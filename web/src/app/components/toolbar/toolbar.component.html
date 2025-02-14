@@ -1,0 +1,18 @@
+<mat-toolbar>
+  <div class="toolbar-container">
+    <div class="toolbar-left-container">
+      <app-icon-button
+        [icon]="isCollapsed ? 'menu' : 'close'"
+        (click)="toggleSadebar()"
+        (keydown.enter)="toggleSadebar()"
+      />
+      <span [innerText]="'monitoring-system' | translate"></span>
+    </div>
+    <div>
+      <app-language-selector
+        [current]="'en'"
+        (select)="selectedLanguage($event)"
+      />
+    </div>
+  </div>
+</mat-toolbar>

@@ -1,0 +1,24 @@
+@use './../../variables' as *;
+
+mat-toolbar {
+  padding: 0;
+  height: $toolbar-height;
+}
+
+app-icon-button {
+  width: $sidenav-collapsed-width;
+}
+
+.toolbar-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  overflow: hidden;
+  padding-right: 16px;
+}
+
+.toolbar-left-container {
+  display: flex;
+  align-items: center;
+}

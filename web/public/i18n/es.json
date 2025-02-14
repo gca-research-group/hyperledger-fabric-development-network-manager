@@ -1,0 +1,11 @@
+{
+  "blockchains": "Blockchains",
+  "home": "Home",
+  "monitoring-system": "Sistema de Monitoreo",
+  "settings": "Configuraciónes",
+  "smart-contracts": "Contratos Inteligentes",
+  "id": "Id",
+  "name": "Nombre",
+  "createdAt": "Data de Registro",
+  "updatedAt": "Data de Actualización"
+}
