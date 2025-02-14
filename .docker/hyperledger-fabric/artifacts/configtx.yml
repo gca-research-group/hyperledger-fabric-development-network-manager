@@ -152,14 +152,14 @@ Channel: &ChannelDefaults
     <<: *ChannelCapabilities
 
 Profiles:
-  SupplyChainOrdererGenesis:
+  ExampleOrdererGenesis:
     <<: *ChannelDefaults
     Orderer:
       <<: *OrdererDefaults
       Organizations:
         - *Orderer
     Consortiums:
-      SupplyChainConsortium:
+      ExampleConsortium:
         Organizations:
           - *Org1
           - *Org2
@@ -171,9 +171,9 @@ Profiles:
         - *Org2
         - *Org3
 
-  SupplyChainChannel:
+  ExampleChannel:
     <<: *ChannelDefaults
-    Consortium: SupplyChainConsortium
+    Consortium: ExampleConsortium
     Application:
       <<: *ApplicationDefaults
       Organizations:

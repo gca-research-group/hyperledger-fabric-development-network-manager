@@ -6,3 +6,6 @@ echo -e "\n========= Package ========="
 
 echo -e "\n========= Install ========="
 ./chaincode/install.sh
+
+echo -e "\n========= Approve ========="
+./chaincode/approveformyorg.sh

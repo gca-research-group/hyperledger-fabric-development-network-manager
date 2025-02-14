@@ -10,7 +10,7 @@ CRYPTO_CONFIG_FOLDER=./.docker/hyperledger-fabric/artifacts/crypto-config
 CONTAINER_NAME=hyperledger-fabric-tools
 
 OUTPUT_BLOCK=./genesis.block
-PROFILE=SupplyChainOrdererGenesis
+PROFILE=ExampleOrdererGenesis
 CHANNEL_ID=examplechannel
 CONFIG_TX_COMMAND="configtxgen -outputBlock $OUTPUT_BLOCK -profile $PROFILE -channelID $CHANNEL_ID"
 

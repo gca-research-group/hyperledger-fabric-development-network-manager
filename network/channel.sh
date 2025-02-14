@@ -5,7 +5,7 @@ source ./_utils.sh
 
 DOCKER_COMPOSE_FILE=./.docker/hyperledger-fabric/hyperledger-fabric-network.yml
 
-CONTAINERS="peer0.org1.example.com peer0.org2.example.com peer0.org3.example.com"
+ORGS="org1 org2 org3"
 
 ORDERER_HOST=orderer.example.com:7050
 
@@ -13,15 +13,19 @@ GENESIS_BLOCK=/etc/hyperledger/fabric/genesis.block
 
 CHANNEL=examplechannel
 
-for container in $CONTAINERS; do
-    echo -e "${PROCESSING_ICON} Joining peer to the channel: ${container}."
+for org in $ORGS; do
+    echo -e "${PROCESSING_ICON} Joining peer to the channel: ${org}."
+    
+    container="peer0.${org}.example.com"
 
     result=$(docker exec -it $container bash -c "peer channel list")
 
     if [[ "$result" == *"$CHANNEL"* ]]; then
         echo -e "${SUCCESS_ICON} Peer has already joined the channel. No action needed."
     else
-        COMMAND="peer channel join -o $ORDERER_HOST -b $GENESIS_BLOCK"
+        CORE_PEER_MSPCONFIGPATH="/etc/hyperledger/fabric/crypto-config/users/Admin@${org}.example.com/msp"
+
+        COMMAND="export CORE_PEER_MSPCONFIGPATH="$CORE_PEER_MSPCONFIGPATH" && peer channel join -o $ORDERER_HOST -b $GENESIS_BLOCK"
         result=$(docker exec -it $container bash -c "$COMMAND")
 
         if [[ "$result" == *"Error"* ]]; then
@@ -29,6 +33,10 @@ for container in $CONTAINERS; do
         else
             echo -e "${SUCCESS_ICON} Peer Joined."
         fi
+
+        CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+        COMMAND="export CORE_PEER_MSPCONFIGPATH="$CORE_PEER_MSPCONFIGPATH""
+        result=$(docker exec -it $container bash -c "$COMMAND")
     fi
 done
 

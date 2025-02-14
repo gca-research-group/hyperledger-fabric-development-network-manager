@@ -6,12 +6,21 @@ services:
       - FABRIC_LOGLEVEL=INFO
       - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
       - ORDERER_GENERAL_LISTENPORT=7050
-      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/fabric/orderer/genesis.block
+      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/fabric/genesis.block
       - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      #- ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/orderer/msp
+      # - TLS configuration
+      - ORDERER_GENERAL_TLS_ENABLED=false
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/etc/hyperledger/fabric/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/etc/hyperledger/fabric/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/etc/hyperledger/fabric/tls/ca.crt]
     volumes:
-      - ./volumes/hyperledger-fabric/orderer:/etc/hyperledger/fabric/orderer/
-      - ./artifacts/crypto-config/ordererOrganizations/example.com/msp:/etc/hyperledger/fabric/orderer/msp
-      - ./artifacts/genesis.block:/etc/hyperledger/fabric/orderer/genesis.block
+      #- ./volumes/hyperledger-fabric/orderer:/etc/hyperledger/fabric/orderer/
+      # - ./artifacts/crypto-config/ordererOrganizations/example.com:/etc/hyperledger/fabric/crypto-config
+      # /var/hyperledger/orderer/msp/signcerts
+      - ./artifacts/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/etc/hyperledger/fabric/msp
+      - ./artifacts/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls:/etc/hyperledger/fabric/tls
+      - ./artifacts/genesis.block:/etc/hyperledger/fabric/genesis.block
     ports:
       - 7050:7050
     networks:
@@ -31,12 +40,19 @@ services:
       - FABRIC_LOGGING_SPEC=INFO
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      # - configure the network mode or the custom network defined
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hyperledger_fabric_example_network
+      # - TLS configuration
+      - CORE_PEER_TLS_ENABLED=false
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/crypto-config/peers/peer0.org1.example.com/tls/server.key
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/crypto-config/peers/peer0.org1.example.com/tls/server.crt
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/crypto-config/peers/peer0.org1.example.com/tls/ca.crt
     working_dir: /etc/hyperledger/fabric
     command: peer node start
     volumes:
-      - ./artifacts/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp:/etc/hyperledger/fabric/msp
-      - ./artifacts/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/tls:/etc/hyperledger/fabric/tls
+      - ./artifacts/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp:/etc/hyperledger/fabric/msp
+      - ./artifacts/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls:/etc/hyperledger/fabric/tls
+      - ./artifacts/crypto-config/peerOrganizations/org1.example.com:/etc/hyperledger/fabric/crypto-config
       - ./artifacts/channel.tx:/etc/hyperledger/fabric/channel.tx
       - ./artifacts/genesis.block:/etc/hyperledger/fabric/genesis.block
       - ./artifacts/chaincode/asset.go:/etc/hyperledger/fabric/chaincode/asset.go
@@ -63,12 +79,19 @@ services:
       - FABRIC_LOGGING_SPEC=INFO
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      # - configure the network mode or the custom network defined
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hyperledger_fabric_example_network
+      # - TLS configuration
+      - CORE_PEER_TLS_ENABLED=false
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/crypto-config/peers/peer0.org2.example.com/tls/server.key
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/crypto-config/peers/peer0.org2.example.com/tls/server.crt
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/crypto-config/peers/peer0.org2.example.com/tls/ca.crt
     working_dir: /etc/hyperledger/fabric
     command: peer node start
     volumes:
-      - ./artifacts/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp:/etc/hyperledger/fabric/msp
-      - ./artifacts/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/tls:/etc/hyperledger/fabric/tls
+      - ./artifacts/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/msp:/etc/hyperledger/fabric/msp
+      - ./artifacts/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls:/etc/hyperledger/fabric/tls
+      - ./artifacts/crypto-config/peerOrganizations/org2.example.com:/etc/hyperledger/fabric/crypto-config
       - ./artifacts/channel.tx:/etc/hyperledger/fabric/channel.tx
       - ./artifacts/genesis.block:/etc/hyperledger/fabric/genesis.block
       - ./artifacts/chaincode/asset.go:/etc/hyperledger/fabric/chaincode/asset.go
@@ -95,12 +118,19 @@ services:
       - FABRIC_LOGGING_SPEC=INFO
       - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
       - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      # - configure the network mode or the custom network defined
       - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hyperledger_fabric_example_network
+      # - TLS configuration
+      - CORE_PEER_TLS_ENABLED=false
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/crypto-config/peers/peer0.org3.example.com/tls/server.key
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/crypto-config/peers/peer0.org3.example.com/tls/server.crt
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/crypto-config/peers/peer0.org3.example.com/tls/ca.crt
     working_dir: /etc/hyperledger/fabric
     command: peer node start
     volumes:
-      - ./artifacts/crypto-config/peerOrganizations/org3.example.com/users/Admin@org3.example.com/msp:/etc/hyperledger/fabric/msp
-      - ./artifacts/crypto-config/peerOrganizations/org3.example.com/users/Admin@org3.example.com/tls:/etc/hyperledger/fabric/tls
+      - ./artifacts/crypto-config/peerOrganizations/org3.example.com/peers/peer0.org3.example.com/msp:/etc/hyperledger/fabric/msp
+      - ./artifacts/crypto-config/peerOrganizations/org3.example.com/peers/peer0.org3.example.com/tls:/etc/hyperledger/fabric/tls
+      - ./artifacts/crypto-config/peerOrganizations/org3.example.com:/etc/hyperledger/fabric/crypto-config
       - ./artifacts/channel.tx:/etc/hyperledger/fabric/channel.tx
       - ./artifacts/genesis.block:/etc/hyperledger/fabric/genesis.block
       - ./artifacts/chaincode/asset.go:/etc/hyperledger/fabric/chaincode/asset.go
