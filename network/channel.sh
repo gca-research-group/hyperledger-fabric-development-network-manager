@@ -1,4 +1,5 @@
 #!/bin/bash
+source ./_variables.sh
 source ./config/_colors.sh
 source ./config/_icons.sh
 source ./_utils.sh
@@ -13,8 +14,6 @@ BASE_PATH=/etc/hyperledger/fabric
 
 GENESIS_BLOCK=$BASE_PATH/genesis.block
 
-CHANNEL=examplechannel
-
 for org in $ORGS; do
     echo -e "${PROCESSING_ICON} Joining peer to the channel: ${org}."
     
@@ -22,7 +21,7 @@ for org in $ORGS; do
 
     result=$(docker exec -it $container bash -c "peer channel list")
 
-    if [[ "$result" == *"$CHANNEL"* ]]; then
+    if [[ "$result" == *"$CHANNEL_ID"* ]]; then
         echo -e "${SUCCESS_ICON} Peer has already joined the channel. No action needed."
     else
         CORE_PEER_MSPCONFIGPATH="$BASE_PATH/crypto-config/users/Admin@${org}.example.com/msp"

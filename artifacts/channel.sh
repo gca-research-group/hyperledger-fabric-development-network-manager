@@ -1,4 +1,5 @@
 #!/bin/bash
+source ./_variables.sh
 source ./config/_colors.sh
 source ./config/_icons.sh
 source ./artifacts/_utils.sh
@@ -11,7 +12,6 @@ CONTAINER_NAME=hyperledger-fabric-tools
 
 OUTPUT_CHANNEL=./channel.tx
 PROFILE=ExampleChannel
-CHANNEL_ID=examplechannel
 CONFIG_TX_COMMAND="configtxgen -outputCreateChannelTx $OUTPUT_CHANNEL -profile $PROFILE -channelID $CHANNEL_ID"
 
 generateChannel() {

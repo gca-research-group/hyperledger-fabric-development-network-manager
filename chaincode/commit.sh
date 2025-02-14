@@ -3,11 +3,10 @@ source ./_variables.sh
 source ./config/_colors.sh
 source ./config/_icons.sh
 
-ORGS="org1 org2 org3"
+ORGS="org1" # org2 org3
 
 BASE_PATH=/etc/hyperledger/fabric
 VERSION=1.0
-CHANNEL=examplechannel
 SEQUENCE=1
 
 for org in $ORGS; do
@@ -17,7 +16,8 @@ for org in $ORGS; do
 
     CORE_PEER_MSPCONFIGPATH="$BASE_PATH/crypto-config/users/Admin@${org}.example.com/msp"
 
-    COMMAND="export CORE_PEER_MSPCONFIGPATH="$CORE_PEER_MSPCONFIGPATH" && peer lifecycle chaincode checkcommitreadiness -n $CHAINCODE -v $VERSION -C $CHANNEL --sequence $SEQUENCE"
+    COMMAND="export CORE_PEER_MSPCONFIGPATH="$CORE_PEER_MSPCONFIGPATH" && peer lifecycle chaincode commit -n $CHAINCODE_NAME -v $VERSION -C $CHANNEL_ID --sequence $SEQUENCE"
+
     result=$(docker exec -it $container bash -c "$COMMAND")
 
     if [[ "$result" == *"Error"* ]]; then

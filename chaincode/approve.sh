@@ -7,7 +7,6 @@ ORGS="org1 org2 org3"
 
 BASE_PATH=/etc/hyperledger/fabric
 VERSION=1.0
-CHANNEL=examplechannel
 SEQUENCE=1
 
 for org in $ORGS; do
@@ -20,7 +19,7 @@ for org in $ORGS; do
     INSTALLED_CHAINCODES=$(docker exec -it $container bash -c "$COMMAND")
     PACKAGE_ID=$(echo "$INSTALLED_CHAINCODES" | grep -oP '(?<=Package ID:)[^,]+' | awk '{print $1}')
 
-    COMMAND="export CORE_PEER_MSPCONFIGPATH="$CORE_PEER_MSPCONFIGPATH" && peer lifecycle chaincode approveformyorg -n $CHAINCODE -v $VERSION -C $CHANNEL --sequence $SEQUENCE --package-id $PACKAGE_ID"
+    COMMAND="export CORE_PEER_MSPCONFIGPATH="$CORE_PEER_MSPCONFIGPATH" && peer lifecycle chaincode approveformyorg -n $CHAINCODE_NAME -v $VERSION -C $CHANNEL_ID --sequence $SEQUENCE --package-id $PACKAGE_ID"
     result=$(docker exec -it $container bash -c "$COMMAND")
 
     if [[ "$result" == *"Error"* ]]; then
