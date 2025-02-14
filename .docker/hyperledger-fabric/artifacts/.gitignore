@@ -1,0 +1,4 @@
+chaincode
+crypto-config
+*.tx
+*.block

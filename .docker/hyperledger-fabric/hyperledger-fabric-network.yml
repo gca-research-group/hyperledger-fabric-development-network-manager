@@ -1,0 +1,119 @@
+services:
+  orderer.example.com:
+    image: hyperledger/fabric-orderer:2.5
+    container_name: orderer.example.com
+    environment:
+      - FABRIC_LOGLEVEL=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/fabric/orderer/genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+    volumes:
+      - ./volumes/hyperledger-fabric/orderer:/etc/hyperledger/fabric/orderer/
+      - ./artifacts/crypto-config/ordererOrganizations/example.com/msp:/etc/hyperledger/fabric/orderer/msp
+      - ./artifacts/genesis.block:/etc/hyperledger/fabric/orderer/genesis.block
+    ports:
+      - 7050:7050
+    networks:
+      - hyperledger_fabric_example_network
+
+  peer0.org1.example.com:
+    container_name: peer0.org1.example.com
+    build:
+      context: .
+      dockerfile: hyperledger-fabric-peer.Dockerfile
+    environment:
+      - CORE_PEER_ID=peer0.org1.example.com
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.example.com:7051
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hyperledger_fabric_example_network
+    working_dir: /etc/hyperledger/fabric
+    command: peer node start
+    volumes:
+      - ./artifacts/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp:/etc/hyperledger/fabric/msp
+      - ./artifacts/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/tls:/etc/hyperledger/fabric/tls
+      - ./artifacts/channel.tx:/etc/hyperledger/fabric/channel.tx
+      - ./artifacts/genesis.block:/etc/hyperledger/fabric/genesis.block
+      - ./artifacts/chaincode/asset.go:/etc/hyperledger/fabric/chaincode/asset.go
+      - ./artifacts/chaincode/go.mod:/etc/hyperledger/fabric/chaincode/go.mod
+      - /var/run/docker.sock:/host/var/run/docker.sock
+    ports:
+      - 7051:7051
+      - 7052:7052
+      - 7053:7053
+    networks:
+      - hyperledger_fabric_example_network
+
+  peer0.org2.example.com:
+    container_name: peer0.org2.example.com
+    build:
+      context: .
+      dockerfile: hyperledger-fabric-peer.Dockerfile
+    environment:
+      - CORE_PEER_ID=peer0.org2.example.com
+      - CORE_PEER_LOCALMSPID=Org2MSP
+      - CORE_PEER_ADDRESS=peer0.org2.example.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org2.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org2.example.com:7051
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hyperledger_fabric_example_network
+    working_dir: /etc/hyperledger/fabric
+    command: peer node start
+    volumes:
+      - ./artifacts/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp:/etc/hyperledger/fabric/msp
+      - ./artifacts/crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/tls:/etc/hyperledger/fabric/tls
+      - ./artifacts/channel.tx:/etc/hyperledger/fabric/channel.tx
+      - ./artifacts/genesis.block:/etc/hyperledger/fabric/genesis.block
+      - ./artifacts/chaincode/asset.go:/etc/hyperledger/fabric/chaincode/asset.go
+      - ./artifacts/chaincode/go.mod:/etc/hyperledger/fabric/chaincode/go.mod
+      - /var/run/docker.sock:/host/var/run/docker.sock
+    ports:
+      - 8051:7051
+      - 8052:7052
+      - 8053:7053
+    networks:
+      - hyperledger_fabric_example_network
+
+  peer0.org3.example.com:
+    container_name: peer0.org3.example.com
+    build:
+      context: .
+      dockerfile: hyperledger-fabric-peer.Dockerfile
+    environment:
+      - CORE_PEER_ID=peer0.org3.example.com
+      - CORE_PEER_LOCALMSPID=Org3MSP
+      - CORE_PEER_ADDRESS=peer0.org3.example.com:7051
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org3.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org3.example.com:7051
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hyperledger_fabric_example_network
+    working_dir: /etc/hyperledger/fabric
+    command: peer node start
+    volumes:
+      - ./artifacts/crypto-config/peerOrganizations/org3.example.com/users/Admin@org3.example.com/msp:/etc/hyperledger/fabric/msp
+      - ./artifacts/crypto-config/peerOrganizations/org3.example.com/users/Admin@org3.example.com/tls:/etc/hyperledger/fabric/tls
+      - ./artifacts/channel.tx:/etc/hyperledger/fabric/channel.tx
+      - ./artifacts/genesis.block:/etc/hyperledger/fabric/genesis.block
+      - ./artifacts/chaincode/asset.go:/etc/hyperledger/fabric/chaincode/asset.go
+      - ./artifacts/chaincode/go.mod:/etc/hyperledger/fabric/chaincode/go.mod
+      - /var/run/docker.sock:/host/var/run/docker.sock
+    ports:
+      - 9051:7051
+      - 9052:7052
+      - 9053:7053
+    networks:
+      - hyperledger_fabric_example_network
+
+networks:
+  hyperledger_fabric_example_network:
+    name: hyperledger_fabric_example_network
+    driver: bridge

@@ -1,0 +1,15 @@
+services:
+  hyperledger-fabric-tools:
+    image: hyperledger/fabric-tools:latest
+    container_name: hyperledger-fabric-tools
+    tty: true
+    stdin_open: true
+    volumes:
+      - ./artifacts:/etc/hyperledger/fabric/
+    working_dir: /etc/hyperledger/fabric
+    networks:
+      - fabric-network
+
+networks:
+  fabric-network:
+    driver: bridge
