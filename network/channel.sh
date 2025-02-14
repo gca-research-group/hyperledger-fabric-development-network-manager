@@ -9,7 +9,9 @@ ORGS="org1 org2 org3"
 
 ORDERER_HOST=orderer.example.com:7050
 
-GENESIS_BLOCK=/etc/hyperledger/fabric/genesis.block
+BASE_PATH=/etc/hyperledger/fabric
+
+GENESIS_BLOCK=$BASE_PATH/genesis.block
 
 CHANNEL=examplechannel
 
@@ -23,7 +25,7 @@ for org in $ORGS; do
     if [[ "$result" == *"$CHANNEL"* ]]; then
         echo -e "${SUCCESS_ICON} Peer has already joined the channel. No action needed."
     else
-        CORE_PEER_MSPCONFIGPATH="/etc/hyperledger/fabric/crypto-config/users/Admin@${org}.example.com/msp"
+        CORE_PEER_MSPCONFIGPATH="$BASE_PATH/crypto-config/users/Admin@${org}.example.com/msp"
 
         COMMAND="export CORE_PEER_MSPCONFIGPATH="$CORE_PEER_MSPCONFIGPATH" && peer channel join -o $ORDERER_HOST -b $GENESIS_BLOCK"
         result=$(docker exec -it $container bash -c "$COMMAND")
@@ -34,7 +36,7 @@ for org in $ORGS; do
             echo -e "${SUCCESS_ICON} Peer Joined."
         fi
 
-        CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+        CORE_PEER_MSPCONFIGPATH=$BASE_PATH/msp
         COMMAND="export CORE_PEER_MSPCONFIGPATH="$CORE_PEER_MSPCONFIGPATH""
         result=$(docker exec -it $container bash -c "$COMMAND")
     fi

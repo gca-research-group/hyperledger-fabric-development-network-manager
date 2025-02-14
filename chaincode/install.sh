@@ -1,10 +1,11 @@
 #!/bin/bash
+source ./_variables.sh
 source ./config/_colors.sh
 source ./config/_icons.sh
 
 ORGS="org1 org2 org3"
 
-CC_LABEL=asset.1.0-1.0
+CC_LABEL="$CHAINCODE.1.0-1.0"
 
 BASE_PATH=/etc/hyperledger/fabric
 CHAINCODE_PATH=$BASE_PATH/chaincode
@@ -16,8 +17,8 @@ for org in $ORGS; do
     echo -e "${PROCESSING_ICON} Installing the chaincode: ${container}."
     echo -e "${PROCESSING_ICON} Verifying if the chaincode is already installed."
 
-    CORE_PEER_MSPCONFIGPATH="/etc/hyperledger/fabric/crypto-config/users/Admin@${org}.example.com/msp"
-    COMMAND="export CORE_PEER_MSPCONFIGPATH="$CORE_PEER_MSPCONFIGPATH" && peer lifecycle chaincode queryinstalled | grep "asset""
+    CORE_PEER_MSPCONFIGPATH="$BASE_PATH/crypto-config/users/Admin@${org}.example.com/msp"
+    COMMAND="export CORE_PEER_MSPCONFIGPATH="$CORE_PEER_MSPCONFIGPATH" && peer lifecycle chaincode queryinstalled | grep "$CHAINCODE""
     result=$(docker exec -it $container bash -c "$COMMAND" 2>&1)
 
     if [[ "$result" == *"Error"* ]]; then

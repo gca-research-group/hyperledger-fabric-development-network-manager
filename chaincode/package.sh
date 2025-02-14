@@ -1,15 +1,15 @@
 #!/bin/bash
+source ./_variables.sh
 source ./config/_colors.sh
 source ./config/_icons.sh
 
 CONTAINERS="peer0.org1.example.com peer0.org2.example.com peer0.org3.example.com"
 
-CC_LABEL=asset.1.0-1.0
+CC_LABEL="$CHAINCODE.1.0-1.0"
 
 BASE_PATH=/etc/hyperledger/fabric
 CHAINCODE_PATH=$BASE_PATH/chaincode
 CC_PACKAGE_FILE=$CC_LABEL.tar.gz
-SMART_CONTRACT=asset.go
 
 for container in $CONTAINERS; do
     echo -e "${PROCESSING_ICON} Packaging the chaincode: ${container}."
@@ -20,7 +20,7 @@ for container in $CONTAINERS; do
     echo -e "${SUCCESS_ICON} Dependencies installed."
 
     echo -e "${PROCESSING_ICON} Packaging."
-    COMMAND="cd $CHAINCODE_PATH && peer lifecycle chaincode package $CC_PACKAGE_FILE -p $SMART_CONTRACT --label $CC_LABEL"
+    COMMAND="cd $CHAINCODE_PATH && peer lifecycle chaincode package $CC_PACKAGE_FILE -p $CHAINCODE.go --label $CC_LABEL"
 
     result=$(docker exec -it $container bash -c "$COMMAND")
 

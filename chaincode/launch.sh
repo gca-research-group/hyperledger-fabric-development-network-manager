@@ -8,4 +8,7 @@ echo -e "\n========= Install ========="
 ./chaincode/install.sh
 
 echo -e "\n========= Approve ========="
-./chaincode/approveformyorg.sh
+./chaincode/approve.sh
+
+echo -e "\n========= Commit ========="
+./chaincode/commit.sh
