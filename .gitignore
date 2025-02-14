@@ -1,0 +1,29 @@
+# Binaries & Build Artifacts
+/my-gin-api
+*.exe
+*.out
+*.test
+*.so
+*.dll
+
+# Go Modules & Dependencies
+/vendor/
+go.sum
+
+# Editor & OS Files
+*.swp
+*.swo
+.DS_Store
+*.log
+.vscode/
+.idea/
+*.iml
+
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+config/*.env
+
+# Docker Files (if using Docker)
+docker-compose.override.yml
