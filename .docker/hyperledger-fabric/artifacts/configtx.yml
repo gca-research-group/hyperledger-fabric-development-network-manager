@@ -10,7 +10,7 @@ Organizations:
   - &Orderer
     Name: Orderer
     ID: OrdererMSP
-    MSPDir: ./crypto-config/ordererOrganizations/example.com/msp
+    MSPDir: ./crypto-materials/ordererOrganizations/example.com/msp
     Policies:
       Readers:
           Type: Signature
@@ -25,7 +25,7 @@ Organizations:
   - &Org1
     Name: Org1
     ID: Org1MSP
-    MSPDir: ./crypto-config/peerOrganizations/org1.example.com/msp
+    MSPDir: ./crypto-materials/peerOrganizations/org1.example.com/msp
     AnchorPeers:
       - Host: peer0.org1.example.com
         Port: 7051
@@ -46,7 +46,7 @@ Organizations:
   - &Org2
     Name: Org2
     ID: Org2MSP
-    MSPDir: ./crypto-config/peerOrganizations/org2.example.com/msp
+    MSPDir: ./crypto-materials/peerOrganizations/org2.example.com/msp
     AnchorPeers:
       - Host: peer0.org2.example.com
         Port: 7051
@@ -67,7 +67,7 @@ Organizations:
   - &Org3
     Name: Org3
     ID: Org3MSP
-    MSPDir: ./crypto-config/peerOrganizations/org3.example.com/msp
+    MSPDir: ./crypto-materials/peerOrganizations/org3.example.com/msp
     AnchorPeers:
       - Host: peer0.org3.example.com
         Port: 7051
@@ -152,14 +152,14 @@ Channel: &ChannelDefaults
     <<: *ChannelCapabilities
 
 Profiles:
-  ExampleOrdererGenesis:
+  MultiOrdererGenesis:
     <<: *ChannelDefaults
     Orderer:
       <<: *OrdererDefaults
       Organizations:
         - *Orderer
     Consortiums:
-      ExampleConsortium:
+      MultiConsortium:
         Organizations:
           - *Org1
           - *Org2
@@ -171,9 +171,9 @@ Profiles:
         - *Org2
         - *Org3
 
-  ExampleChannel:
+  MultiChannel:
     <<: *ChannelDefaults
-    Consortium: ExampleConsortium
+    Consortium: MultiConsortium
     Application:
       <<: *ApplicationDefaults
       Organizations:

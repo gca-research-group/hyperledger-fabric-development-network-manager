@@ -1,28 +1,45 @@
 package main
 
 import (
-	"log"
-	"net/http"
-	"os"
-
-	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
+	"github.com/gca-research-group/hyperledger-fabric-network-manager/internal/yaml"
+	"github.com/gca-research-group/hyperledger-fabric-network-manager/pkg"
+	"github.com/gca-research-group/hyperledger-fabric-network-manager/pkg/configtx"
+	"github.com/gca-research-group/hyperledger-fabric-network-manager/pkg/cryptoconfig"
 )
 
 func main() {
-	err := godotenv.Load()
-
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	config := pkg.Config{
+		Orderers: []pkg.Orderer{
+			{
+				Name:   "Orderer",
+				Domain: "example.com",
+				Port:   7050,
+			},
+		},
+		Peers: []pkg.Peer{
+			{
+				Name:   "Org1",
+				Domain: "org1.example.com",
+				Port:   7051,
+			},
+			{
+				Name:   "Org2",
+				Domain: "org2.example.com",
+				Port:   7051,
+			},
+			{
+				Name:   "Org3",
+				Domain: "org3.example.com",
+			},
+		},
+		Networks: []pkg.Network{
+			{Name: "MultiChannel1", Organizations: []string{"Org1", "Org2", "Org3"}},
+		},
 	}
 
-	r := gin.Default()
+	_cryptoconfig := yaml.Parse(cryptoconfig.Build(config))
+	yaml.Write(_cryptoconfig, "./crypto-config.yaml")
 
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "Hello, Gin!"})
-	})
-
-	port := os.Getenv("PORT")
-	host := os.Getenv("HOST")
-	r.Run(host + ":" + port)
+	_configtx := configtx.UpdateAnchors(yaml.Parse(configtx.Build(config)), config.Networks[0].Organizations)
+	yaml.Write(_configtx, "./configtx.yaml")
 }

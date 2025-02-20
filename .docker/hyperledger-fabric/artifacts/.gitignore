@@ -1,4 +1,4 @@
 chaincode
-crypto-config
+crypto-materials
 *.tx
 *.block
