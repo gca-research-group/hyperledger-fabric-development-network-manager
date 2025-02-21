@@ -1,11 +1,15 @@
 {
+  "add": "Adicionar",
   "blockchains": "Blockchains",
+  "configuration-files": "Arquivos de Configuração",
+  "connection-script": "Script de Conexão",
   "createdAt": "Data de Cadastro",
   "home": "Home",
   "id": "Id",
   "monitoring-system": "Sistema de Monitoramento",
   "name": "Nome",
   "settings": "Configurações",
+  "domain": "Domínio",
   "smart-contracts": "Contratos Inteligentes",
   "updatedAt": "Data de Atualizaçao"
 }

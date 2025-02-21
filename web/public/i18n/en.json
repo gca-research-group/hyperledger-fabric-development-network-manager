@@ -1,11 +1,16 @@
 {
+  "add": "Add",
   "blockchains": "Blockchains",
+  "configuration-files": "Configuraton Files",
+  "connection-script": "Connection Script",
+  "createdAt": "Created At",
   "home": "Home",
+  "id": "Id",
   "monitoring-system": "Monitoring System",
+  "name": "Name",
+  "port": "Port",
+  "domain": "Port",
   "settings": "Settings",
   "smart-contracts": "Smart Contracts",
-  "id": "Id",
-  "name": "Name",
-  "createdAt": "Created At",
   "updatedAt": "Updated At"
 }

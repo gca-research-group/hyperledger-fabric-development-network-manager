@@ -1,11 +1,11 @@
 <ng-select
-  [(ngModel)]="current"
   appendTo="body"
   [multiple]="false"
   [clearable]="false"
   required
   class="languages"
-  (change)="select.emit($event)"
+  (change)="change($event)"
+  [formControl]="formControl"
 >
   @for (language of languages; track language.id) {
     <ng-option [value]="language.id">

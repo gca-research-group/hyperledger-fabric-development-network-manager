@@ -13,4 +13,5 @@ import { MatTooltip } from '@angular/material/tooltip';
 export class IconButtonComponent {
   @Input() icon!: string;
   @Input() tooltip!: string;
+  @Input() color!: string;
 }

@@ -6,13 +6,12 @@
         (click)="toggleSadebar()"
         (keydown.enter)="toggleSadebar()"
       />
-      <span [innerText]="'monitoring-system' | translate"></span>
+      <div>
+        <app-breadcrumb [items]="breadcrumb" />
+      </div>
     </div>
     <div>
-      <app-language-selector
-        [current]="'en'"
-        (select)="selectedLanguage($event)"
-      />
+      <app-language-selector [(language)]="language"/>
     </div>
   </div>
 </mat-toolbar>

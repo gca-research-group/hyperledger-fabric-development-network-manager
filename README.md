@@ -29,17 +29,35 @@ Setting up a Hyperledger Fabric network can be a challenging task, even for expe
 
 ## Installation
 
+
+#### The easiest way:
+
+```sh
+docker run image
+```
+
+#### If you are hard coding:
+> 🚧 **You will need also install the following dependencies** 🚧  
+> - [Golang](https://go.dev/)
+> - [NodeJs](https://nodejs.org/en)
+
 1. Clone the repository:
-    ```sh
-    git clone https://github.com/yourusername/hyperledger-fabric-network-manager.git
-    ```
-2. Navigate to the project directory:
-    ```sh
-    docker compose up
-    ```
 
-## Usage
+```sh
+git clone https://github.com/gca-research-group/hyperledger-fabric-network-manager.git
+```
+2. Navigate to the project directory and run:
+    
+```sh
+# running the database
+docker compose up -d
 
+# running the api
+go run ./api/main.go
+
+# running the web application
+npm i && npm run start
+```
 
 ## Contributing
 

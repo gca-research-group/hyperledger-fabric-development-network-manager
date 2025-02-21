@@ -1,4 +1,4 @@
-import { Component, inject, Input, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, input, OnDestroy, OnInit } from '@angular/core';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatButtonModule } from '@angular/material/button';
 import { IconComponent } from '@app/components/icon';
@@ -8,6 +8,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { SidebarService } from '@app/services/sidebar';
 import { Subject, takeUntil } from 'rxjs';
 import { Sidebar } from '@app/models';
+import { IS_MOBILE } from '@app/tokens';
 
 @Component({
   selector: 'app-sidebar',
@@ -25,12 +26,13 @@ import { Sidebar } from '@app/models';
 export class SidebarComponent implements OnInit, OnDestroy {
   isCollapsed = true;
 
-  @Input()
-  items: Sidebar[] = [];
+  items = input<Sidebar[]>([]);
 
   private sidebarService = inject(SidebarService);
 
   private onDestroy$ = new Subject();
+
+  isMobile = inject(IS_MOBILE);
 
   ngOnInit(): void {
     this.sidebarService.isCollapsed$

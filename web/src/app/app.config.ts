@@ -7,6 +7,8 @@ import { HttpClient, provideHttpClient } from '@angular/common/http';
 
 import { provideTranslateService, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
+import { provideToastr } from 'ngx-toastr';
 
 const httpLoaderFactory: (http: HttpClient) => TranslateHttpLoader = (
   http: HttpClient,
@@ -17,6 +19,7 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideAnimationsAsync(),
+    provideToastr(),
     provideHttpClient(),
     provideTranslateService({
       loader: {
@@ -26,5 +29,9 @@ export const appConfig: ApplicationConfig = {
       },
       defaultLanguage: 'en',
     }),
+    {
+      provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
+      useValue: { appearance: 'outline', subscriptSizing: 'dynamic' },
+    },
   ],
 };

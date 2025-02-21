@@ -1,0 +1,49 @@
+ng-select {
+  min-width: 64px;
+  padding-bottom: 4px;
+}
+
+::ng-deep .blockchain-platforms {
+  .ng-option,
+  .ng-option-label {
+    display: flex !important;
+    align-items: center;
+  }
+}
+
+:host ::ng-deep {
+  .ng-select .ng-select-container {
+    min-height: fit-content;
+    display: flex;
+    align-items: center;
+  }
+
+  .ng-value-container {
+    padding: 0 !important;
+    display: flex;
+    justify-content: center;
+    border-top: 0 !important;
+  }
+
+  .ng-value,
+  .ng-value-label {
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .ng-select .ng-select-container:after {
+    border: none;
+  }
+
+  .ng-input {
+    display: none;
+  }
+
+  .ng-arrow-wrapper {
+    font-size: 12px;
+    line-height: initial;
+    bottom: initial !important;
+    align-self: initial !important;
+  }
+}

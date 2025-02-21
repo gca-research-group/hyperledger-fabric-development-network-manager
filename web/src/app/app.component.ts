@@ -13,8 +13,7 @@ import { Sidebar } from './models';
 export class AppComponent {
   menus: Sidebar[] = [
     { label: 'home', icon: 'home', url: '' },
-    { label: 'blockchains', icon: 'link', url: 'blockchains' },
-    { label: 'smart-contracts', icon: 'article', url: 'smart-contracts' },
+    { label: 'configuration-files', icon: 'link', url: 'configuration-files' },
     { label: 'settings', icon: 'settings', url: '' },
   ];
 }

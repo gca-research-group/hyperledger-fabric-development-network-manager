@@ -1,0 +1,10 @@
+<nav>
+  <ul class="d-flex">
+    @for (item of items(); track item.label) {
+      <li><a [routerLink]="$any(item).url">{{ item.label | translate | lowercase }}</a></li>
+      @if (!$last) {
+        <span>»</span>
+      }
+    }
+  </ul>
+</nav>

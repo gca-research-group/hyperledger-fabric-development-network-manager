@@ -1,5 +1,14 @@
 /* You can add global styles to this file, and also import other style files */
-@import "@ng-select/ng-select/themes/material.theme.css";
+@use "@ng-select/ng-select/themes/material.theme.css";
+
+@use "bootstrap/dist/css/bootstrap-grid.min.css";
+@use "bootstrap/dist/css/bootstrap-utilities.min.css";
+
+@use 'ngx-toastr/toastr';
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'bootstrap/scss/mixins';
+@import 'ngx-toastr/toastr-bs5-alert';
 
 html,
 body {
@@ -13,4 +22,9 @@ body {
 
 * {
   box-sizing: border-box;
+}
+
+
+.ng-select {
+  padding-bottom: 0;
 }

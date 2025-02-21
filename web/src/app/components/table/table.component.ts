@@ -1,30 +1,34 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { MatTableModule } from '@angular/material/table';
 
 import { InfiniteScrollDirective } from '@app/directives/infinite-scroll';
 import { TranslateModule } from '@ngx-translate/core';
 import { Column, SmartContract } from '@app/models';
+import { IconButtonComponent } from '../icon-button';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-table',
   templateUrl: './table.component.html',
   styleUrls: ['./table.component.scss'],
-  imports: [MatTableModule, InfiniteScrollDirective, TranslateModule],
+  imports: [
+    MatTableModule,
+    TranslateModule,
+    RouterLink,
+    InfiniteScrollDirective,
+    IconButtonComponent,
+  ],
 })
 export class TableComponent {
-  @Input()
-  dataSource: SmartContract[] = [];
+  dataSource = input<SmartContract[]>([]);
 
-  @Input()
-  displayedColumns: string[] = [];
+  displayedColumns = input<string[]>([]);
+  _displayedColumns = computed(() => [
+    ...(this.displayedColumns() ?? []),
+    'add',
+  ]);
 
-  @Input()
-  columns: Column[] = [];
+  columns = input<Column[]>([]);
 
-  @Output()
-  loadMore = new EventEmitter();
-
-  loadData() {
-    this.loadMore.emit();
-  }
+  loadMore = output();
 }
