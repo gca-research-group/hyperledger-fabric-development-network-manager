@@ -9,7 +9,7 @@
   "monitoring-system": "Monitoring System",
   "name": "Name",
   "port": "Port",
-  "domain": "Port",
+  "domain": "Domain",
   "settings": "Settings",
   "smart-contracts": "Smart Contracts",
   "updatedAt": "Updated At"

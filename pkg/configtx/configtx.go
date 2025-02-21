@@ -120,13 +120,13 @@ func Build(config pkg.Config) ConfigTx {
 		},
 	}
 
-	for _, network := range config.Networks {
-		_configtx.Profiles[network.Name] = profiles.ChannelProfile{
+	for _, channel := range config.Channels {
+		_configtx.Profiles[channel.Name] = profiles.ChannelProfile{
 			Channel:    "<<: *ChannelDefaults",
 			Consortium: "Consortium",
 			Application: profiles.Application{
 				Application:   "<<: *ApplicationDefaults",
-				Organizations: network.Organizations,
+				Organizations: channel.Organizations,
 			},
 		}
 	}

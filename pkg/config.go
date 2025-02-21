@@ -14,7 +14,7 @@ type Peer struct {
 	Users  int
 }
 
-type Network struct {
+type Channel struct {
 	Name          string
 	Organizations []string
 }
@@ -22,5 +22,5 @@ type Network struct {
 type Config struct {
 	Orderers []Orderer
 	Peers    []Peer
-	Networks []Network
+	Channels []Channel
 }
