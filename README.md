@@ -1,6 +1,9 @@
 <h1 align="center">
-  Hyperledger Fabric Development Network Manager
-  <br>
+    <br>
+        <img src="assets/logo.svg" height="256px" alt="Hyperledger Fabric Development Network Manager">
+    <br>
+    Hyperledger Fabric Development Network Manager
+    <br>
 </h1>
 
 <p align="center">
@@ -20,15 +23,14 @@ Setting up a Hyperledger Fabric network can be a challenging task, even for expe
 
 ## Features
 
-- **Automated Network Setup**: Set up a Hyperledger Fabric network with predefined configurations.
-- **Customizable Configurations**: Customize network parameters such as organizations, peers, and orderers.
+-   **Automated Network Setup**: Set up a Hyperledger Fabric network with predefined configurations.
+-   **Customizable Configurations**: Customize network parameters such as organizations, peers, and orderers.
 
 ## Prerequisites
 
-- Docker
+-   Docker
 
 ## Installation
-
 
 #### The easiest way:
 
@@ -37,17 +39,20 @@ docker run image
 ```
 
 #### If you are hard coding:
-> 🚧 **You will need also install the following dependencies** 🚧  
-> - [Golang](https://go.dev/)
-> - [NodeJs](https://nodejs.org/en)
+
+> 🚧 **You will need also install the following dependencies** 🚧
+>
+> -   [Golang](https://go.dev/)
+> -   [NodeJs](https://nodejs.org/en)
 
 1. Clone the repository:
 
 ```sh
 git clone https://github.com/gca-research-group/hyperledger-fabric-network-manager.git
 ```
+
 2. Navigate to the project directory and run:
-    
+
 ```sh
 # running the database
 docker compose up -d
