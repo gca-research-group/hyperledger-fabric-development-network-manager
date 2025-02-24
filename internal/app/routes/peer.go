@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func SetupPeerRoutes(engine *gin.RouterGroup, db *gorm.DB) *gin.RouterGroup {
+func SetupPeerRoutes(engine *gin.RouterGroup, db *gorm.DB) {
 
 	routes := engine.Group("/peer")
 	{
@@ -26,6 +26,4 @@ func SetupPeerRoutes(engine *gin.RouterGroup, db *gorm.DB) *gin.RouterGroup {
 			handler.Delete(c, db)
 		})
 	}
-
-	return routes
 }

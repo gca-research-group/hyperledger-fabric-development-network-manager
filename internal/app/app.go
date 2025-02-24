@@ -15,10 +15,9 @@ func Run() {
 	server.Use(middlewares.ErrorHandler())
 
 	db := database.Connection()
-
 	api := server.Group("/api/v1")
-	routes.SetupOrdererRoutes(api, db)
-	routes.SetupPeerRoutes(api, db)
+
+	routes.SetUp(api, db)
 
 	server.Run()
 }
