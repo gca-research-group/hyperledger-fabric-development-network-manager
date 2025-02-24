@@ -1,5 +1,6 @@
 # Binaries & Build Artifacts
 /my-gin-api
+.bin/**
 *.exe
 *.out
 *.test
