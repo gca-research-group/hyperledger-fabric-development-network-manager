@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 [build]
   args_bin = []
   bin = "./tmp/main.exe"
-  cmd = "go build -o ./tmp/main.exe ."
+  cmd = "go build -o ./tmp/main.exe ./cmd/app"
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata", "web"]
   exclude_file = []
@@ -19,6 +19,12 @@ tmp_dir = "tmp"
   log = "build-errors.log"
   send_interrupt = false
   stop_on_error = true
+
+[watcher]
+  dirs = ["cmd", "internal", "pkg"]
+  extensions = ["go", "toml"]
+  exclude_dirs = ["vendor", "tmp", "test"]
+  exclude_files = ["air.toml"]
 
 [color]
   app = ""

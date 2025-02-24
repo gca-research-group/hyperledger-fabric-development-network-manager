@@ -1,6 +1,6 @@
 package main
 
-import "github.com/gca-research-group/hyperledger-fabric-development-network-manager/api"
+import "github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app"
 
 func main() {
 	// config := pkg.Config{
@@ -37,5 +37,5 @@ func main() {
 
 	// _configtx := configtx.UpdateAnchors(yaml.Parse(configtx.Build(config)), config.Networks[0].Organizations)
 	// yaml.Write(_configtx, "./configtx.yaml")
-	api.Run()
+	app.Run()
 }
