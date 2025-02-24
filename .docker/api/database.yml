@@ -8,7 +8,7 @@ services:
     volumes:
       - hfndm_api_database_volume:/var/lib/postgresql/data
     env_file:
-      - envs/.env.api-database
+      - ./.env.database
     networks:
       - hfndm_network
     restart: always

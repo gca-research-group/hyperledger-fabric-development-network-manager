@@ -1,13 +1,6 @@
 package main
 
-import (
-	"net/http"
-
-	"github.com/gca-research-group/hyperledger-fabric-network-manager/config/database"
-	"github.com/gca-research-group/hyperledger-fabric-network-manager/pkg"
-	"github.com/gca-research-group/hyperledger-fabric-network-manager/repository"
-	"github.com/gin-gonic/gin"
-)
+import "github.com/gca-research-group/hyperledger-fabric-development-network-manager/api"
 
 func main() {
 	// config := pkg.Config{
@@ -44,23 +37,5 @@ func main() {
 
 	// _configtx := configtx.UpdateAnchors(yaml.Parse(configtx.Build(config)), config.Networks[0].Organizations)
 	// yaml.Write(_configtx, "./configtx.yaml")
-
-	database.Migrate()
-
-	server := gin.Default()
-
-	server.GET("/config", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, gin.H{"message": "teste"})
-	})
-
-	server.POST("/config", func(ctx *gin.Context) {
-		var body pkg.Config
-		if err := ctx.ShouldBindJSON(&body); err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		ctx.JSON(http.StatusOK, repository.Create(body))
-	})
-
-	server.Run()
+	api.Run()
 }

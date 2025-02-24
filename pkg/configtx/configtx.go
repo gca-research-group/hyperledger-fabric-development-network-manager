@@ -5,13 +5,13 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/gca-research-group/hyperledger-fabric-network-manager/pkg"
-	"github.com/gca-research-group/hyperledger-fabric-network-manager/pkg/configtx/application"
-	"github.com/gca-research-group/hyperledger-fabric-network-manager/pkg/configtx/capabilities"
-	"github.com/gca-research-group/hyperledger-fabric-network-manager/pkg/configtx/channel"
-	"github.com/gca-research-group/hyperledger-fabric-network-manager/pkg/configtx/orderer"
-	"github.com/gca-research-group/hyperledger-fabric-network-manager/pkg/configtx/organization"
-	"github.com/gca-research-group/hyperledger-fabric-network-manager/pkg/configtx/profiles"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/configtx/application"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/configtx/capabilities"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/configtx/channel"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/configtx/orderer"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/configtx/organization"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/configtx/profiles"
 )
 
 type ConfigTx struct {

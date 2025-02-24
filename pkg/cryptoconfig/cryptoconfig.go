@@ -3,7 +3,7 @@ package cryptoconfig
 import (
 	"strings"
 
-	"github.com/gca-research-group/hyperledger-fabric-network-manager/pkg"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
 )
 
 type Spec struct {
