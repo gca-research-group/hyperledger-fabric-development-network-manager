@@ -18,6 +18,7 @@ func Run() {
 
 	api := server.Group("/api/v1")
 	routes.SetupOrdererRoutes(api, db)
+	routes.SetupPeerRoutes(api, db)
 
 	server.Run()
 }
