@@ -22,8 +22,9 @@ go.sum
 # Environment Variables & Secrets
 .env
 .env.*
-!.env.example
+!.env**.example
 config/*.env
 
 # Docker Files (if using Docker)
 docker-compose.override.yml
+volumes
