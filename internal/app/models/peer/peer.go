@@ -1,4 +1,4 @@
-package orderer
+package peer
 
 import (
 	"errors"
@@ -13,7 +13,7 @@ type Peer struct {
 	Port   int
 }
 
-func (o *Peer) FindAll(db *gorm.DB) ([]Peer, error) {
+func (p *Peer) FindAll(db *gorm.DB) ([]Peer, error) {
 
 	var orderers []Peer
 
@@ -22,57 +22,57 @@ func (o *Peer) FindAll(db *gorm.DB) ([]Peer, error) {
 	return orderers, err
 }
 
-func (o *Peer) FindById(db *gorm.DB, id uint) (Peer, error) {
-	var orderer Peer
+func (p *Peer) FindById(db *gorm.DB, id uint) (Peer, error) {
+	var peer Peer
 
-	if err := db.First(&orderer, id).Error; err != nil {
-		return orderer, errors.New("RECORD_NOT_FOUND")
+	if err := db.First(&peer, id).Error; err != nil {
+		return peer, errors.New("RECORD_NOT_FOUND")
 	}
 
-	return orderer, nil
+	return peer, nil
 }
 
-func (o *Peer) Create(db *gorm.DB, orderer *Peer) (*Peer, error) {
-	if orderer.Domain == "" {
+func (p *Peer) Create(db *gorm.DB, peer *Peer) (*Peer, error) {
+	if peer.Domain == "" {
 		return nil, errors.New("DOMAIN_CANNOT_BE_EMPTY")
 	}
 
-	if orderer.Name == "" {
+	if peer.Name == "" {
 		return nil, errors.New("ORDERER_NAME_CANNOT_BE_EMPTY")
 	}
 
-	err := db.Create(&orderer).Error
+	err := db.Create(&peer).Error
 
-	return orderer, err
+	return peer, err
 }
 
-func (o *Peer) Update(db *gorm.DB, id uint, orderer *Peer) (*Peer, error) {
+func (p *Peer) Update(db *gorm.DB, id uint, peer *Peer) (*Peer, error) {
 
 	if id == 0 {
 		return nil, errors.New("ID_CANNOT_BE_EMPTY")
 	}
 
-	if orderer.Domain != "" {
-		db.Model(&orderer).Update("domain", orderer.Domain)
+	if peer.Domain != "" {
+		db.Model(&peer).Update("domain", peer.Domain)
 	}
 
-	if orderer.Port == 0 {
+	if peer.Port == 0 {
 		return nil, errors.New("PORT_CANNOT_BE_EMPTY")
 	}
 
-	if orderer.Name == "" {
+	if peer.Name == "" {
 		return nil, errors.New("ORDERER_NAME_CANNOT_BE_EMPTY")
 	}
 
-	orderer.ID = id
+	peer.ID = id
 
-	err := db.Save(&orderer).Error
+	err := db.Save(&peer).Error
 
-	return orderer, err
+	return peer, err
 }
 
-func (o *Peer) Delete(db *gorm.DB, id uint) error {
-	if _, err := o.FindById(db, id); err != nil {
+func (p *Peer) Delete(db *gorm.DB, id uint) error {
+	if _, err := p.FindById(db, id); err != nil {
 		return err
 	}
 

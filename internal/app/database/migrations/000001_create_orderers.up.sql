@@ -3,5 +3,5 @@ CREATE TABLE orderers (
     name        VARCHAR(255)    NOT NULL,
     domain      VARCHAR(255)    NOT NULL,
     port        INTEGER         NOT NULL,
-    crated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
