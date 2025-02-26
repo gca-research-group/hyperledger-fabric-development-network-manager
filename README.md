@@ -1,9 +1,9 @@
 <h1 align="center">
-    <br>
-        <img src="assets/logo.svg" height="256px" alt="Hyperledger Fabric Development Network Manager">
-    <br>
-    Hyperledger Fabric Development Network Manager
-    <br>
+  <br>
+    <img src="assets/logo.svg" height="256px" alt="Hyperledger Fabric Development Network Manager">
+  <br>
+  Hyperledger Fabric Development Network Manager
+  <br>
 </h1>
 
 <p align="center">
@@ -14,55 +14,22 @@
     <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white" />
 </p>
 
-## Overview
-
-Setting up a Hyperledger Fabric network can be a challenging task, even for experienced professionals. For those who are just starting out, or even for those who simply want to try the network in development mode, building the network can be time-consuming and requires a great deal of knowledge. The Hyperledger Fabric Development Network Manager is an open-source, free-to-use tool that aims to address this challenge by offering high-level abstractions. On the one hand, abstractions hide implementation and configuration details; on the other hand, we don't need to worry about these details if we're just learning how the network works or applying it to a business problem.
-
 > 🚧 **This project is currently under development.** 🚧  
 > Expect frequent updates and changes. Your feedback is appreciated!
 
+## Overview
+
+Setting up a Hyperledger Fabric network can be a challenging task, even for experienced professionals. Therefore, this project aims to offer a straightforward way to configure and run a local Hyperledger Fabric network.
+
+<!-- Setting up a Hyperledger Fabric network can be a challenging task, even for experienced professionals. For those who are just starting out, or even for those who simply want to try the network in development mode, building the network can be time-consuming and requires a great deal of knowledge. The Hyperledger Fabric Development Network Manager is an open-source, free-to-use tool that aims to address this challenge by offering high-level abstractions. On the one hand, abstractions hide implementation and configuration details; on the other hand, we don't need to worry about these details if we're just learning how the network works or applying it to a business problem. -->
+
 ## Features
 
--   **Automated Network Setup**: Set up a Hyperledger Fabric network with predefined configurations.
--   **Customizable Configurations**: Customize network parameters such as organizations, peers, and orderers.
-
-## Prerequisites
-
--   Docker
-
-## Installation
-
-#### The easiest way:
-
-```sh
-docker run image
-```
-
-#### If you are hard coding:
-
-> 🚧 **You will need also install the following dependencies** 🚧
->
-> -   [Golang](https://go.dev/)
-> -   [NodeJs](https://nodejs.org/en)
-
-1. Clone the repository:
-
-```sh
-git clone https://github.com/gca-research-group/hyperledger-fabric-network-manager.git
-```
-
-2. Navigate to the project directory and run:
-
-```sh
-# running the database
-docker compose up -d
-
-# running the api
-go run ./api/main.go
-
-# running the web application
-npm i && npm run start
-```
+- **Set up Orderers**
+- **Set up Peers**
+- **Set up Channels**
+- **Manage the Chaincode Lifecycle**
+- **Start/Stop the Network**
 
 ## Contributing
 
