@@ -3,9 +3,10 @@ import { MatTableModule } from '@angular/material/table';
 
 import { InfiniteScrollDirective } from '@app/directives/infinite-scroll';
 import { TranslateModule } from '@ngx-translate/core';
-import { Column, SmartContract } from '@app/models';
+import { Column } from '@app/models';
 import { IconButtonComponent } from '../icon-button';
 import { RouterLink } from '@angular/router';
+import { debounceTime, Subject } from 'rxjs';
 
 @Component({
   selector: 'app-table',
@@ -19,8 +20,8 @@ import { RouterLink } from '@angular/router';
     IconButtonComponent,
   ],
 })
-export class TableComponent {
-  dataSource = input<SmartContract[]>([]);
+export class TableComponent<T> {
+  dataSource = input<T[]>([]);
 
   displayedColumns = input<string[]>([]);
   _displayedColumns = computed(() => [
@@ -31,4 +32,12 @@ export class TableComponent {
   columns = input<Column[]>([]);
 
   loadMore = output();
+
+  scrollEvents = new Subject<void>();
+
+  constructor() {
+    this.scrollEvents.pipe(debounceTime(300)).subscribe(() => {
+      this.loadMore.emit();
+    });
+  }
 }

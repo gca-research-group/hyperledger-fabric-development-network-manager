@@ -1,9 +1,11 @@
+@use './../../variables' as *;
+
 .table-container {
-    height: 400px;
-    overflow-y: auto;
-    border: 1px solid #ccc;
-  }
-  
-  .mat-elevation-z8 {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  }
+  height: calc(100vh - $toolbar-height - $content-side-padding);
+  overflow-y: auto;
+  border: 1px solid #ccc;
+}
+
+.mat-elevation-z8 {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}

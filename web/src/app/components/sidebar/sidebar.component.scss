@@ -21,7 +21,7 @@ mat-sidenav.collapsed {
 }
 
 mat-sidenav-content {
-  padding: 0 4px;
+  padding: 0 $content-side-padding;
 }
 
 .mat-drawer,

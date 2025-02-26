@@ -1,11 +1,13 @@
-<div class="table-container" appInfiniteScroll (scrolled)="loadMore.emit()">
-  <table mat-table [dataSource]="dataSource()">
+<div class="table-container" appInfiniteScroll (scrolled)="scrollEvents.next()">
+  <table mat-table sticky  [dataSource]="dataSource()">
     @for (column of columns(); track column.field) {
       <ng-container [matColumnDef]="column.field">
         <th mat-header-cell *matHeaderCellDef>
           {{ column.label | translate }}
         </th>
-        <td mat-cell *matCellDef="let element">{{ element[column.field] }}</td>
+        <td mat-cell *matCellDef="let element">
+          {{ element[column.field] }}
+        </td>
       </ng-container>
     }
     <ng-container [matColumnDef]="'add'">
@@ -14,6 +16,7 @@
           <app-icon-button [icon]="'add_circle'" />
         </a>
       </th>
+      <td mat-cell *matCellDef="let element"></td>
     </ng-container>
 
     <tr mat-header-row *matHeaderRowDef="_displayedColumns()"></tr>
