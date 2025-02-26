@@ -2,8 +2,6 @@ package orderer
 
 import (
 	"errors"
-	"log"
-	"math"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/http"
 	"gorm.io/gorm"
@@ -20,26 +18,13 @@ func (o *Orderer) FindAll(db *gorm.DB, query http.Query) (http.Response[[]Ordere
 
 	var orderers []Orderer
 	var total int64
-	hasMore := true
 
 	err := db.Offset(query.Offset).Limit(query.Limit).Find(&orderers).Error
 	db.Model(&Orderer{}).Count(&total)
-	log.Printf("Offset %d, Limit %d", query.Offset, query.Limit)
-	if (query.Offset + query.Limit) >= int(total) {
-		hasMore = false
-	}
 
-	if len(orderers) == 0 {
-		hasMore = false
-	}
+	response := http.Response[[]Orderer]{}
 
-	return http.Response[[]Orderer]{
-		HasMore: hasMore,
-		Total:   int(total),
-		Page:    (query.Offset / query.Limit) + 1,
-		Pages:   int(math.Ceil(float64(total) / float64(query.Limit))),
-		Data:    orderers,
-	}, err
+	return *response.NewResponse(orderers, query, int(total)), err
 }
 
 func (o *Orderer) FindById(db *gorm.DB, id uint) (Orderer, error) {
