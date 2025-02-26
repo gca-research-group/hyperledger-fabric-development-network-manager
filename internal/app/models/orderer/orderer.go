@@ -2,24 +2,44 @@ package orderer
 
 import (
 	"errors"
+	"log"
+	"math"
 
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/http"
 	"gorm.io/gorm"
 )
 
 type Orderer struct {
-	ID     uint `gorm:"primaryKey"`
-	Name   string
-	Domain string
-	Port   int
+	ID     uint   `gorm:"primaryKey" json:"id"`
+	Name   string `json:"name"`
+	Domain string `json:"domain"`
+	Port   int    `json:"port"`
 }
 
-func (o *Orderer) FindAll(db *gorm.DB) ([]Orderer, error) {
+func (o *Orderer) FindAll(db *gorm.DB, query http.Query) (http.Response[[]Orderer], error) {
 
 	var orderers []Orderer
+	var total int64
+	hasMore := true
 
-	err := db.Find(&orderers).Error
+	err := db.Offset(query.Offset).Limit(query.Limit).Find(&orderers).Error
+	db.Model(&Orderer{}).Count(&total)
+	log.Printf("Offset %d, Limit %d", query.Offset, query.Limit)
+	if (query.Offset + query.Limit) >= int(total) {
+		hasMore = false
+	}
 
-	return orderers, err
+	if len(orderers) == 0 {
+		hasMore = false
+	}
+
+	return http.Response[[]Orderer]{
+		HasMore: hasMore,
+		Total:   int(total),
+		Page:    (query.Offset / query.Limit) + 1,
+		Pages:   int(math.Ceil(float64(total) / float64(query.Limit))),
+		Data:    orderers,
+	}, err
 }
 
 func (o *Orderer) FindById(db *gorm.DB, id uint) (Orderer, error) {

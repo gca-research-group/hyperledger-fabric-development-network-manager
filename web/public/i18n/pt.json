@@ -4,12 +4,13 @@
   "configuration-files": "Arquivos de Configuração",
   "connection-script": "Script de Conexão",
   "createdAt": "Data de Cadastro",
+  "domain": "Domínio",
   "home": "Home",
   "id": "Id",
   "monitoring-system": "Sistema de Monitoramento",
   "name": "Nome",
+  "save": "Salvar",
   "settings": "Configurações",
-  "domain": "Domínio",
   "smart-contracts": "Contratos Inteligentes",
   "updatedAt": "Data de Atualizaçao"
 }

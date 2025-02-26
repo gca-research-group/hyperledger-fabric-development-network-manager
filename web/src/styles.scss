@@ -1,13 +1,13 @@
 /* You can add global styles to this file, and also import other style files */
 @use "@ng-select/ng-select/themes/material.theme.css";
 
-@use "bootstrap/dist/css/bootstrap-grid.min.css";
-@use "bootstrap/dist/css/bootstrap-utilities.min.css";
+@use "bootstrap/dist/css/bootstrap-grid.min.css" as *;
+@use "bootstrap/dist/css/bootstrap-utilities.min.css" as *;
 
 @use 'ngx-toastr/toastr';
-@import 'bootstrap/scss/functions';
-@import 'bootstrap/scss/variables';
-@import 'bootstrap/scss/mixins';
+@import  'bootstrap/scss/_functions';
+@import  'bootstrap/scss/variables';
+@import  'bootstrap/scss/mixins';
 @import 'ngx-toastr/toastr-bs5-alert';
 
 html,

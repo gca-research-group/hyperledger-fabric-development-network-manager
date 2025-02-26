@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/errors"
+	custom "github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/http"
 	model "github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/orderer"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -12,7 +13,11 @@ import (
 
 func Index(c *gin.Context, db *gorm.DB) {
 	entity := model.Orderer{}
-	data, err := entity.FindAll(db)
+
+	query := custom.Query{}
+	query.UpdateFromContext(c)
+
+	data, err := entity.FindAll(db, query)
 
 	if err != nil {
 		c.Error(&errors.AppError{
@@ -22,7 +27,7 @@ func Index(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": data})
+	c.JSON(http.StatusOK, data)
 }
 
 func Show(c *gin.Context, db *gorm.DB) {

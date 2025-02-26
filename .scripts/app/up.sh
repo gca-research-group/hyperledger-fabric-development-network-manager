@@ -1,1 +1,1 @@
-docker compose -f ./.docker/api/network.yml -f ./.docker/api/database.yml up --build -d
+docker compose -f ./.docker/api/docker-compose.yml up hfndm_database --build -d
