@@ -4,19 +4,19 @@ import { BreadcrumbService } from '@app/services/breadcrumb';
 
 const COLUMNS = [
   {
-    field: 'id',
+    id: 'id',
     label: 'id',
   },
   {
-    field: 'name',
+    id: 'name',
     label: 'name',
   },
   {
-    field: 'createdAt',
+    id: 'createdAt',
     label: 'createdAt',
   },
   {
-    field: 'updatedAt',
+    id: 'updatedAt',
     label: 'updatedAt',
   },
 ];
@@ -36,14 +36,14 @@ const BREADCRUMB = [
 
 @Component({
   selector: 'app-configuration-files-list',
-  imports: [TableComponent],
   templateUrl: './list.component.html',
   styleUrl: './list.component.scss',
+  imports: [TableComponent],
 })
 export class ListComponent implements OnDestroy {
   columns = COLUMNS;
 
-  displayedColumns = COLUMNS.map(column => column.field);
+  displayedColumns = COLUMNS.map(column => column.id);
 
   breadcrumbService = inject(BreadcrumbService);
 

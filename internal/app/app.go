@@ -31,7 +31,6 @@ func Run() {
 
 	db := database.Connection()
 	api := server.Group("/api/v1")
-
 	routes.SetUp(api, db)
 
 	server.Run()

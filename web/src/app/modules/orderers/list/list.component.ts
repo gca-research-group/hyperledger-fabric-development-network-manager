@@ -6,11 +6,12 @@ import {
   inject,
   OnDestroy,
   OnInit,
+  TemplateRef,
   viewChild,
 } from '@angular/core';
 import { BreadcrumbService } from '@app/services/breadcrumb';
 import { OrderersService } from '../services/orderers.service';
-import { ColumnType, Orderer } from '@app/models';
+import { Column, ColumnType, Orderer } from '@app/models';
 import {
   FormBuilder,
   FormGroup,
@@ -21,33 +22,44 @@ import { TranslateModule } from '@ngx-translate/core';
 import { InputComponent } from '@app/components/input';
 import { debounceTime } from 'rxjs';
 import { TableComponent } from '@app/components/table';
+import { IconButtonComponent } from '@app/components/icon-button';
+import { RouterLink } from '@angular/router';
+import { DeleteDialogComponent } from '@app/components/delete-dialog';
+import { MatDialog } from '@angular/material/dialog';
+import { ToastrService } from 'ngx-toastr';
 
-const COLUMNS = [
+const COLUMNS: Column[] = [
   {
-    field: 'id',
+    id: 'id',
     label: 'id',
   },
   {
-    field: 'name',
+    id: 'name',
     label: 'name',
   },
   {
-    field: 'domain',
+    id: 'domain',
     label: 'domain',
   },
   {
-    field: 'port',
+    id: 'port',
     label: 'port',
   },
   {
-    field: 'createdAt',
+    id: 'createdAt',
     label: 'createdAt',
-    type: ColumnType.DATETIME,
+    rowType: ColumnType.DATETIME,
   },
   {
-    field: 'updatedAt',
+    id: 'updatedAt',
     label: 'updatedAt',
-    type: ColumnType.DATETIME,
+    rowType: ColumnType.DATETIME,
+  },
+  {
+    id: 'actions',
+    label: '',
+    columnType: ColumnType.TEMPLATE,
+    rowType: ColumnType.TEMPLATE,
   },
 ];
 
@@ -72,14 +84,18 @@ const BREADCRUMB = [
     TableComponent,
     ReactiveFormsModule,
     FormsModule,
+    RouterLink,
+
     TranslateModule,
+
     InputComponent,
+    IconButtonComponent,
   ],
 })
 export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
   columns = COLUMNS;
 
-  displayedColumns = COLUMNS.map(column => column.field);
+  displayedColumns = COLUMNS.map(column => column.id);
 
   private breadcrumbService = inject(BreadcrumbService);
   private service = inject(OrderersService);
@@ -97,6 +113,14 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
   tableHeight!: string;
   private cdk = inject(ChangeDetectorRef);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private actionsColumn = viewChild<TemplateRef<any>>('actionsColumn');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private actionsRow = viewChild<TemplateRef<any>>('actionsRow');
+
+  readonly dialog = inject(MatDialog);
+  private toastr = inject(ToastrService);
+
   constructor() {
     this.breadcrumbService.update(BREADCRUMB);
 
@@ -109,13 +133,13 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
       pageSize: 20,
     });
 
-    this.form.valueChanges.pipe(debounceTime(300)).subscribe(value => {
-      this.search(value);
+    this.form.valueChanges.pipe(debounceTime(300)).subscribe(() => {
+      this.search();
     });
   }
 
   ngOnInit(): void {
-    this.search(this.form.value);
+    this.search();
   }
 
   ngAfterViewInit(): void {
@@ -126,6 +150,19 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
     ).marginBottom;
 
     this.tableHeight = `calc(100vh - var(--hfdnm-toolbar-height) - (2 * var(--hfdnm-content-vertical-padding)) - ${form?.offsetHeight}px - ${marginBottom})`;
+
+    this.columns = this.columns.map(column => {
+      if (column.id !== 'actions') {
+        return column;
+      }
+
+      return {
+        ...column,
+        templateRow: this.actionsRow(),
+        templateColumn: this.actionsColumn(),
+      };
+    });
+
     this.cdk.detectChanges();
   }
 
@@ -133,15 +170,42 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.breadcrumbService.reset();
   }
 
+  openDialog(item: Orderer): void {
+    const dialogRef = this.dialog.open(DeleteDialogComponent, {
+      data: item.id,
+    });
+
+    dialogRef.afterClosed().subscribe((id: number | undefined) => {
+      if (id) {
+        this.service.delete(id).subscribe({
+          next: () => {
+            this.data = this.data.filter(item => item.id !== id);
+            this.toastr.success('DELETED_SUCCESSFULLY', undefined, {
+              closeButton: true,
+              progressBar: true,
+            });
+          },
+          error: error => {
+            console.log('[error]', error);
+          },
+        });
+      }
+    });
+  }
+
   scroll() {
     if (this.hasMore) {
-      this.form.patchValue({ page: (this.form.get('page')?.value ?? 0) + 1 });
+      this.form.patchValue(
+        { page: (this.form.get('page')?.value ?? 0) + 1 },
+        { emitEvent: false },
+      );
       this.findAll();
     }
   }
 
   findAll() {
-    this.service.findAll(this.form.value).subscribe({
+    const _params = this.removeNullFields(this.form.value);
+    this.service.findAll(_params).subscribe({
       next: response => {
         this.data = [...this.data, ...response.data];
         this.hasMore = response.hasMore;
@@ -154,12 +218,14 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   removeNullFields<T extends object>(obj: T): Partial<T> {
     return Object.fromEntries(
-      Object.entries(obj).filter(([_, value]) => value !== null),
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      Object.entries(obj).filter(([_index, value]) => value !== null),
     ) as Partial<T>;
   }
 
-  search(params: object) {
-    const _params = this.removeNullFields(params);
+  search() {
+    this.form.patchValue({ page: 1 }, { emitEvent: false });
+    const _params = this.removeNullFields(this.form.value);
     this.service.findAll(_params).subscribe({
       next: response => {
         this.data = response.data;

@@ -4,6 +4,7 @@
   "configuration-files": "Archivos de Configuración",
   "connection-script": "Script de Conexión",
   "createdAt": "Data de Registro",
+  "delete-record": "Excluir este registro?",
   "home": "Home",
   "id": "Id",
   "monitoring-system": "Sistema de Monitoreo",

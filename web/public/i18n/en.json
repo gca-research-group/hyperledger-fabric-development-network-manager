@@ -4,6 +4,7 @@
   "configuration-files": "Configuraton Files",
   "connection-script": "Connection Script",
   "createdAt": "Created At",
+  "delete-record": "Delete the record?",
   "domain": "Domain",
   "home": "Home",
   "id": "Id",

@@ -16,6 +16,10 @@ export class OrderersService {
     });
   }
 
+  delete(id: number) {
+    return this.http.delete(`${this.url}${id}`);
+  }
+
   save(orderer: Orderer) {
     return this.http.post(this.url, orderer);
   }

@@ -11,4 +11,13 @@
   [displayedColumns]="displayedColumns"
   [dataSource]="data"
   (loadMore)="scroll()"
-/>
+>
+  <ng-template #actionsColumn>
+    <a routerLink="./add">
+      <app-icon-button icon="add_circle" />
+    </a>
+  </ng-template>
+  <ng-template #actionsRow let-element="element">
+    <app-icon-button icon="delete" tooltip="delete" (click)="openDialog(element)" />
+  </ng-template>
+</app-table>

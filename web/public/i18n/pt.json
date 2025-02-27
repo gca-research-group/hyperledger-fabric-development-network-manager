@@ -4,6 +4,7 @@
   "configuration-files": "Arquivos de Configuração",
   "connection-script": "Script de Conexão",
   "createdAt": "Data de Cadastro",
+  "delete-record": "Excluir este registro?",
   "domain": "Domínio",
   "home": "Home",
   "id": "Id",
