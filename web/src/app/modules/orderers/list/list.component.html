@@ -1,4 +1,12 @@
+<form [formGroup]="form" class="mb-3 d-flex" style="gap: 8px" #filters>
+  <app-input formControlName="id" label="id" type="number" class="col" />
+  <app-input formControlName="name" label="name" class="col" />
+  <app-input formControlName="domain" label="domain" class="col" />
+  <app-input formControlName="port" label="port" type="number" class="col" />
+</form>
+
 <app-table
+  [height]="tableHeight"
   [columns]="columns"
   [displayedColumns]="displayedColumns"
   [dataSource]="data"

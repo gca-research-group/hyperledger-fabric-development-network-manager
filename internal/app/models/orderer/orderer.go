@@ -2,29 +2,57 @@ package orderer
 
 import (
 	"errors"
+	"time"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/http"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/sql"
 	"gorm.io/gorm"
 )
 
-type Orderer struct {
-	ID     uint   `gorm:"primaryKey" json:"id"`
-	Name   string `json:"name"`
-	Domain string `json:"domain"`
-	Port   int    `json:"port"`
+type OrdererDto struct {
+	ID     int    `form:"id"`
+	Name   string `form:"name"`
+	Domain string `form:"domain"`
+	Port   int    `form:"port"`
 }
 
-func (o *Orderer) FindAll(db *gorm.DB, query http.Query) (http.Response[[]Orderer], error) {
+type Orderer struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	Name      string    `json:"name"`
+	Domain    string    `json:"domain"`
+	Port      int       `json:"port"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+func (o *Orderer) FindAll(db *gorm.DB, queryOptions sql.QueryOptions, queryParams OrdererDto) (http.Response[[]Orderer], error) {
 
 	var orderers []Orderer
 	var total int64
+	stmt := db.Model(&Orderer{})
 
-	err := db.Offset(query.Offset).Limit(query.Limit).Find(&orderers).Error
-	db.Model(&Orderer{}).Count(&total)
+	if queryParams.Domain != "" {
+		stmt.Where("domain ilike ?", "%"+queryParams.Domain+"%")
+	}
+
+	if queryParams.Name != "" {
+		stmt.Where("name ilike ?", "%"+queryParams.Name+"%")
+	}
+
+	if queryParams.Port != 0 {
+		stmt.Where("port = ?", queryParams.Port)
+	}
+
+	if queryParams.ID != 0 {
+		stmt.Where("id = ?", queryParams.ID)
+	}
+
+	err := stmt.Offset(queryOptions.Offset).Limit(queryOptions.Limit).Find(&orderers).Error
+	stmt.Count(&total)
 
 	response := http.Response[[]Orderer]{}
 
-	return *response.NewResponse(orderers, query, int(total)), err
+	return *response.NewResponse(orderers, queryOptions, int(total)), err
 }
 
 func (o *Orderer) FindById(db *gorm.DB, id uint) (Orderer, error) {

@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/errors"
-	custom "github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/http"
 	model "github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/orderer"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/sql"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -14,10 +14,13 @@ import (
 func Index(c *gin.Context, db *gorm.DB) {
 	entity := model.Orderer{}
 
-	query := custom.Query{}
-	query.UpdateFromContext(c)
+	var queryParams model.OrdererDto
+	c.ShouldBindQuery(&queryParams)
 
-	data, err := entity.FindAll(db, query)
+	queryOptions := sql.QueryOptions{}
+	queryOptions.UpdateFromContext(c)
+
+	data, err := entity.FindAll(db, queryOptions, queryParams)
 
 	if err != nil {
 		c.Error(&errors.AppError{

@@ -8,6 +8,7 @@
   "id": "Id",
   "monitoring-system": "Sistema de Monitoreo",
   "name": "Nombre",
+  "port": "Puerto",
   "save": "Salvar",
   "settings": "Configuraciónes",
   "smart-contracts": "Contratos Inteligentes",

@@ -15,6 +15,7 @@ import { BreadcrumbComponent } from '../breadcrumb';
 import { BreadcrumbService } from '@app/services/breadcrumb';
 import { Breadcrumb } from '@app/models';
 import { Subject, takeUntil } from 'rxjs';
+import { LanguageService } from '@app/services/language';
 
 @Component({
   selector: 'app-toolbar',
@@ -29,13 +30,14 @@ import { Subject, takeUntil } from 'rxjs';
   ],
 })
 export class ToolbarComponent implements OnDestroy {
-  isCollapsed = true;
-  language = signal(localStorage.getItem('language') ?? 'en');
-
-  label = computed(() => this.language());
-
   private sidebarService = inject(SidebarService);
   private translateService = inject(TranslateService);
+  private languageService = inject(LanguageService);
+
+  isCollapsed = true;
+  language = signal(this.languageService.language);
+
+  label = computed(() => this.language());
 
   private breadcrumbService = inject(BreadcrumbService);
   breadcrumb: Breadcrumb[] = [];
@@ -51,7 +53,7 @@ export class ToolbarComponent implements OnDestroy {
 
     effect(() => {
       this.translateService.use(this.language());
-      localStorage.setItem('language', this.language());
+      this.languageService.update(this.language());
     });
   }
 

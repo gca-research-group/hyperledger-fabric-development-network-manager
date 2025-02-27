@@ -1,12 +1,11 @@
-@use './../../variables' as *;
-
 mat-toolbar {
   padding: 0;
-  height: $toolbar-height;
+  height: var(--hfdnm-toolbar-height);
+  border-bottom: 1px solid var(--hfdnm-sidebar-background-color);
 }
 
 app-icon-button {
-  width: $sidenav-collapsed-width;
+  width: var(--hfdnm-sidebar-collapsed-width);
 }
 
 .toolbar-container {

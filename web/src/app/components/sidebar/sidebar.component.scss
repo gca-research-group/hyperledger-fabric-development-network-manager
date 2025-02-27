@@ -1,27 +1,25 @@
-@use './../../variables' as *;
-
 .sidenav-container {
-  height: calc(100vh - $toolbar-height);
+  height: calc(100vh - var(--hfdnm-toolbar-height));
 }
 
 mat-sidenav {
   padding-top: 8px;
   width: 250px;
   transition: width 0.3s ease;
-  background-color: #333;
+  background-color: var(--hfdnm-sidebar-background-color);
   color: white;
 }
 
 .sidenav-container app-icon {
-  min-width: $sidenav-collapsed-width;
+  min-width: var(--hfdnm-sidebar-collapsed-width);
 }
 
 mat-sidenav.collapsed {
-  width: $sidenav-collapsed-width;
+  width: var(--hfdnm-sidebar-collapsed-width);
 }
 
 mat-sidenav-content {
-  padding: 0 $content-side-padding;
+  padding: var(--hfdnm-content-vertical-padding) var(--hfdnm-content-horizontal-padding);
 }
 
 .mat-drawer,

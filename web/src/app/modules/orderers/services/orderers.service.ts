@@ -10,9 +10,9 @@ export class OrderersService {
   private readonly http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/orderer/`;
 
-  findAll(page: number) {
+  findAll(params: object) {
     return this.http.get<{ data: Orderer[]; hasMore: boolean }>(this.url, {
-      params: { page },
+      params: { ...params },
     });
   }
 

@@ -1,4 +1,4 @@
-package http
+package sql
 
 import (
 	"strconv"
@@ -6,12 +6,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Query struct {
+type QueryOptions struct {
 	Limit  int
 	Offset int
 }
 
-func (q *Query) UpdateFromContext(c *gin.Context) {
+func (q *QueryOptions) UpdateFromContext(c *gin.Context) {
 	pageSize, _ := strconv.Atoi(c.Query("pageSize"))
 	page, _ := strconv.Atoi(c.Query("page"))
 
@@ -27,5 +27,4 @@ func (q *Query) UpdateFromContext(c *gin.Context) {
 
 	q.Limit = pageSize
 	q.Offset = offset
-
 }

@@ -1,7 +1,8 @@
 CREATE TABLE orderers (
-    id          SERIAL PRIMARY KEY,
-    name        VARCHAR(255)    NOT NULL,
-    domain      VARCHAR(255)    NOT NULL,
-    port        INTEGER         NOT NULL,
-    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  domain VARCHAR(255) NOT NULL,
+  port INTEGER NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP
 );
