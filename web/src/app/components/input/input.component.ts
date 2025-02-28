@@ -22,6 +22,7 @@ export class InputComponent
   implements OnInit
 {
   @Input() label = '';
+  @Input() placeholder = '';
   @Input() type = 'text';
   @Input() formControlName!: string;
 }

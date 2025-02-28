@@ -16,11 +16,19 @@ export class OrderersService {
     });
   }
 
+  findById(id: number) {
+    return this.http.get(`${this.url}${id}`);
+  }
+
   delete(id: number) {
     return this.http.delete(`${this.url}${id}`);
   }
 
   save(orderer: Orderer) {
+    if (orderer.id) {
+      return this.http.put(`${this.url}`, orderer);
+    }
+
     return this.http.post(this.url, orderer);
   }
 }

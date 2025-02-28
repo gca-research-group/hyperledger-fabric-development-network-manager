@@ -9,6 +9,8 @@ services:
       - hfndm_database_volume:/var/lib/postgresql/data
     env_file:
       - ./env/.env.database
+    environment:
+      - TZ=UTC
     networks:
       - hfndm_network
     restart: unless-stopped

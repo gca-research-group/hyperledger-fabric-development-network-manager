@@ -63,7 +63,7 @@ func Show(c *gin.Context, db *gorm.DB) {
 func Create(c *gin.Context, db *gorm.DB) {
 	var data ChannelDto
 
-	if err := c.BindJSON(&data); err != nil {
+	if err := c.ShouldBindJSON(&data); err != nil {
 		c.Error(&errors.AppError{
 			Code:    http.StatusInternalServerError,
 			Message: err.Error(),
@@ -90,7 +90,7 @@ func Update(c *gin.Context, db *gorm.DB) {
 	var data ChannelDto
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	if err := c.BindJSON(&data); err != nil {
+	if err := c.ShouldBindJSON(&data); err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}

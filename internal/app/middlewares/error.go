@@ -12,14 +12,23 @@ func ErrorHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
 
+		if c.Writer.Written() {
+			return
+		}
+
 		if len(c.Errors) > 0 {
 			var appErr *custom.AppError
-			if errors.As(c.Errors[0].Err, &appErr) {
-				c.JSON(appErr.Code, appErr)
+			message := "UNEXPECTED_ERROR"
+
+			if errors.As(c.Errors[0].Err, &appErr) && appErr.Code != http.StatusInternalServerError {
+				c.JSON(appErr.Code, custom.AppError{
+					Code:    appErr.Code,
+					Message: appErr.Message,
+				})
 			} else {
 				c.JSON(http.StatusInternalServerError, custom.AppError{
 					Code:    http.StatusInternalServerError,
-					Message: "An unexpected error occurred",
+					Message: message,
 				})
 			}
 		}

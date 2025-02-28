@@ -79,14 +79,14 @@ func (o *Orderer) Create(db *gorm.DB, orderer *Orderer) (*Orderer, error) {
 	return orderer, err
 }
 
-func (o *Orderer) Update(db *gorm.DB, id uint, orderer *Orderer) (*Orderer, error) {
+func (o *Orderer) Update(db *gorm.DB, orderer Orderer) (*Orderer, error) {
 
-	if id == 0 {
+	if orderer.ID == 0 {
 		return nil, errors.New("ID_CANNOT_BE_EMPTY")
 	}
 
-	if orderer.Domain != "" {
-		db.Model(&orderer).Update("domain", orderer.Domain)
+	if orderer.Domain == "" {
+		return nil, errors.New("ORDERER_DOMAIN_CANNOT_BE_EMPTY")
 	}
 
 	if orderer.Port == 0 {
@@ -97,11 +97,10 @@ func (o *Orderer) Update(db *gorm.DB, id uint, orderer *Orderer) (*Orderer, erro
 		return nil, errors.New("ORDERER_NAME_CANNOT_BE_EMPTY")
 	}
 
-	orderer.ID = id
+	_orderer := Orderer{}
+	err := db.Model(&_orderer).Where("id = ?", orderer.ID).UpdateColumns(Orderer{Name: orderer.Name, Domain: orderer.Domain, Port: orderer.Port, UpdatedAt: time.Now().UTC()}).Error
 
-	err := db.Save(&orderer).Error
-
-	return orderer, err
+	return &_orderer, err
 }
 
 func (o *Orderer) Delete(db *gorm.DB, id uint) error {
@@ -109,7 +108,18 @@ func (o *Orderer) Delete(db *gorm.DB, id uint) error {
 		return err
 	}
 
-	db.Delete(&Orderer{}, id)
+	err := db.Delete(&Orderer{}, id).Error
 
-	return nil
+	return err
+}
+
+func (o *Orderer) BeforeCreate(tx *gorm.DB) (err error) {
+	o.CreatedAt = time.Now().UTC()
+	o.UpdatedAt = time.Now().UTC()
+	return
+}
+
+func (o *Orderer) BeforeUpdate(tx *gorm.DB) (err error) {
+	o.UpdatedAt = time.Now().UTC()
+	return
 }

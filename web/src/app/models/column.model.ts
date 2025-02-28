@@ -13,4 +13,5 @@ export interface Column {
   templateColumn?: TemplateRef<any>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   templateRow?: TemplateRef<any>;
+  width?: number;
 }

@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { MatButton } from '@angular/material/button';
 import { TranslateModule } from '@ngx-translate/core';
 
@@ -6,8 +6,13 @@ import { TranslateModule } from '@ngx-translate/core';
   selector: 'app-button',
   templateUrl: './button.component.html',
   styleUrl: './button.component.scss',
+  host: {
+    '[attr.disabled]': 'disabled()',
+  },
   imports: [MatButton, TranslateModule],
 })
 export class ButtonComponent {
-  @Input() label!: string;
+  label = input<string>('');
+  type = input<string>('button');
+  disabled = input<boolean>();
 }

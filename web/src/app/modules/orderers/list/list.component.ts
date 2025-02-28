@@ -60,6 +60,7 @@ const COLUMNS: Column[] = [
     label: '',
     columnType: ColumnType.TEMPLATE,
     rowType: ColumnType.TEMPLATE,
+    width: 150,
   },
 ];
 

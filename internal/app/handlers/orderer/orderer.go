@@ -52,8 +52,11 @@ func Show(c *gin.Context, db *gorm.DB) {
 func Create(c *gin.Context, db *gorm.DB) {
 	var data model.Orderer
 
-	if err := c.BindJSON(&data); err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.Error(&errors.AppError{
+			Code:    http.StatusInternalServerError,
+			Message: err.Error(),
+		})
 		return
 	}
 
@@ -73,15 +76,17 @@ func Create(c *gin.Context, db *gorm.DB) {
 
 func Update(c *gin.Context, db *gorm.DB) {
 	var data model.Orderer
-	id, _ := strconv.Atoi(c.Param("id"))
 
-	if err := c.BindJSON(&data); err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.Error(&errors.AppError{
+			Code:    http.StatusInternalServerError,
+			Message: err.Error(),
+		})
 		return
 	}
 
 	entity := model.Orderer{}
-	_, err := entity.Update(db, uint(id), &data)
+	_, err := entity.Update(db, data)
 
 	if err != nil {
 		c.Error(&errors.AppError{

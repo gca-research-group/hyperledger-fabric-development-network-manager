@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -13,6 +13,8 @@ import { ToastrService } from 'ngx-toastr';
 import { ButtonComponent } from '@app/components/button';
 import { OrderersService } from '../services/orderers.service';
 import { Location } from '@angular/common';
+import { finalize } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
 
 const BREADCRUMB = [
   {
@@ -22,9 +24,6 @@ const BREADCRUMB = [
   {
     label: 'orderers',
     url: '/orderers',
-  },
-  {
-    label: 'add',
   },
 ];
 
@@ -41,29 +40,58 @@ const BREADCRUMB = [
     ButtonComponent,
   ],
 })
-export class FormComponent implements OnDestroy {
+export class FormComponent implements OnInit, OnDestroy {
   form!: FormGroup;
 
   private formBuilder = inject(FormBuilder);
   private breadcrumbService = inject(BreadcrumbService);
   private service = inject(OrderersService);
   private location = inject(Location);
+  private activatedRoute = inject(ActivatedRoute);
   loading = false;
 
   private toastr = inject(ToastrService);
 
   constructor() {
     this.form = this.formBuilder.group({
-      name: ['Orderer', Validators.required],
-      domain: ['orderer.example.com', Validators.required],
-      port: [7050, Validators.required],
+      id: null,
+      name: [null, Validators.required],
+      domain: [null, Validators.required],
+      port: [null, Validators.required],
     });
 
-    this.breadcrumbService.update(BREADCRUMB);
+    this.breadcrumbService.update([
+      ...BREADCRUMB,
+      {
+        label: 'add',
+      },
+    ]);
+  }
+
+  ngOnInit(): void {
+    const id = this.activatedRoute.snapshot.params['id'];
+    if (id) {
+      this.find(id);
+      this.breadcrumbService.update([...BREADCRUMB, { label: 'edit' }]);
+    }
   }
 
   ngOnDestroy(): void {
     this.breadcrumbService.reset();
+  }
+
+  find(id: number) {
+    this.service.findById(id).subscribe({
+      next: orderer => {
+        this.form.patchValue(orderer);
+      },
+      error: error => {
+        this.toastr.error(error.message, undefined, {
+          closeButton: true,
+          progressBar: true,
+        });
+      },
+    });
   }
 
   save() {
@@ -76,20 +104,27 @@ export class FormComponent implements OnDestroy {
     }
 
     this.loading = true;
-    this.service.save(this.form.value).subscribe({
-      next: () => {
-        this.toastr.success('RECORD_CREATED_SUCCESSFULLY', undefined, {
-          closeButton: true,
-          progressBar: true,
-        });
-        this.location.back();
-      },
-      error: error => {
-        this.toastr.error(error.message, undefined, {
-          closeButton: true,
-          progressBar: true,
-        });
-      },
-    });
+    this.service
+      .save({ ...this.form.value, port: +this.form.value.port })
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+        }),
+      )
+      .subscribe({
+        next: () => {
+          this.toastr.success('RECORD_CREATED_SUCCESSFULLY', undefined, {
+            closeButton: true,
+            progressBar: true,
+          });
+          this.location.back();
+        },
+        error: error => {
+          this.toastr.error(error.message, undefined, {
+            closeButton: true,
+            progressBar: true,
+          });
+        },
+      });
   }
 }

@@ -13,14 +13,14 @@ func SetupOrdererRoutes(engine *gin.RouterGroup, db *gorm.DB) *gin.RouterGroup {
 		routes.POST("/", func(c *gin.Context) {
 			handler.Create(c, db)
 		})
+		routes.PUT("/", func(c *gin.Context) {
+			handler.Update(c, db)
+		})
 		routes.GET("/", func(c *gin.Context) {
 			handler.Index(c, db)
 		})
 		routes.GET("/:id", func(c *gin.Context) {
 			handler.Show(c, db)
-		})
-		routes.PUT("/:id", func(c *gin.Context) {
-			handler.Update(c, db)
 		})
 		routes.DELETE("/:id", func(c *gin.Context) {
 			handler.Delete(c, db)
