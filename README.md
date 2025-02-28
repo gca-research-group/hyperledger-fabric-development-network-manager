@@ -36,9 +36,10 @@ Setting up a Hyperledger Fabric network can be a challenging task, even for expe
 > Currently, you can only execute this project by cloning it. However, we are working on developing a Docker image. Therefore, in the coming weeks, you will be able to run it with a single, fast command.
 
 ### Prerequisites
-- Golang +1.24
 - Docker
 - NodeJs +22.0
+- Golang +1.24
+- [Air](https://github.com/air-verse/air)
 
 ### Executing
 
@@ -47,19 +48,14 @@ Setting up a Hyperledger Fabric network can be a challenging task, even for expe
 git clone https://github.com/gca-research-group/hyperledger-fabric-development-network-manager.git
 ```
 
-- Start the database
+- Running the api
 ```sh
-./.scripts/app/up.sh
+./.scripts/app/api/up.sh
 ```
 
-- Start the backend
+- Running the frontend
 ```sh
-air
-```
-
-- Start the frontend
-```sh
-cd web && npm run start
+./.scripts/app/web/up.sh
 ```
 
 ## Contributing
