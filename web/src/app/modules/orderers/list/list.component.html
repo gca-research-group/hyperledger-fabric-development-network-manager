@@ -1,8 +1,10 @@
 <form [formGroup]="form" class="mb-3 d-flex" style="gap: 8px" #filters>
-  <app-input formControlName="id" label="id" type="number" class="col" />
+  <app-input formControlName="id" label="id" type="number" [min]="1" class="col" />
   <app-input formControlName="name" label="name" class="col" />
   <app-input formControlName="domain" label="domain" class="col" />
   <app-input formControlName="port" label="port" type="number" class="col" />
+  <app-input formControlName="page" label="page" type="number" [min]="1" class="col" />
+  <app-input formControlName="pageSize" label="pageSize" type="number" [min]="1" class="col" />
 </form>
 
 <app-table
@@ -11,6 +13,7 @@
   [displayedColumns]="displayedColumns"
   [dataSource]="data"
   (loadMore)="scroll()"
+  (sort)="sort($event)"
 >
   <ng-template #actionsColumn>
     <div style="display: flex; justify-content: center; width: 100%;">

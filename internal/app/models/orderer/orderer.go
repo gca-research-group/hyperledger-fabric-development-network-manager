@@ -7,13 +7,16 @@ import (
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/http"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/sql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type OrdererDto struct {
-	ID     int    `form:"id"`
-	Name   string `form:"name"`
-	Domain string `form:"domain"`
-	Port   int    `form:"port"`
+	ID             int    `form:"id"`
+	Name           string `form:"name"`
+	Domain         string `form:"domain"`
+	Port           int    `form:"port"`
+	OrderBy        string `form:"orderBy"`
+	OrderDirection string `form:"orderDirection"`
 }
 
 type Orderer struct {
@@ -46,6 +49,19 @@ func (o *Orderer) FindAll(db *gorm.DB, queryOptions sql.QueryOptions, queryParam
 	if queryParams.ID != 0 {
 		stmt.Where("id = ?", queryParams.ID)
 	}
+
+	column := "name"
+	desc := true
+
+	if queryParams.OrderBy != "" {
+		column = queryParams.OrderBy
+	}
+
+	if queryParams.OrderDirection != "" {
+		desc = queryParams.OrderDirection == "desc"
+	}
+
+	stmt.Order(clause.OrderByColumn{Column: clause.Column{Name: column}, Desc: desc})
 
 	err := stmt.Offset(queryOptions.Offset).Limit(queryOptions.Limit).Find(&orderers).Error
 	stmt.Count(&total)

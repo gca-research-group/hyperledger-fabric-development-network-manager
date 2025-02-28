@@ -23,10 +23,11 @@ import { InputComponent } from '@app/components/input';
 import { debounceTime } from 'rxjs';
 import { TableComponent } from '@app/components/table';
 import { IconButtonComponent } from '@app/components/icon-button';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DeleteDialogComponent } from '@app/components/delete-dialog';
 import { MatDialog } from '@angular/material/dialog';
 import { ToastrService } from 'ngx-toastr';
+import { Sort } from '@angular/material/sort';
 
 const COLUMNS: Column[] = [
   {
@@ -121,6 +122,8 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   readonly dialog = inject(MatDialog);
   private toastr = inject(ToastrService);
+  private router = inject(Router);
+  private activatedRoute = inject(ActivatedRoute);
 
   constructor() {
     this.breadcrumbService.update(BREADCRUMB);
@@ -132,10 +135,19 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
       port: null,
       page: 1,
       pageSize: 20,
+      orderBy: null,
+      orderDirection: null,
     });
+
+    const queryParams = this.activatedRoute.snapshot.queryParams;
+    this.form.patchValue(queryParams, { emitEvent: false });
 
     this.form.valueChanges.pipe(debounceTime(300)).subscribe(() => {
       this.search();
+      this.router.navigate([], {
+        queryParams: this.form.value,
+        queryParamsHandling: 'merge',
+      });
     });
   }
 
@@ -225,7 +237,6 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   search() {
-    this.form.patchValue({ page: 1 }, { emitEvent: false });
     const _params = this.removeNullFields(this.form.value);
     this.service.findAll(_params).subscribe({
       next: response => {
@@ -235,6 +246,14 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
       error: error => {
         console.log('[error]', error);
       },
+    });
+  }
+
+  sort(event: Sort) {
+    this.form.patchValue({
+      orderBy: event.active,
+      orderDirection: event.direction,
+      page: 1,
     });
   }
 }

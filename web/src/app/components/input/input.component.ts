@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, input, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -21,8 +21,9 @@ export class InputComponent
   extends CustomControlValueAccessorDirective
   implements OnInit
 {
-  @Input() label = '';
-  @Input() placeholder = '';
-  @Input() type = 'text';
-  @Input() formControlName!: string;
+  label = input('');
+  placeholder = input('');
+  type = input('text');
+  min = input<number>();
+  formControlName = input('');
 }

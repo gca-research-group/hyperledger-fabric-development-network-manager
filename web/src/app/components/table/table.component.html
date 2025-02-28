@@ -4,11 +4,12 @@
   (scrolled)="scrollEvents.next()"
   [ngStyle]="{ height: height() }"
 >
-  <table mat-table sticky [dataSource]="dataSource()">
+  <table mat-table matSort  sticky [dataSource]="dataSource()" (matSortChange)="sortFn($event)">
     @for (column of columns(); track column.id) {
       <ng-container [matColumnDef]="column.id">
         <th
           mat-header-cell
+          mat-sort-header
           *matHeaderCellDef
           [ngStyle]="{ 'width.px': column.width }"
         >

@@ -6,7 +6,7 @@ fi
 
 docker compose -f ./.docker/api/docker-compose.yml up hfndm_database --build -d
 
-./.scripts/app/migrations/up.sh
+./.scripts/app/api/migrations/up.sh
 
 go mod tidy
 

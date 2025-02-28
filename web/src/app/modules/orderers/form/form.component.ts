@@ -113,7 +113,11 @@ export class FormComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: () => {
-          this.toastr.success('RECORD_CREATED_SUCCESSFULLY', undefined, {
+          const message = this.form.value.id
+            ? 'RECORD_UPDATED_SUCCESSFULLY'
+            : 'RECORD_CREATED_SUCCESSFULLY';
+
+          this.toastr.success(message, undefined, {
             closeButton: true,
             progressBar: true,
           });

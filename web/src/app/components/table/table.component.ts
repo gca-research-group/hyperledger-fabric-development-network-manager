@@ -8,6 +8,7 @@ import { debounceTime, Subject, takeUntil } from 'rxjs';
 import { NgStyle, NgTemplateOutlet } from '@angular/common';
 import { CustomDatePipe } from '@app/pipes';
 import { LanguageService } from '@app/services/language';
+import { MatSortModule, Sort } from '@angular/material/sort';
 
 @Component({
   selector: 'app-table',
@@ -19,6 +20,7 @@ import { LanguageService } from '@app/services/language';
     CustomDatePipe,
 
     MatTableModule,
+    MatSortModule,
     TranslateModule,
 
     InfiniteScrollDirective,
@@ -33,6 +35,7 @@ export class TableComponent<T> implements OnDestroy {
   height = input<string>();
 
   loadMore = output();
+  sort = output<Sort>();
 
   scrollEvents = new Subject<void>();
 
@@ -56,5 +59,9 @@ export class TableComponent<T> implements OnDestroy {
   ngOnDestroy(): void {
     this.onDestroy$.complete();
     this.onDestroy$.unsubscribe();
+  }
+
+  sortFn(sort: Sort) {
+    this.sort.emit(sort);
   }
 }
