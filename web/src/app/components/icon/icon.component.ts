@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
 
@@ -9,6 +9,6 @@ import { MatTooltip } from '@angular/material/tooltip';
   imports: [MatIcon, MatTooltip],
 })
 export class IconComponent {
-  @Input() icon!: string;
-  @Input() tooltip!: string;
+  icon = input<string>();
+  tooltip = input<string>();
 }

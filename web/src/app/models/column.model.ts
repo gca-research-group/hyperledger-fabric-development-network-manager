@@ -14,4 +14,5 @@ export interface Column {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   templateRow?: TemplateRef<any>;
   width?: number;
+  sortable?: boolean;
 }

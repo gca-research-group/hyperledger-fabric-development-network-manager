@@ -3,3 +3,6 @@
   border: 1px solid #ccc;
 }
 
+:host ::ng-deep .mat-sort-header-content {
+  width: 100%;
+}

@@ -6,13 +6,21 @@ import (
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/errors"
 	model "github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/peer"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/sql"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
 func Index(c *gin.Context, db *gorm.DB) {
 	entity := model.Peer{}
-	data, err := entity.FindAll(db)
+
+	var queryParams model.PeerDto
+	c.ShouldBindQuery(&queryParams)
+
+	queryOptions := sql.QueryOptions{}
+	queryOptions.UpdateFromContext(c)
+
+	data, err := entity.FindAll(db, queryOptions, queryParams)
 
 	if err != nil {
 		c.Error(&errors.AppError{
@@ -22,7 +30,7 @@ func Index(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": data})
+	c.JSON(http.StatusOK, data)
 }
 
 func Show(c *gin.Context, db *gorm.DB) {
@@ -45,7 +53,10 @@ func Create(c *gin.Context, db *gorm.DB) {
 	var data model.Peer
 
 	if err := c.ShouldBindJSON(&data); err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.Error(&errors.AppError{
+			Code:    http.StatusInternalServerError,
+			Message: err.Error(),
+		})
 		return
 	}
 
@@ -65,15 +76,17 @@ func Create(c *gin.Context, db *gorm.DB) {
 
 func Update(c *gin.Context, db *gorm.DB) {
 	var data model.Peer
-	id, _ := strconv.Atoi(c.Param("id"))
 
 	if err := c.ShouldBindJSON(&data); err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.Error(&errors.AppError{
+			Code:    http.StatusInternalServerError,
+			Message: err.Error(),
+		})
 		return
 	}
 
 	entity := model.Peer{}
-	_, err := entity.Update(db, uint(id), &data)
+	_, err := entity.Update(db, data)
 
 	if err != nil {
 		c.Error(&errors.AppError{

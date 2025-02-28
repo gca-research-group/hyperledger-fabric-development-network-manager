@@ -8,6 +8,7 @@ import (
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/sql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"gorm.io/gorm/schema"
 )
 
 type OrdererDto struct {
@@ -54,7 +55,7 @@ func (o *Orderer) FindAll(db *gorm.DB, queryOptions sql.QueryOptions, queryParam
 	desc := true
 
 	if queryParams.OrderBy != "" {
-		column = queryParams.OrderBy
+		column = schema.NamingStrategy{}.ColumnName("", queryParams.OrderBy)
 	}
 
 	if queryParams.OrderDirection != "" {

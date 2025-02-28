@@ -2,27 +2,77 @@ package peer
 
 import (
 	"errors"
+	"time"
 
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/http"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/sql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+	"gorm.io/gorm/schema"
 )
 
+type PeerDto struct {
+	ID             int    `form:"id"`
+	Name           string `form:"name"`
+	Domain         string `form:"domain"`
+	Port           int    `form:"port"`
+	OrderBy        string `form:"orderBy"`
+	OrderDirection string `form:"orderDirection"`
+}
+
 type Peer struct {
-	ID     uint `gorm:"primaryKey"`
-	Name   string
-	Domain string
-	Port   int
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	Name      string    `json:"name"`
+	Domain    string    `json:"domain"`
+	Port      int       `json:"port"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-func (p *Peer) FindAll(db *gorm.DB) ([]Peer, error) {
+func (o *Peer) FindAll(db *gorm.DB, queryOptions sql.QueryOptions, queryParams PeerDto) (http.Response[[]Peer], error) {
 
-	var orderers []Peer
+	var peers []Peer
+	var total int64
+	stmt := db.Model(&Peer{})
 
-	err := db.Find(&orderers).Error
+	if queryParams.Domain != "" {
+		stmt.Where("domain ilike ?", "%"+queryParams.Domain+"%")
+	}
 
-	return orderers, err
+	if queryParams.Name != "" {
+		stmt.Where("name ilike ?", "%"+queryParams.Name+"%")
+	}
+
+	if queryParams.Port != 0 {
+		stmt.Where("port = ?", queryParams.Port)
+	}
+
+	if queryParams.ID != 0 {
+		stmt.Where("id = ?", queryParams.ID)
+	}
+
+	column := "name"
+	desc := true
+
+	if queryParams.OrderBy != "" {
+		column = schema.NamingStrategy{}.ColumnName("", queryParams.OrderBy)
+	}
+
+	if queryParams.OrderDirection != "" {
+		desc = queryParams.OrderDirection == "desc"
+	}
+
+	stmt.Order(clause.OrderByColumn{Column: clause.Column{Name: column}, Desc: desc})
+
+	err := stmt.Offset(queryOptions.Offset).Limit(queryOptions.Limit).Find(&peers).Error
+	stmt.Count(&total)
+
+	response := http.Response[[]Peer]{}
+
+	return *response.NewResponse(peers, queryOptions, int(total)), err
 }
 
-func (p *Peer) FindById(db *gorm.DB, id uint) (Peer, error) {
+func (o *Peer) FindById(db *gorm.DB, id uint) (Peer, error) {
 	var peer Peer
 
 	if err := db.First(&peer, id).Error; err != nil {
@@ -32,13 +82,13 @@ func (p *Peer) FindById(db *gorm.DB, id uint) (Peer, error) {
 	return peer, nil
 }
 
-func (p *Peer) Create(db *gorm.DB, peer *Peer) (*Peer, error) {
+func (o *Peer) Create(db *gorm.DB, peer *Peer) (*Peer, error) {
 	if peer.Domain == "" {
 		return nil, errors.New("DOMAIN_CANNOT_BE_EMPTY")
 	}
 
 	if peer.Name == "" {
-		return nil, errors.New("ORDERER_NAME_CANNOT_BE_EMPTY")
+		return nil, errors.New("PEER_NAME_CANNOT_BE_EMPTY")
 	}
 
 	err := db.Create(&peer).Error
@@ -46,14 +96,14 @@ func (p *Peer) Create(db *gorm.DB, peer *Peer) (*Peer, error) {
 	return peer, err
 }
 
-func (p *Peer) Update(db *gorm.DB, id uint, peer *Peer) (*Peer, error) {
+func (o *Peer) Update(db *gorm.DB, peer Peer) (*Peer, error) {
 
-	if id == 0 {
+	if peer.ID == 0 {
 		return nil, errors.New("ID_CANNOT_BE_EMPTY")
 	}
 
-	if peer.Domain != "" {
-		db.Model(&peer).Update("domain", peer.Domain)
+	if peer.Domain == "" {
+		return nil, errors.New("PEER_DOMAIN_CANNOT_BE_EMPTY")
 	}
 
 	if peer.Port == 0 {
@@ -61,22 +111,32 @@ func (p *Peer) Update(db *gorm.DB, id uint, peer *Peer) (*Peer, error) {
 	}
 
 	if peer.Name == "" {
-		return nil, errors.New("ORDERER_NAME_CANNOT_BE_EMPTY")
+		return nil, errors.New("PEER_NAME_CANNOT_BE_EMPTY")
 	}
 
-	peer.ID = id
+	_peer := Peer{}
+	err := db.Model(&_peer).Where("id = ?", peer.ID).UpdateColumns(Peer{Name: peer.Name, Domain: peer.Domain, Port: peer.Port, UpdatedAt: time.Now().UTC()}).Error
 
-	err := db.Save(&peer).Error
-
-	return peer, err
+	return &_peer, err
 }
 
-func (p *Peer) Delete(db *gorm.DB, id uint) error {
-	if _, err := p.FindById(db, id); err != nil {
+func (o *Peer) Delete(db *gorm.DB, id uint) error {
+	if _, err := o.FindById(db, id); err != nil {
 		return err
 	}
 
-	db.Delete(&Peer{}, id)
+	err := db.Delete(&Peer{}, id).Error
 
-	return nil
+	return err
+}
+
+func (o *Peer) BeforeCreate(tx *gorm.DB) (err error) {
+	o.CreatedAt = time.Now().UTC()
+	o.UpdatedAt = time.Now().UTC()
+	return
+}
+
+func (o *Peer) BeforeUpdate(tx *gorm.DB) (err error) {
+	o.UpdatedAt = time.Now().UTC()
+	return
 }

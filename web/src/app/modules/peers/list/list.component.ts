@@ -10,8 +10,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { BreadcrumbService } from '@app/services/breadcrumb';
-import { OrderersService } from '../services/orderers.service';
-import { Column, ColumnType, Orderer } from '@app/models';
+import { PeersService } from '../services/peers.service';
+import { Column, ColumnType, Peer } from '@app/models';
 import {
   FormBuilder,
   FormGroup,
@@ -73,14 +73,14 @@ const BREADCRUMB = [
     active: false,
   },
   {
-    label: 'orderers',
-    url: '/orderers',
+    label: 'peers',
+    url: '/peers',
     active: false,
   },
 ];
 
 @Component({
-  selector: 'app-orderers-list',
+  selector: 'app-peers-list',
   templateUrl: './list.component.html',
   styleUrl: './list.component.scss',
   imports: [
@@ -101,10 +101,10 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
   displayedColumns = COLUMNS.map(column => column.id);
 
   private breadcrumbService = inject(BreadcrumbService);
-  private service = inject(OrderersService);
+  private service = inject(PeersService);
   private formBuilder = inject(FormBuilder);
 
-  data: Orderer[] = [];
+  data: Peer[] = [];
 
   loading = false;
   hasMore = true;
@@ -184,7 +184,7 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.breadcrumbService.reset();
   }
 
-  openDialog(item: Orderer): void {
+  openDialog(item: Peer): void {
     const dialogRef = this.dialog.open(DeleteDialogComponent, {
       data: item.id,
     });
