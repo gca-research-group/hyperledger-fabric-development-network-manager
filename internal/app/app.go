@@ -6,6 +6,7 @@ import (
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/database"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/middlewares"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/routes"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/utils/logger"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -15,6 +16,9 @@ func Run() {
 
 	godotenv.Load(".env")
 
+	logger.SetUp()
+	defer logger.CleanUp()
+	gin.DefaultWriter = logger.GetMultiWriter()
 	server := gin.Default()
 
 	server.Use(cors.New(cors.Config{
