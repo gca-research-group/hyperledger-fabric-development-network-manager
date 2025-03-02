@@ -13,9 +13,8 @@ import { Sidebar } from './models';
 export class AppComponent {
   menus: Sidebar[] = [
     { label: 'home', icon: 'home', url: '' },
-    //{ label: 'configuration-files', icon: 'link', url: 'configuration-files' },
     { label: 'orderers', icon: 'swap_vert', url: 'orderers' },
     { label: 'peers', icon: 'network_node', url: 'peers' },
-    //{ label: 'settings', icon: 'settings', url: '' },
+    { label: 'channels', icon: 'hub', url: 'channels' },
   ];
 }

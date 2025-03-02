@@ -10,8 +10,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { BreadcrumbService } from '@app/services/breadcrumb';
-import { PeersService } from '../services/peers.service';
-import { Breadcrumb, Column, ColumnType, Peer } from '@app/models';
+import { ChannelsService } from '../services/channels.service';
+import { Column, ColumnType, Channel, Breadcrumb } from '@app/models';
 import {
   FormBuilder,
   FormGroup,
@@ -39,14 +39,6 @@ const COLUMNS: Column[] = [
     label: 'name',
   },
   {
-    id: 'domain',
-    label: 'domain',
-  },
-  {
-    id: 'port',
-    label: 'port',
-  },
-  {
     id: 'createdAt',
     label: 'createdAt',
     rowType: ColumnType.DATETIME,
@@ -72,12 +64,12 @@ const BREADCRUMB: Breadcrumb[] = [
     url: '/',
   },
   {
-    label: 'peers',
+    label: 'channels',
   },
 ];
 
 @Component({
-  selector: 'app-peers-list',
+  selector: 'app-channels-list',
   templateUrl: './list.component.html',
   styleUrl: './list.component.scss',
   imports: [
@@ -98,10 +90,10 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
   displayedColumns = COLUMNS.map(column => column.id);
 
   private breadcrumbService = inject(BreadcrumbService);
-  private service = inject(PeersService);
+  private service = inject(ChannelsService);
   private formBuilder = inject(FormBuilder);
 
-  data: Peer[] = [];
+  data: Channel[] = [];
 
   loading = false;
   hasMore = true;
@@ -181,7 +173,7 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.breadcrumbService.reset();
   }
 
-  openDialog(item: Peer): void {
+  openDialog(item: Channel): void {
     const dialogRef = this.dialog.open(DeleteDialogComponent, {
       data: item.id,
     });

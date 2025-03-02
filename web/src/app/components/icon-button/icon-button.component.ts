@@ -1,7 +1,7 @@
 import { Component, input } from '@angular/core';
 import { MatIconButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
-import { MatTooltip } from '@angular/material/tooltip';
+import { MatTooltip, TooltipPosition } from '@angular/material/tooltip';
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
@@ -14,4 +14,5 @@ export class IconButtonComponent {
   icon = input<string>();
   tooltip = input<string>('');
   color = input<string>();
+  tooltipPosition = input<TooltipPosition>('below');
 }

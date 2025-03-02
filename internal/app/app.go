@@ -12,13 +12,17 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func Run() {
-
-	godotenv.Load(".env")
-
+func SetUpLogger() {
 	logger.SetUp()
 	defer logger.CleanUp()
 	gin.DefaultWriter = logger.GetMultiWriter()
+}
+
+func Run() {
+
+	godotenv.Load(".env")
+	SetUpLogger()
+
 	server := gin.Default()
 
 	server.Use(cors.New(cors.Config{

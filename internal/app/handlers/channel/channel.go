@@ -1,39 +1,30 @@
 package channel
 
 import (
+	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/errors"
 	model "github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/channel"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/peer"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/sql"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
-type ChannelDto struct {
-	Name  string
-	Peers []int
-}
-
-func (c *ChannelDto) toEntity() model.Channel {
-	entity := model.Channel{}
-	entity.Name = c.Name
-
-	for _, id := range c.Peers {
-		currentPeer := peer.Peer{}
-		currentPeer.ID = uint(id)
-		entity.Peers = append(entity.Peers, &currentPeer)
-	}
-
-	return entity
-}
-
 func Index(c *gin.Context, db *gorm.DB) {
 	entity := model.Channel{}
-	data, err := entity.FindAll(db)
+
+	var queryParams model.ChannelDto
+	c.ShouldBindQuery(&queryParams)
+
+	queryOptions := sql.QueryOptions{}
+	queryOptions.UpdateFromContext(c)
+
+	data, err := entity.FindAll(db, queryOptions, queryParams)
 
 	if err != nil {
+		slog.Error("[Channel -> Index]", "err", err)
 		c.Error(&errors.AppError{
 			Code:    http.StatusBadRequest,
 			Message: err.Error(),
@@ -41,7 +32,7 @@ func Index(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"data": data})
+	c.JSON(http.StatusOK, data)
 }
 
 func Show(c *gin.Context, db *gorm.DB) {
@@ -50,6 +41,7 @@ func Show(c *gin.Context, db *gorm.DB) {
 	data, err := entity.FindById(db, uint(id))
 
 	if err != nil {
+		slog.Error("[Channel -> Show]", "err", err)
 		c.Error(&errors.AppError{
 			Code:    http.StatusBadRequest,
 			Message: err.Error(),
@@ -61,9 +53,10 @@ func Show(c *gin.Context, db *gorm.DB) {
 }
 
 func Create(c *gin.Context, db *gorm.DB) {
-	var data ChannelDto
+	var data model.ChannelDto
 
 	if err := c.ShouldBindJSON(&data); err != nil {
+		slog.Error("[Channel -> Create ->  ShouldBindJSON]", "err", err)
 		c.Error(&errors.AppError{
 			Code:    http.StatusInternalServerError,
 			Message: err.Error(),
@@ -72,7 +65,7 @@ func Create(c *gin.Context, db *gorm.DB) {
 	}
 
 	entity := model.Channel{}
-	channel := data.toEntity()
+	channel := data.ToEntity()
 	_, err := entity.Create(db, &channel)
 
 	if err != nil {
@@ -87,27 +80,31 @@ func Create(c *gin.Context, db *gorm.DB) {
 }
 
 func Update(c *gin.Context, db *gorm.DB) {
-	var data ChannelDto
-	id, _ := strconv.Atoi(c.Param("id"))
+	var data model.ChannelDto
 
 	if err := c.ShouldBindJSON(&data); err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-
-	entity := model.Channel{}
-	channel := data.toEntity()
-	_, err := entity.Update(db, uint(id), &channel)
-
-	if err != nil {
+		slog.Error("[Channel -> Update ->  ShouldBindJSON]", "err", err)
 		c.Error(&errors.AppError{
 			Code:    http.StatusBadRequest,
-			Message: err.Error(),
+			Message: "Invalid request payload",
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, channel)
+	channel := data.ToEntity()
+	entity := model.Channel{}
+	updatedChannel, err := entity.Update(db, &channel)
+
+	if err != nil {
+		slog.Error("[Channel -> Update]", "err", err)
+		c.Error(&errors.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "FAILED_TO_UPDATE",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, updatedChannel)
 }
 
 func Delete(c *gin.Context, db *gorm.DB) {
@@ -115,9 +112,10 @@ func Delete(c *gin.Context, db *gorm.DB) {
 
 	entity := model.Channel{}
 	if err := entity.Delete(db, uint(id)); err != nil {
+		slog.Error("[Channel -> Delete]", "err", err)
 		c.Error(&errors.AppError{
 			Code:    http.StatusBadRequest,
-			Message: err.Error(),
+			Message: "FAILED_TO_DELETE",
 		})
 		return
 	}

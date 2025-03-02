@@ -1,3 +1,10 @@
-<button mat-icon-button [matTooltip]="tooltip() | translate" matTooltipPosition="right">
-  <mat-icon class="material-symbols-outlined" [class]="color()">{{ icon() }}</mat-icon>
+<button
+  mat-icon-button
+  [matTooltipPosition]="tooltipPosition()"
+  [matTooltip]="tooltip() | translate"
+  matTooltipPosition="right"
+>
+  <mat-icon class="material-symbols-outlined" [class]="color()">{{
+    icon()
+  }}</mat-icon>
 </button>

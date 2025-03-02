@@ -13,7 +13,6 @@ import (
 
 func Index(c *gin.Context, db *gorm.DB) {
 	entity := model.Orderer{}
-
 	var queryParams model.OrdererDto
 	c.ShouldBindQuery(&queryParams)
 

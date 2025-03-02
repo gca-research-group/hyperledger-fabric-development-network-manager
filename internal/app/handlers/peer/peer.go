@@ -1,6 +1,8 @@
 package peer
 
 import (
+	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -53,6 +55,7 @@ func Create(c *gin.Context, db *gorm.DB) {
 	var data model.Peer
 
 	if err := c.ShouldBindJSON(&data); err != nil {
+		slog.Error(fmt.Sprintf("[Peer -> Create]: %v\n", err))
 		c.Error(&errors.AppError{
 			Code:    http.StatusInternalServerError,
 			Message: err.Error(),
@@ -78,6 +81,7 @@ func Update(c *gin.Context, db *gorm.DB) {
 	var data model.Peer
 
 	if err := c.ShouldBindJSON(&data); err != nil {
+		slog.Error(fmt.Sprintf("[Peer -> Update]: %v\n", err))
 		c.Error(&errors.AppError{
 			Code:    http.StatusInternalServerError,
 			Message: err.Error(),

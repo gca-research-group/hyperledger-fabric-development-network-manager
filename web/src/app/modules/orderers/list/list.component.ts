@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { BreadcrumbService } from '@app/services/breadcrumb';
 import { OrderersService } from '../services/orderers.service';
-import { Column, ColumnType, Orderer } from '@app/models';
+import { Breadcrumb, Column, ColumnType, Orderer } from '@app/models';
 import {
   FormBuilder,
   FormGroup,
@@ -66,16 +66,13 @@ const COLUMNS: Column[] = [
   },
 ];
 
-const BREADCRUMB = [
+const BREADCRUMB: Breadcrumb[] = [
   {
     label: 'home',
     url: '/',
-    active: false,
   },
   {
     label: 'orderers',
-    url: '/orderers',
-    active: false,
   },
 ];
 

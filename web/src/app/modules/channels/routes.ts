@@ -1,6 +1,6 @@
-export const configurationFilesRoutes = [
+export const channelsRoutes = [
   {
-    path: 'configuration-files',
+    path: 'channels',
     children: [
       {
         path: '',

@@ -1,6 +1,7 @@
 {
   "add": "Add",
   "blockchains": "Blockchains",
+  "channels": "Channels",
   "configuration-files": "Configuraton Files",
   "connection-script": "Connection Script",
   "createdAt": "Created At",
@@ -12,8 +13,10 @@
   "id": "Id",
   "monitoring-system": "Monitoring System",
   "name": "Name",
+  "orderers": "Orderers",
   "page": "Page",
   "pageSize": "Page Size",
+  "peers": "Peers",
   "port": "Port",
   "save": "Save",
   "settings": "Settings",

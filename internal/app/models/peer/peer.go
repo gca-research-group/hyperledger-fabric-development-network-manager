@@ -52,7 +52,7 @@ func (o *Peer) FindAll(db *gorm.DB, queryOptions sql.QueryOptions, queryParams P
 	}
 
 	column := "name"
-	desc := true
+	desc := false
 
 	if queryParams.OrderBy != "" {
 		column = schema.NamingStrategy{}.ColumnName("", queryParams.OrderBy)
