@@ -5,16 +5,6 @@
     label="name"
     class="col mb-5"
   />
-  <ng-select
-    [items]="peers"
-    bindLabel="name"
-    bindValue="id"
-    placeholder="Peers"
-    formControlName="peers"
-    label="peers"
-    [multiple]="true"
-    class="col mb-5"
-    appearance="outline"
-  />
+  <app-peers-selector formControlName="peers" class="col mb-5" />
   <app-button label="save" class="w-100" type="submit" [disabled]="form.invalid" />
 </form>

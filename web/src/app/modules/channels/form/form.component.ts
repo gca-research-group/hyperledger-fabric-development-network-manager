@@ -15,9 +15,7 @@ import { ChannelsService } from '../services/channels.service';
 import { Location } from '@angular/common';
 import { finalize } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
-import { PeersService } from '@app/modules/peers/services/peers.service';
-import { Peer } from '@app/models';
-import { NgSelectComponent } from '@ng-select/ng-select';
+import { PeersSelectorComponent } from '@app/components/peers-selector';
 
 const BREADCRUMB = [
   {
@@ -41,17 +39,15 @@ const BREADCRUMB = [
     TranslateModule,
     InputComponent,
     ButtonComponent,
-    NgSelectComponent,
+    PeersSelectorComponent,
   ],
 })
 export class FormComponent implements OnInit, OnDestroy {
   form!: FormGroup;
-  peers: Peer[] = [];
 
   private formBuilder = inject(FormBuilder);
   private breadcrumbService = inject(BreadcrumbService);
   private service = inject(ChannelsService);
-  private peerService = inject(PeersService);
   private location = inject(Location);
   private activatedRoute = inject(ActivatedRoute);
   loading = false;
@@ -74,8 +70,6 @@ export class FormComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.getAllPeers();
-
     const id = this.activatedRoute.snapshot.params['id'];
     if (id) {
       this.find(id);
@@ -85,12 +79,6 @@ export class FormComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.breadcrumbService.reset();
-  }
-
-  getAllPeers() {
-    this.peerService.findAll().subscribe(response => {
-      this.peers = response.data;
-    });
   }
 
   find(id: number) {

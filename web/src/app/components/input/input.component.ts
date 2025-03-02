@@ -25,5 +25,4 @@ export class InputComponent
   placeholder = input('');
   type = input('text');
   min = input<number>();
-  formControlName = input('');
 }
