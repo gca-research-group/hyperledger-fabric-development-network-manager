@@ -14,8 +14,12 @@
     <img alt="PostgreSQL" src="https://img.shields.io/badge/PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white" />
 </p>
 
-> 🚧 **This project is currently under development.** 🚧  
-> Expect frequent updates and changes. Your feedback is appreciated!
+<div align="center">
+
+🚧 **This project is currently under development.** 🚧  
+Expect frequent updates and changes. Your feedback is appreciated!
+
+</div>
 
 ## Overview
 
