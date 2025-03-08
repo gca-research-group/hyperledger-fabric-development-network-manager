@@ -6,6 +6,7 @@ import { FlatCompat } from '@eslint/eslintrc';
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import angularTemplatePlugin from '@angular-eslint/eslint-plugin-template';
 import globals from 'globals';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -34,6 +35,15 @@ export default tseslint.config(
       'plugin:import/typescript',
     ),
   ),
+  {
+    files: ['*.html'],
+    plugins: {
+      '@angular-eslint/template': angularTemplatePlugin,
+    },
+    rules: {
+      ...angularTemplatePlugin.configs.recommended.rules,
+    },
+  },
   {
     languageOptions: {
       globals: {
@@ -129,14 +139,5 @@ export default tseslint.config(
         },
       ],
     },
-  },
-  // ...compat
-  //   .extends(
-  //     'plugin:@angular-eslint/template/recommended',
-  //     'plugin:@angular-eslint/template/accessibility',
-  //   )
-  //   .map(config => ({
-  //     ...config,
-  //     files: ['**/*.html'],
-  //   }))
+  }
 );
