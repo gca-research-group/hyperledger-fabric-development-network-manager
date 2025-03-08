@@ -16,11 +16,11 @@ export class CustomControlValueAccessorDirective<T = any>
   @Input()
   set required(required: boolean) {
     if (required) {
-      this.formControl.setValidators([Validators.required]);
+      this.formControl.setValidators([control => Validators.required(control)]);
       return;
     }
 
-    this.formControl.removeValidators(Validators.required);
+    this.formControl.removeValidators(control => Validators.required(control));
   }
 
   formControl = new FormControl();
@@ -51,13 +51,11 @@ export class CustomControlValueAccessorDirective<T = any>
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  registerOnChange(fn: any): void {
+  registerOnChange(fn: (value: T) => void): void {
     this.onChange = fn;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  registerOnTouched(fn: any): void {
+  registerOnTouched(fn: (value: T) => void): void {
     this.onTouched = fn;
   }
 
@@ -68,11 +66,9 @@ export class CustomControlValueAccessorDirective<T = any>
     this.formControl[key]({ emitEvent: false });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected onChange = (value: T) => {
+  protected onChange = (_value: T) => {
     this.updateFormControl();
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected onTouched: any;
+  protected onTouched?: (value: T) => void;
 }

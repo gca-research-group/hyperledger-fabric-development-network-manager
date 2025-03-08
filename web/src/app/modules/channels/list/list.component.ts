@@ -137,8 +137,8 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.form.valueChanges.pipe(debounceTime(300)).subscribe(() => {
       this.search();
-      this.router.navigate([], {
-        queryParams: this.form.value,
+      void this.router.navigate([], {
+        queryParams: this.form.value as Record<string, string>,
         queryParamsHandling: 'merge',
       });
     });
@@ -202,7 +202,9 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
   scroll() {
     if (this.hasMore) {
       this.form.patchValue(
-        { page: (this.form.get('page')?.value ?? 0) + 1 },
+        {
+          page: ((this.form.get('page')?.value as unknown as number) ?? 0) + 1,
+        },
         { emitEvent: false },
       );
       this.findAll();

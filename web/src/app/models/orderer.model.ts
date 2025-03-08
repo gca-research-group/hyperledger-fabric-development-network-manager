@@ -1,5 +1,5 @@
 export type Orderer = {
-  id: number;
+  id: string | null;
   name: string;
   domain: string;
   port: number;

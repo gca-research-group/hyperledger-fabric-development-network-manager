@@ -5,7 +5,9 @@ import { finalize } from 'rxjs';
 import { Location } from '@angular/common';
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import {
+  AbstractControl,
   FormBuilder,
+  FormControl,
   FormGroup,
   FormsModule,
   ReactiveFormsModule,
@@ -15,6 +17,7 @@ import { ActivatedRoute } from '@angular/router';
 
 import { ButtonComponent } from '@app/components/button';
 import { PeersSelectorComponent } from '@app/components/peers-selector';
+import { Channel } from '@app/models';
 import { BreadcrumbService } from '@app/services/breadcrumb';
 
 import { InputComponent } from '../../../components/input/input.component';
@@ -46,7 +49,11 @@ const BREADCRUMB = [
   ],
 })
 export class FormComponent implements OnInit, OnDestroy {
-  form!: FormGroup;
+  form!: FormGroup<{
+    id: FormControl<number | null>;
+    name: FormControl<string | null>;
+    peers: FormControl<number[] | null>;
+  }>;
 
   private formBuilder = inject(FormBuilder);
   private breadcrumbService = inject(BreadcrumbService);
@@ -59,9 +66,11 @@ export class FormComponent implements OnInit, OnDestroy {
 
   constructor() {
     this.form = this.formBuilder.group({
-      id: null,
-      name: [null, Validators.required],
-      peers: [[]],
+      id: new FormControl(),
+      name: new FormControl('', [
+        (control: AbstractControl) => Validators.required(control),
+      ]),
+      peers: new FormControl<number[]>([]),
     });
 
     this.breadcrumbService.update([
@@ -73,7 +82,7 @@ export class FormComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    const id = this.activatedRoute.snapshot.params['id'];
+    const id = this.activatedRoute.snapshot.params['id'] as unknown as number;
     if (id) {
       this.find(id);
       this.breadcrumbService.update([...BREADCRUMB, { label: 'edit' }]);
@@ -92,7 +101,7 @@ export class FormComponent implements OnInit, OnDestroy {
           peers: channel.peers.map(peer => peer.id),
         });
       },
-      error: error => {
+      error: (error: { message: string }) => {
         this.toastr.error(error.message, undefined, {
           closeButton: true,
           progressBar: true,
@@ -112,7 +121,7 @@ export class FormComponent implements OnInit, OnDestroy {
 
     this.loading = true;
     this.service
-      .save({ ...this.form.value, port: +this.form.value.port })
+      .save({ ...this.form.value } as unknown as Channel)
       .pipe(
         finalize(() => {
           this.loading = false;
@@ -130,7 +139,7 @@ export class FormComponent implements OnInit, OnDestroy {
           });
           this.location.back();
         },
-        error: error => {
+        error: (error: { message: string }) => {
           this.toastr.error(error.message, undefined, {
             closeButton: true,
             progressBar: true,
