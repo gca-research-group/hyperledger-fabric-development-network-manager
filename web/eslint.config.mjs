@@ -18,7 +18,7 @@ const compat = new FlatCompat({
 
 export default tseslint.config(
   {
-    ignores: ['projects/**/*'],
+    ignores: ['projects/**/*', 'eslint.config.mjs'],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
