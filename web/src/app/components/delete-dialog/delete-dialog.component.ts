@@ -1,4 +1,7 @@
+import { TranslateModule } from '@ngx-translate/core';
+
 import { Component, inject } from '@angular/core';
+import { MatButton } from '@angular/material/button';
 import {
   MAT_DIALOG_DATA,
   MatDialogActions,
@@ -6,8 +9,6 @@ import {
   MatDialogRef,
   MatDialogTitle,
 } from '@angular/material/dialog';
-import { TranslateModule } from '@ngx-translate/core';
-import { MatButton } from '@angular/material/button';
 
 @Component({
   selector: 'app-delete-dialog',

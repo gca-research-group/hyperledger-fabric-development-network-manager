@@ -1,6 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
+
 import { Channel } from '@app/models';
+
 import { environment } from '../../../../environments/environment';
 
 @Injectable({

@@ -1,7 +1,9 @@
+import { NgOptionComponent, NgSelectComponent } from '@ng-select/ng-select';
+
 import { Component, effect, model } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+
 import { CustomControlValueAccessorDirective } from '@app/directives/custom-control-value-accessor';
-import { NgOptionComponent, NgSelectComponent } from '@ng-select/ng-select';
 
 @Component({
   selector: 'app-language-selector',

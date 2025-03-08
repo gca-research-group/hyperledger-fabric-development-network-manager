@@ -1,8 +1,10 @@
+import { TranslateModule } from '@ngx-translate/core';
+
 import { LowerCasePipe } from '@angular/common';
 import { Component, input } from '@angular/core';
 import { RouterModule } from '@angular/router';
+
 import { Breadcrumb } from '@app/models';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-breadcrumb',

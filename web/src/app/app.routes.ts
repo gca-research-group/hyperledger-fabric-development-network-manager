@@ -1,7 +1,8 @@
 import { Routes } from '@angular/router';
+
+import { channelsRoutes } from './modules/channels';
 import { orderersRoutes } from './modules/orderers';
 import { peersRoutes } from './modules/peers';
-import { channelsRoutes } from './modules/channels';
 
 export const routes: Routes = [
   ...orderersRoutes,

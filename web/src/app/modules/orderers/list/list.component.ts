@@ -1,3 +1,7 @@
+import { TranslateModule } from '@ngx-translate/core';
+import { ToastrService } from 'ngx-toastr';
+import { debounceTime } from 'rxjs';
+
 import {
   AfterViewInit,
   ChangeDetectorRef,
@@ -9,25 +13,24 @@ import {
   TemplateRef,
   viewChild,
 } from '@angular/core';
-import { BreadcrumbService } from '@app/services/breadcrumb';
-import { OrderersService } from '../services/orderers.service';
-import { Breadcrumb, Column, ColumnType, Orderer } from '@app/models';
 import {
   FormBuilder,
   FormGroup,
   FormsModule,
   ReactiveFormsModule,
 } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
-import { InputComponent } from '@app/components/input';
-import { debounceTime } from 'rxjs';
-import { TableComponent } from '@app/components/table';
-import { IconButtonComponent } from '@app/components/icon-button';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { DeleteDialogComponent } from '@app/components/delete-dialog';
 import { MatDialog } from '@angular/material/dialog';
-import { ToastrService } from 'ngx-toastr';
 import { Sort } from '@angular/material/sort';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+
+import { DeleteDialogComponent } from '@app/components/delete-dialog';
+import { IconButtonComponent } from '@app/components/icon-button';
+import { InputComponent } from '@app/components/input';
+import { TableComponent } from '@app/components/table';
+import { Breadcrumb, Column, ColumnType, Orderer } from '@app/models';
+import { BreadcrumbService } from '@app/services/breadcrumb';
+
+import { OrderersService } from '../services/orderers.service';
 
 const COLUMNS: Column[] = [
   {
@@ -229,7 +232,6 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   removeNullFields<T extends object>(obj: T): Partial<T> {
     return Object.fromEntries(
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       Object.entries(obj).filter(([_index, value]) => value !== null),
     ) as Partial<T>;
   }

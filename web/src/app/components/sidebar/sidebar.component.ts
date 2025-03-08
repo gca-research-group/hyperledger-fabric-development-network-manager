@@ -1,13 +1,15 @@
-import { Component, inject, input, OnDestroy, OnInit } from '@angular/core';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatButtonModule } from '@angular/material/button';
-import { IconComponent } from '@app/components/icon';
-import { NgIf } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { SidebarService } from '@app/services/sidebar';
 import { Subject, takeUntil } from 'rxjs';
+
+import { NgIf } from '@angular/common';
+import { Component, inject, input, OnDestroy, OnInit } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { RouterLink } from '@angular/router';
+
+import { IconComponent } from '@app/components/icon';
 import { Sidebar } from '@app/models';
+import { SidebarService } from '@app/services/sidebar';
 import { IS_MOBILE } from '@app/tokens';
 
 @Component({

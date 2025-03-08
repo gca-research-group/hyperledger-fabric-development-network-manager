@@ -1,23 +1,22 @@
+import { provideTranslateService, TranslateLoader } from '@ngx-translate/core';
+import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+import { provideToastr } from 'ngx-toastr';
+
+import { DatePipe, registerLocaleData } from '@angular/common';
+import { HttpClient, provideHttpClient } from '@angular/common/http';
+import localeEN from '@angular/common/locales/en';
+import localeES from '@angular/common/locales/es';
+import localePT from '@angular/common/locales/pt';
 import {
   ApplicationConfig,
   LOCALE_ID,
   provideZoneChangeDetection,
 } from '@angular/core';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
+import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
-import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { HttpClient, provideHttpClient } from '@angular/common/http';
-
-import { provideTranslateService, TranslateLoader } from '@ngx-translate/core';
-import { TranslateHttpLoader } from '@ngx-translate/http-loader';
-import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
-import { provideToastr } from 'ngx-toastr';
-import { DatePipe, registerLocaleData } from '@angular/common';
-
-import localeES from '@angular/common/locales/es';
-import localePT from '@angular/common/locales/pt';
-import localeEN from '@angular/common/locales/en';
 
 registerLocaleData(localeES, 'es');
 registerLocaleData(localePT, 'pt');

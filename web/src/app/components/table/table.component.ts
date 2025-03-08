@@ -1,14 +1,15 @@
+import { TranslateModule } from '@ngx-translate/core';
+import { debounceTime, Subject, takeUntil } from 'rxjs';
+
+import { NgStyle, NgTemplateOutlet } from '@angular/common';
 import { Component, inject, input, OnDestroy, output } from '@angular/core';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 
 import { InfiniteScrollDirective } from '@app/directives/infinite-scroll';
-import { TranslateModule } from '@ngx-translate/core';
 import { Column } from '@app/models';
-import { debounceTime, Subject, takeUntil } from 'rxjs';
-import { NgStyle, NgTemplateOutlet } from '@angular/common';
 import { CustomDatePipe } from '@app/pipes';
 import { LanguageService } from '@app/services/language';
-import { MatSortModule, Sort } from '@angular/material/sort';
 
 @Component({
   selector: 'app-table',

@@ -1,3 +1,6 @@
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Subject, takeUntil } from 'rxjs';
+
 import {
   Component,
   computed,
@@ -7,15 +10,15 @@ import {
   effect,
 } from '@angular/core';
 import { MatToolbar } from '@angular/material/toolbar';
-import { IconButtonComponent } from '../icon-button';
-import { SidebarService } from '@app/services/sidebar';
-import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { BreadcrumbComponent } from '../breadcrumb';
-import { BreadcrumbService } from '@app/services/breadcrumb';
+
 import { Breadcrumb } from '@app/models';
-import { Subject, takeUntil } from 'rxjs';
+import { BreadcrumbService } from '@app/services/breadcrumb';
 import { LanguageService } from '@app/services/language';
+import { SidebarService } from '@app/services/sidebar';
+
+import { BreadcrumbComponent } from '../breadcrumb';
+import { IconButtonComponent } from '../icon-button';
+import { LanguageSelectorComponent } from '../language-selector/language-selector.component';
 
 @Component({
   selector: 'app-toolbar',

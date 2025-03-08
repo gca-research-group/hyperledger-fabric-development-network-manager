@@ -1,6 +1,7 @@
+import { TranslateModule } from '@ngx-translate/core';
+
 import { Component, input } from '@angular/core';
 import { MatButton } from '@angular/material/button';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-button',

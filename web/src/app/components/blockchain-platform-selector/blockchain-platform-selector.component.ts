@@ -1,7 +1,9 @@
+import { NgOptionComponent, NgSelectComponent } from '@ng-select/ng-select';
+
 import { Component, model, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+
 import { CustomControlValueAccessorDirective } from '@app/directives/custom-control-value-accessor';
-import { NgOptionComponent, NgSelectComponent } from '@ng-select/ng-select';
 
 @Component({
   selector: 'app-blockchain-platform-selector',

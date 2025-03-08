@@ -45,8 +45,6 @@ export class CustomControlValueAccessorDirective<T = any>
       this.formControl = this.ngControl.control;
     }
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   writeValue(value: T): void {
     if (value !== this.formControl.value) {
       this.formControl.setValue(value);
@@ -70,7 +68,7 @@ export class CustomControlValueAccessorDirective<T = any>
     this.formControl[key]({ emitEvent: false });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected onChange = (value: T) => {
     this.updateFormControl();
   };
