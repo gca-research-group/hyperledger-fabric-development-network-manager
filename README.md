@@ -25,7 +25,18 @@ Expect frequent updates and changes. Your feedback is appreciated!
 
 Setting up a Hyperledger Fabric network can be a challenging task, even for experienced professionals. Therefore, this project aims to offer a straightforward way to configure and run a local Hyperledger Fabric network.
 
-<!-- Setting up a Hyperledger Fabric network can be a challenging task, even for experienced professionals. For those who are just starting out, or even for those who simply want to try the network in development mode, building the network can be time-consuming and requires a great deal of knowledge. The Hyperledger Fabric Development Network Manager is an open-source, free-to-use tool that aims to address this challenge by offering high-level abstractions. On the one hand, abstractions hide implementation and configuration details; on the other hand, we don't need to worry about these details if we're just learning how the network works or applying it to a business problem. -->
+## Project papers
+- [Advances in a DSL to Specify Smart Contracts for Application Integration Processes](https://sol.sbc.org.br/index.php/cibse/article/view/20962)
+- [On the Need to Use Smart Contracts in Enterprise Application Integration](https://idus.us.es/handle/11441/140199)
+- [Jabuti CE: A Tool for Specifying Smart Contracts in the Domain of Enterprise Application Integration](https://www.scitepress.org/Link.aspx?doi=10.5220/0012413300003645)
+
+## Project repositories
+- [Smart Contract Monitoring System](https://github.com/gca-research-group/smart-contract-execution-monitoring-system)
+- [Hyperledger Fabric Network Manager](https://github.com/gca-research-group/hyperledger-fabric-development-network-manager)
+- [Transformation Engine](https://github.com/gca-research-group/jabuti-ce-transformation-engine)
+- [Jabuti CE](https://github.com/gca-research-group/jabuti-ce-vscode-plugin)
+- [Jabuti DSL Grammar](https://github.com/gca-research-group/jabuti-ce-jabuti-dsl-grammar)
+- [Jabuti XText/Xtend implementation](https://github.com/gca-research-group/dsl-smart-contract-eai)
 
 ## Features
 
