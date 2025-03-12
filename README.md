@@ -25,16 +25,25 @@ Expect frequent updates and changes. Your feedback is appreciated!
 
 Setting up a Hyperledger Fabric network can be a challenging task, even for experienced professionals. Therefore, this project aims to offer a straightforward way to configure and run a local Hyperledger Fabric network.
 
+## Table of contents
+
+- [Project papers](#project-papers)
+- [Project repositories](#project-repositories)
+- [Features](#features)
+- [How to execute](#how-to-execute)
+
 ## Project papers
+
 - [Advances in a DSL to Specify Smart Contracts for Application Integration Processes](https://sol.sbc.org.br/index.php/cibse/article/view/20962)
 - [On the Need to Use Smart Contracts in Enterprise Application Integration](https://idus.us.es/handle/11441/140199)
 - [Jabuti CE: A Tool for Specifying Smart Contracts in the Domain of Enterprise Application Integration](https://www.scitepress.org/Link.aspx?doi=10.5220/0012413300003645)
 
 ## Project repositories
+
 - [Smart Contract Monitoring System](https://github.com/gca-research-group/smart-contract-execution-monitoring-system)
 - [Hyperledger Fabric Network Manager](https://github.com/gca-research-group/hyperledger-fabric-development-network-manager)
 - [Transformation Engine](https://github.com/gca-research-group/jabuti-ce-transformation-engine)
-- [Jabuti CE](https://github.com/gca-research-group/jabuti-ce-vscode-plugin)
+- [Jabuti CE (VSCode Plug-in)](https://github.com/gca-research-group/jabuti-ce-vscode-plugin)
 - [Jabuti DSL Grammar](https://github.com/gca-research-group/jabuti-ce-jabuti-dsl-grammar)
 - [Jabuti XText/Xtend implementation](https://github.com/gca-research-group/dsl-smart-contract-eai)
 
@@ -51,6 +60,7 @@ Setting up a Hyperledger Fabric network can be a challenging task, even for expe
 > Currently, you can only execute this project by cloning it. However, we are working on developing a Docker image. Therefore, in the coming weeks, you will be able to run it with a single, fast command.
 
 ### Prerequisites
+
 - Docker
 - NodeJs +22.0
 - Golang +1.24
@@ -59,23 +69,22 @@ Setting up a Hyperledger Fabric network can be a challenging task, even for expe
 ### Executing
 
 - Clone this repository
+
 ```sh
 git clone https://github.com/gca-research-group/hyperledger-fabric-development-network-manager.git
 ```
 
 - Running the api
+
 ```sh
 ./.scripts/app/api/up.sh
 ```
 
 - Running the frontend
+
 ```sh
 ./.scripts/app/web/up.sh
 ```
-
-## Contributing
-
-Contributions are welcome! Please read the [contributing guidelines](CONTRIBUTING.md) first.
 
 ## License
 
