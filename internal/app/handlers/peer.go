@@ -1,4 +1,4 @@
-package peer
+package handlers
 
 import (
 	"fmt"
@@ -6,23 +6,31 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/dtos"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/errors"
-	model "github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/peer"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/sql"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/services"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
-func Index(c *gin.Context, db *gorm.DB) {
-	entity := model.Peer{}
+type PeerHandler struct {
+	service *services.PeerService
+}
 
-	var queryParams model.PeerDto
+func NewPeerHandler(service *services.PeerService) *PeerHandler {
+	return &PeerHandler{service: service}
+}
+
+func (h *PeerHandler) Index(c *gin.Context) {
+
+	var queryParams dtos.PeerDto
 	c.ShouldBindQuery(&queryParams)
 
 	queryOptions := sql.QueryOptions{}
 	queryOptions.UpdateFromContext(c)
 
-	data, err := entity.FindAll(db, queryOptions, queryParams)
+	data, err := h.service.FindAll(queryOptions, queryParams)
 
 	if err != nil {
 		c.Error(&errors.AppError{
@@ -35,10 +43,9 @@ func Index(c *gin.Context, db *gorm.DB) {
 	c.JSON(http.StatusOK, data)
 }
 
-func Show(c *gin.Context, db *gorm.DB) {
-	entity := model.Peer{}
+func (h *PeerHandler) Show(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	data, err := entity.FindById(db, uint(id))
+	data, err := h.service.FindById(uint(id))
 
 	if err != nil {
 		c.Error(&errors.AppError{
@@ -51,8 +58,8 @@ func Show(c *gin.Context, db *gorm.DB) {
 	c.JSON(http.StatusOK, data)
 }
 
-func Create(c *gin.Context, db *gorm.DB) {
-	var data model.Peer
+func (h *PeerHandler) Create(c *gin.Context) {
+	var data models.Peer
 
 	if err := c.ShouldBindJSON(&data); err != nil {
 		slog.Error(fmt.Sprintf("[Peer -> Create]: %v\n", err))
@@ -63,8 +70,7 @@ func Create(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	entity := model.Peer{}
-	_, err := entity.Create(db, &data)
+	_, err := h.service.Create(&data)
 
 	if err != nil {
 		c.Error(&errors.AppError{
@@ -77,8 +83,8 @@ func Create(c *gin.Context, db *gorm.DB) {
 	c.JSON(http.StatusCreated, data)
 }
 
-func Update(c *gin.Context, db *gorm.DB) {
-	var data model.Peer
+func (h *PeerHandler) Update(c *gin.Context) {
+	var data models.Peer
 
 	if err := c.ShouldBindJSON(&data); err != nil {
 		slog.Error(fmt.Sprintf("[Peer -> Update]: %v\n", err))
@@ -89,8 +95,7 @@ func Update(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	entity := model.Peer{}
-	_, err := entity.Update(db, data)
+	_, err := h.service.Update(data)
 
 	if err != nil {
 		c.Error(&errors.AppError{
@@ -103,11 +108,10 @@ func Update(c *gin.Context, db *gorm.DB) {
 	c.JSON(http.StatusOK, data)
 }
 
-func Delete(c *gin.Context, db *gorm.DB) {
+func (h *PeerHandler) Delete(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	entity := model.Peer{}
-	if err := entity.Delete(db, uint(id)); err != nil {
+	if err := h.service.Delete(uint(id)); err != nil {
 		c.Error(&errors.AppError{
 			Code:    http.StatusBadRequest,
 			Message: err.Error(),

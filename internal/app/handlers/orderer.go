@@ -1,25 +1,33 @@
-package orderer
+package handlers
 
 import (
 	"net/http"
 	"strconv"
 
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/dtos"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/errors"
-	model "github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/orderer"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/models/sql"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/services"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
-func Index(c *gin.Context, db *gorm.DB) {
-	entity := model.Orderer{}
-	var queryParams model.OrdererDto
+type OrdererHandler struct {
+	service *services.OrdererService
+}
+
+func NewOrdererHandler(service *services.OrdererService) *OrdererHandler {
+	return &OrdererHandler{service: service}
+}
+
+func (h *OrdererHandler) Index(c *gin.Context) {
+	var queryParams dtos.OrdererDto
 	c.ShouldBindQuery(&queryParams)
 
 	queryOptions := sql.QueryOptions{}
 	queryOptions.UpdateFromContext(c)
 
-	data, err := entity.FindAll(db, queryOptions, queryParams)
+	data, err := h.service.FindAll(queryOptions, queryParams)
 
 	if err != nil {
 		c.Error(&errors.AppError{
@@ -32,10 +40,9 @@ func Index(c *gin.Context, db *gorm.DB) {
 	c.JSON(http.StatusOK, data)
 }
 
-func Show(c *gin.Context, db *gorm.DB) {
-	entity := model.Orderer{}
+func (h *OrdererHandler) Show(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	data, err := entity.FindById(db, uint(id))
+	data, err := h.service.FindById(uint(id))
 
 	if err != nil {
 		c.Error(&errors.AppError{
@@ -48,8 +55,8 @@ func Show(c *gin.Context, db *gorm.DB) {
 	c.JSON(http.StatusOK, data)
 }
 
-func Create(c *gin.Context, db *gorm.DB) {
-	var data model.Orderer
+func (h *OrdererHandler) Create(c *gin.Context) {
+	var data models.Orderer
 
 	if err := c.ShouldBindJSON(&data); err != nil {
 		c.Error(&errors.AppError{
@@ -59,8 +66,7 @@ func Create(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	entity := model.Orderer{}
-	_, err := entity.Create(db, &data)
+	_, err := h.service.Create(&data)
 
 	if err != nil {
 		c.Error(&errors.AppError{
@@ -73,8 +79,8 @@ func Create(c *gin.Context, db *gorm.DB) {
 	c.JSON(http.StatusCreated, data)
 }
 
-func Update(c *gin.Context, db *gorm.DB) {
-	var data model.Orderer
+func (h *OrdererHandler) Update(c *gin.Context) {
+	var data models.Orderer
 
 	if err := c.ShouldBindJSON(&data); err != nil {
 		c.Error(&errors.AppError{
@@ -84,8 +90,7 @@ func Update(c *gin.Context, db *gorm.DB) {
 		return
 	}
 
-	entity := model.Orderer{}
-	_, err := entity.Update(db, data)
+	_, err := h.service.Update(data)
 
 	if err != nil {
 		c.Error(&errors.AppError{
@@ -98,11 +103,10 @@ func Update(c *gin.Context, db *gorm.DB) {
 	c.JSON(http.StatusOK, data)
 }
 
-func Delete(c *gin.Context, db *gorm.DB) {
+func (h *OrdererHandler) Delete(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	entity := model.Orderer{}
-	if err := entity.Delete(db, uint(id)); err != nil {
+	if err := h.service.Delete(uint(id)); err != nil {
 		c.Error(&errors.AppError{
 			Code:    http.StatusBadRequest,
 			Message: err.Error(),
