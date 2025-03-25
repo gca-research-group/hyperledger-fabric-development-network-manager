@@ -134,11 +134,17 @@ func (s *UserService) Update(entity models.User) (*models.User, error) {
 		return nil, errors.New("USER_PASSWORD_CANNOT_BE_EMPTY")
 	}
 
+	hashedPassword, err := HashPassword(entity.Password)
+
+	if err != nil {
+		return &entity, err
+	}
+
 	_user := models.User{}
-	err := s.Repository.DB.Model(&_user).Where("id = ?", _user.ID).UpdateColumns(models.User{
+	err = s.Repository.DB.Model(&_user).Where("id = ?", _user.ID).UpdateColumns(models.User{
 		Name:      entity.Name,
 		Email:     entity.Email,
-		Password:  entity.Password,
+		Password:  hashedPassword,
 		IsSuper:   entity.IsSuper,
 		UpdatedAt: time.Now().UTC()}).Error
 

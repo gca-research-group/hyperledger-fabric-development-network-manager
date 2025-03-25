@@ -6,7 +6,8 @@ import (
 )
 
 func SetUp(engine *gin.RouterGroup, db *gorm.DB) {
+	SetupChannelRoutes(engine, db)
 	SetupOrdererRoutes(engine, db)
 	SetupPeerRoutes(engine, db)
-	SetupChannelRoutes(engine, db)
+	SetupUserRoutes(engine, db)
 }
