@@ -1,9 +1,15 @@
 import { provideTranslateService, TranslateLoader } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+import { withNgxsStoragePlugin } from '@ngxs/storage-plugin';
+import { provideStore } from '@ngxs/store';
 import { provideToastr } from 'ngx-toastr';
 
 import { DatePipe, registerLocaleData } from '@angular/common';
-import { HttpClient, provideHttpClient } from '@angular/common/http';
+import {
+  HttpClient,
+  provideHttpClient,
+  withInterceptors,
+} from '@angular/common/http';
 import localeEN from '@angular/common/locales/en';
 import localeES from '@angular/common/locales/es';
 import localePT from '@angular/common/locales/pt';
@@ -17,6 +23,8 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
+import { requestInterceptor } from './interceptors';
+import { UserState } from './state/current-user';
 
 registerLocaleData(localeES, 'es');
 registerLocaleData(localePT, 'pt');
@@ -28,11 +36,20 @@ const httpLoaderFactory: (http: HttpClient) => TranslateHttpLoader = (
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideStore(
+      [UserState],
+      withNgxsStoragePlugin({
+        keys: '*',
+      }),
+    ),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideAnimationsAsync(),
-    provideToastr(),
-    provideHttpClient(),
+    provideToastr({
+      closeButton: true,
+      progressBar: true,
+    }),
+    provideHttpClient(withInterceptors([requestInterceptor])),
     provideTranslateService({
       loader: {
         provide: TranslateLoader,

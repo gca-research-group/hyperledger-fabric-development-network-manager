@@ -1,9 +1,12 @@
+import { TranslateModule } from '@ngx-translate/core';
+
 import { Component, input, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 
 import { CustomControlValueAccessorDirective } from '@app/directives/custom-control-value-accessor';
+import { IsRequiredPipe } from '@app/pipes';
 
 @Component({
   selector: 'app-textarea',
@@ -14,6 +17,8 @@ import { CustomControlValueAccessorDirective } from '@app/directives/custom-cont
     MatInputModule,
     FormsModule,
     ReactiveFormsModule,
+    TranslateModule,
+    IsRequiredPipe,
   ],
 })
 export class TextAreaComponent
@@ -21,4 +26,6 @@ export class TextAreaComponent
   implements OnInit
 {
   label = input('');
+  rows = input(10);
+  cols = input(1);
 }

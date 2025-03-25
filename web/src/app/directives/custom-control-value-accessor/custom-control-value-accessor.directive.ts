@@ -1,4 +1,10 @@
-import { Directive, inject, Input, OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Directive,
+  inject,
+  Input,
+  OnInit,
+} from '@angular/core';
 import {
   ControlValueAccessor,
   FormControl,
@@ -13,6 +19,8 @@ import {
 export class CustomControlValueAccessorDirective<T = any>
   implements ControlValueAccessor, Validators, OnInit
 {
+  private cdr = inject(ChangeDetectorRef);
+
   @Input()
   set required(required: boolean) {
     if (required) {
@@ -45,17 +53,25 @@ export class CustomControlValueAccessorDirective<T = any>
       this.formControl = this.ngControl.control;
     }
   }
-  writeValue(value: T): void {
+
+  writeValue(event: unknown): void {
+    const value =
+      (event as { target: { value: unknown } })?.target?.value || event;
+
     if (value !== this.formControl.value) {
-      this.formControl.setValue(value);
+      setTimeout(() => {
+        this.formControl.setValue(value, { emitEvent: false });
+        this.formControl.updateValueAndValidity();
+        this.cdr.detectChanges();
+      });
     }
   }
 
-  registerOnChange(fn: (value: T) => void): void {
+  registerOnChange(fn: (_value: T) => void): void {
     this.onChange = fn;
   }
 
-  registerOnTouched(fn: (value: T) => void): void {
+  registerOnTouched(fn: (_value: T) => void): void {
     this.onTouched = fn;
   }
 
@@ -70,5 +86,5 @@ export class CustomControlValueAccessorDirective<T = any>
     this.updateFormControl();
   };
 
-  protected onTouched?: (value: T) => void;
+  protected onTouched?: (_value: T) => void;
 }

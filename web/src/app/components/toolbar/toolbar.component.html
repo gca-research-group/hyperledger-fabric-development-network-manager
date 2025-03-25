@@ -10,8 +10,15 @@
         <app-breadcrumb [items]="breadcrumb" />
       </div>
     </div>
-    <div>
-      <app-language-selector [(language)]="language"/>
+    <div class="d-flex align-items-center">
+      <app-language-selector [(language)]="language" />
+      <app-icon-button icon="account_circle" tooltip="profile" [matMenuTriggerFor]="menu" />
+      <mat-menu #menu="matMenu">
+        <button mat-menu-item class="toolbar-right-menu" (click)="logout()">
+          <app-icon icon="logout" />
+          <span>{{ 'logout' | translate }}</span>
+        </button>
+      </mat-menu>
     </div>
   </div>
 </mat-toolbar>

@@ -21,3 +21,8 @@ app-icon-button {
   display: flex;
   align-items: center;
 }
+
+::ng-deep .toolbar-right-menu .mat-mdc-menu-item-text {
+  display: flex;
+  align-items: center;
+}

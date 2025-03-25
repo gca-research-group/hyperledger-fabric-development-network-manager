@@ -1,8 +1,16 @@
 :host {
   display: inline-block;
-  // width: 100%;
 
   mat-form-field {
     width: 100%;
+  }
+
+  ::ng-deep .mat-mdc-form-field-text-prefix,
+  ::ng-deep .mat-mdc-form-field-text-prefix span {
+    display: inline-flex;
+  }
+
+  ::ng-deep .mat-mdc-form-field-flex {
+    align-items: center;
   }
 }

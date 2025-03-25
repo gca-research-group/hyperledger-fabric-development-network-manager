@@ -1,7 +1,8 @@
 import { NgOptionComponent, NgSelectComponent } from '@ng-select/ng-select';
+import { TranslateModule } from '@ngx-translate/core';
 
-import { Component, model, output } from '@angular/core';
-import { FormsModule } from '@angular/forms';
+import { Component } from '@angular/core';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { CustomControlValueAccessorDirective } from '@app/directives/custom-control-value-accessor';
 
@@ -9,21 +10,23 @@ import { CustomControlValueAccessorDirective } from '@app/directives/custom-cont
   selector: 'app-blockchain-platform-selector',
   templateUrl: './blockchain-platform-selector.component.html',
   styleUrl: './blockchain-platform-selector.component.scss',
-  imports: [FormsModule, NgSelectComponent, NgOptionComponent],
+  imports: [
+    FormsModule,
+    ReactiveFormsModule,
+    NgSelectComponent,
+    NgOptionComponent,
+    TranslateModule,
+  ],
 })
 export class BlockchainPlatformSelectorComponent extends CustomControlValueAccessorDirective {
-  current = model('hyperledger-fabric');
-
-  select = output<string>();
-
   blockchainPlatforms = [
     {
-      id: 'hyperledger-fabric',
+      id: 'HYPERLEDGER_FABRIC',
       name: 'Hyperledger Fabric',
       image: '/images/hyperledger.png',
     },
     {
-      id: 'ethereum',
+      id: 'ETHEREUM',
       name: 'Ethereum',
       image: '/images/ethereum.png',
     },

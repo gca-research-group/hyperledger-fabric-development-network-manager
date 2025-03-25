@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { appConfig } from '@app/__tests__/app.config';
+
 import { TextAreaComponent } from './textarea.component';
 
 describe('TextAreaComponent', () => {
@@ -8,6 +10,7 @@ describe('TextAreaComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      providers: [...appConfig.providers],
       imports: [TextAreaComponent],
     }).compileComponents();
 

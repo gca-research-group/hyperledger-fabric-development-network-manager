@@ -1,4 +1,10 @@
 <mat-form-field>
-  <mat-label>{{ label() }}</mat-label>
-  <textarea [formControl]="formControl" matInput></textarea>
+  <mat-label>{{ label() | translate }}</mat-label>
+  <textarea
+    [formControl]="formControl"
+    [rows]="rows()"
+    [cols]="cols()"
+    [required]="formControl | isRequired"
+    matInput
+  ></textarea>
 </mat-form-field>

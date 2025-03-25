@@ -1,0 +1,77 @@
+<form [formGroup]="form" class="d-flex flex-column col-lg-6 col-md-12" (ngSubmit)="save()">
+  <app-input
+    placeholder="Channel"
+    formControlName="name"
+    label="name"
+    class="col mb-5"
+  />
+  <!-- <div class="mb-5" formArrayName="clauses">
+    <legend class="d-flex justify-content-between align-items-center w-100">
+      <span>{{ 'clauses' | translate }}</span>
+      <app-icon-button icon="add_circle" (click)="addClause()" tooltip="add" />
+    </legend>
+
+    <div
+      *ngFor="let item of clauses.controls; let clauseIndex = index"
+      [formGroupName]="clauseIndex"
+      class="mb-3"
+    >
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            {{ 'clause' | translate }} {{ clauseIndex + 1 }}
+          </mat-panel-title>
+        </mat-expansion-panel-header>
+        <div class="d-flex align-items-center mb-5" style="gap: 8px">
+          <app-input
+            formControlName="name"
+            placeholder="name"
+            label="name"
+            class="col"
+          />
+
+          <app-icon-button
+            icon="delete"
+            (click)="removeClause(clauseIndex)"
+            tooltip="delete"
+          />
+        </div>
+      </mat-expansion-panel>
+    </div>
+  </div> -->
+  <!-- <app-peers-selector formControlName="peers" class="col mb-5" /> -->
+   <!--
+  OrdererOrgs:
+  - Name: Orderer
+    Domain: example.com
+    Specs:
+      - Hostname: orderer
+
+PeerOrgs:
+  - Name: Org1
+    Domain: org1.example.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  - Name: Org2
+    Domain: org2.example.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  - Name: Org3
+    Domain: org3.example.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+   -->
+  <app-button label="save" class="w-100" type="submit" [disabled]="form.invalid" />
+</form>

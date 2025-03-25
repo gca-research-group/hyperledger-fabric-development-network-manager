@@ -1,10 +1,19 @@
 <mat-form-field>
   <mat-label>{{ label() | translate }}</mat-label>
+
+  @if (icon()) {
+    <span matTextPrefix>
+      <app-icon  [icon]="icon()" />
+      &nbsp;
+    </span>
+  }
+
   <input
     [type]="type()"
-    [placeholder]="placeholder()"
+    [placeholder]="placeholder() | translate"
     [min]="min()"
     [formControl]="formControl"
     matInput
+    [required]="formControl | isRequired"
   />
 </mat-form-field>
