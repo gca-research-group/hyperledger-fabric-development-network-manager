@@ -141,7 +141,7 @@ func (s *UserService) Update(entity models.User) (*models.User, error) {
 	}
 
 	_user := models.User{}
-	err = s.Repository.DB.Model(&_user).Where("id = ?", _user.ID).UpdateColumns(models.User{
+	err = s.Repository.DB.Model(&_user).Where("id = ?", entity.ID).UpdateColumns(models.User{
 		Name:      entity.Name,
 		Email:     entity.Email,
 		Password:  hashedPassword,

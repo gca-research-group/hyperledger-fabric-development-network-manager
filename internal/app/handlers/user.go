@@ -21,45 +21,6 @@ func NewUserHandler(service *services.UserService) *UserHandler {
 	return &UserHandler{service: service}
 }
 
-func (h *UserHandler) Create(c *gin.Context) {
-	var data models.User
-
-	if err := c.ShouldBindJSON(&data); err != nil {
-		c.Error(&errors.AppError{
-			Code:    http.StatusInternalServerError,
-			Message: err.Error(),
-		})
-		return
-	}
-
-	_, err := h.service.Create(&data)
-
-	if err != nil {
-		c.Error(&errors.AppError{
-			Code:    http.StatusBadRequest,
-			Message: err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusCreated, data)
-}
-
-func (h *UserHandler) Delete(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-
-	if err := h.service.Delete(uint(id)); err != nil {
-		slog.Error("[User -> Delete]", "err", err)
-		c.Error(&errors.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "FAILED_TO_DELETE",
-		})
-		return
-	}
-
-	c.Status(http.StatusOK)
-}
-
 func (h *UserHandler) Index(c *gin.Context) {
 	var queryParams dtos.UserDto
 	c.ShouldBindQuery(&queryParams)
@@ -98,6 +59,30 @@ func (h *UserHandler) Show(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
+func (h *UserHandler) Create(c *gin.Context) {
+	var data models.User
+
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.Error(&errors.AppError{
+			Code:    http.StatusInternalServerError,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	_, err := h.service.Create(&data)
+
+	if err != nil {
+		c.Error(&errors.AppError{
+			Code:    http.StatusBadRequest,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, data)
+}
+
 func (h *UserHandler) Update(c *gin.Context) {
 	var data models.User
 
@@ -120,4 +105,19 @@ func (h *UserHandler) Update(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, data)
+}
+
+func (h *UserHandler) Delete(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+
+	if err := h.service.Delete(uint(id)); err != nil {
+		slog.Error("[User -> Delete]", "err", err)
+		c.Error(&errors.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "FAILED_TO_DELETE",
+		})
+		return
+	}
+
+	c.Status(http.StatusOK)
 }
