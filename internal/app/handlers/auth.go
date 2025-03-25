@@ -46,3 +46,32 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		"user":        response.User,
 	})
 }
+
+func (h *AuthHandler) Refresh(c *gin.Context) {
+	refreshToken, err := c.Cookie("jrt")
+
+	if err != nil {
+		c.Error(&errors.AppError{
+			Code:    http.StatusUnauthorized,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	response, err := h.service.Refresh(refreshToken)
+
+	if err != nil {
+		c.Error(&errors.AppError{
+			Code:    http.StatusUnauthorized,
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.SetCookie("jrt", response.RefreshToken, 7*24*60*60*1000, "/", "", false, true)
+
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"accessToken": response.AccessToken,
+		"user":        response.User,
+	})
+}

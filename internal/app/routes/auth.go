@@ -18,6 +18,7 @@ func SetupAuthRoutes(engine *gin.RouterGroup, db *gorm.DB) *gin.RouterGroup {
 	routes := engine.Group("/auth")
 	{
 		routes.POST("/login", handler.Login)
+		routes.POST("/refresh", handler.Refresh)
 	}
 
 	return routes
