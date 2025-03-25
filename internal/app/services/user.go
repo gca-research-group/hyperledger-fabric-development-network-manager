@@ -100,7 +100,7 @@ func (s *UserService) FindAll(queryOptions sql.QueryOptions, queryParams dtos.Us
 func (s *UserService) FindByEmail(email string) (models.User, error) {
 	entity, err := s.Repository.FindByEmail(email)
 
-	if err != nil {
+	if err != nil || entity.ID == 0 {
 		return entity, errors.New("RECORD_NOT_FOUND")
 	}
 
@@ -134,7 +134,7 @@ func (s *UserService) Update(entity models.User) (*models.User, error) {
 		return nil, errors.New("USER_PASSWORD_CANNOT_BE_EMPTY")
 	}
 
-	hashedPassword, err := HashPassword(entity.Password)
+	hashedPassword, err := (&AuthService{}).HashPassword(entity.Password)
 
 	if err != nil {
 		return &entity, err
