@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
@@ -65,15 +64,6 @@ func (s *AuthService) VerifyToken(token string) error {
 	return nil
 }
 
-func (s *AuthService) VerifyPassword() {
-
-}
-
-func (s *AuthService) HashPassword(password string) (string, error) {
-	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	return string(hashed), err
-}
-
 func (s *AuthService) Login(email string, password string) (Response, error) {
 	if email == "" {
 		return Response{}, errors.New("EMAIL_IS_REQUIRED")
@@ -89,9 +79,7 @@ func (s *AuthService) Login(email string, password string) (Response, error) {
 		return Response{}, err
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-
-	if err != nil {
+	if err := user.VerifyPassword(password); err != nil {
 		return Response{}, errors.New("INVALID_PASSWORD")
 	}
 

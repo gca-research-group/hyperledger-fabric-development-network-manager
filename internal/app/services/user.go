@@ -134,7 +134,7 @@ func (s *UserService) Update(entity models.User) (*models.User, error) {
 		return nil, errors.New("USER_PASSWORD_CANNOT_BE_EMPTY")
 	}
 
-	hashedPassword, err := (&AuthService{}).HashPassword(entity.Password)
+	hashedPassword, err := entity.HashPassword(entity.Password)
 
 	if err != nil {
 		return &entity, err
