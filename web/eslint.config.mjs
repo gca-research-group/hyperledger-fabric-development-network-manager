@@ -26,8 +26,6 @@ export default tseslint.config(
   eslintPluginPrettierRecommended,
   ...fixupConfigRules(
     compat.extends(
-      //'eslint:recommended',
-      //'plugin:@typescript-eslint/recommended',
       'plugin:@angular-eslint/recommended',
       'plugin:@angular-eslint/template/process-inline-templates',
       'plugin:import/typescript',
@@ -78,7 +76,12 @@ export default tseslint.config(
         },
       ],
       '@typescript-eslint/no-useless-constructor': 'error',
-      //'@typescript-eslint/semi': 'error',
+      '@typescript-eslint/unbound-method': [
+        'error',
+        {
+          ignoreStatic: true,
+        },
+      ],
       'prettier/prettier': 'error',
       eqeqeq: 'error',
 
