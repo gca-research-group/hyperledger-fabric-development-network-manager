@@ -86,6 +86,10 @@ git clone https://github.com/gca-research-group/hyperledger-fabric-development-n
 ./.scripts/app/web/up.sh
 ```
 
+- Executing the application
+
+You have to access the address [https://localhost:4200](https://localhost:4200) on your web browser. The default user is `admin@admin.com` and the default password is `admin`
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
