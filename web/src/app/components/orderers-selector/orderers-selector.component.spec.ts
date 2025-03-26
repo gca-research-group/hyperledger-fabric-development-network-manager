@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { appConfig } from '@app/__tests__/app.config';
+
 import { OrderersSelectorComponent } from './orderers-selector.component';
 
 describe('OrderersSelectorComponent', () => {
@@ -9,6 +11,7 @@ describe('OrderersSelectorComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [OrderersSelectorComponent],
+      providers: [appConfig.providers],
     }).compileComponents();
 
     fixture = TestBed.createComponent(OrderersSelectorComponent);
