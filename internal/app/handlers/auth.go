@@ -7,6 +7,7 @@ import (
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/dtos"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/errors"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/services"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -39,7 +40,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("jrt", response.RefreshToken, 7*24*60*60*1000, "/", "", false, true)
+	utils.SetRefreshTokenAsCookie(c, response.RefreshToken)
 
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"accessToken": response.AccessToken,
@@ -68,7 +69,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("jrt", response.RefreshToken, 7*24*60*60*1000, "/", "", false, true)
+	utils.SetRefreshTokenAsCookie(c, response.RefreshToken)
 
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"accessToken": response.AccessToken,

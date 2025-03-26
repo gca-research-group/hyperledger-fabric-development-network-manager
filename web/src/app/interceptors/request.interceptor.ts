@@ -31,15 +31,19 @@ export function requestInterceptor(
         return authService.refresh().pipe(
           switchMap(response => {
             currentUserService.updateAccessToken(response.accessToken);
-
             return next(cloneRequest(req, response.accessToken));
           }),
-          catchError(_ => {
-            currentUserService.remove();
-            void router.navigate(['/login']);
+          catchError(
+            (newError: { status: number; error?: { message: string } }) => {
+              if (newError.status === 401) {
+                currentUserService.remove();
+                void router.navigate(['/login']);
+                return EMPTY;
+              }
 
-            return EMPTY;
-          }),
+              return throwError(() => newError);
+            },
+          ),
         );
       }
 
