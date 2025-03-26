@@ -63,7 +63,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	if err != nil {
 		c.Error(&errors.AppError{
 			Code:    http.StatusUnauthorized,
-			Message: err.Error(),
+			Message: "SESSION_EXPIRED",
 		})
 		return
 	}

@@ -1,10 +1,10 @@
 <form [formGroup]="form" class="d-flex flex-column col-lg-6 col-md-12" (ngSubmit)="save()">
   <app-input
-    placeholder="Channel"
     formControlName="name"
     label="name"
     class="col mb-5"
   />
   <app-peers-selector formControlName="peers" class="col mb-5" />
+  <app-orderers-selector formControlName="orderers" class="col mb-5" />
   <app-button label="save" class="w-100" type="submit" [disabled]="form.invalid" />
 </form>

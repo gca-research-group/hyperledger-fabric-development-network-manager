@@ -14,15 +14,15 @@ import (
 )
 
 type OrdererService struct {
-	Repository *repositories.OrdererRepository
+	repository *repositories.OrdererRepository
 }
 
 func NewOrdererService(repository *repositories.OrdererRepository) *OrdererService {
-	return &OrdererService{Repository: repository}
+	return &OrdererService{repository: repository}
 }
 
 func (s *OrdererService) FindById(id uint) (*models.Orderer, error) {
-	orderer, err := s.Repository.FindById(id)
+	orderer, err := s.repository.FindById(id)
 
 	if err != nil {
 		return nil, errors.New("REGISTER_NOT_FOUND")
@@ -35,7 +35,7 @@ func (s *OrdererService) FindAll(queryOptions sql.QueryOptions, queryParams dtos
 
 	var orderers []models.Orderer
 	var total int64
-	stmt := s.Repository.DB.Model(&models.Orderer{})
+	stmt := s.repository.DB.Model(&models.Orderer{})
 
 	if queryParams.Domain != "" {
 		stmt.Where("domain ilike ?", "%"+queryParams.Domain+"%")
@@ -43,10 +43,6 @@ func (s *OrdererService) FindAll(queryOptions sql.QueryOptions, queryParams dtos
 
 	if queryParams.Name != "" {
 		stmt.Where("name ilike ?", "%"+queryParams.Name+"%")
-	}
-
-	if queryParams.Port != 0 {
-		stmt.Where("port = ?", queryParams.Port)
 	}
 
 	if queryParams.ID != 0 {
@@ -83,7 +79,7 @@ func (s *OrdererService) Create(orderer *models.Orderer) (models.Orderer, error)
 		return models.Orderer{}, errors.New("ORDERER_NAME_CANNOT_BE_EMPTY")
 	}
 
-	err := s.Repository.Create(orderer)
+	err := s.repository.Create(orderer)
 
 	return models.Orderer{}, err
 }
@@ -98,10 +94,6 @@ func (s *OrdererService) Update(orderer models.Orderer) (models.Orderer, error) 
 		return models.Orderer{}, errors.New("ORDERER_DOMAIN_CANNOT_BE_EMPTY")
 	}
 
-	if orderer.Port == 0 {
-		return models.Orderer{}, errors.New("PORT_CANNOT_BE_EMPTY")
-	}
-
 	if orderer.Name == "" {
 		return models.Orderer{}, errors.New("ORDERER_NAME_CANNOT_BE_EMPTY")
 	}
@@ -113,21 +105,20 @@ func (s *OrdererService) Update(orderer models.Orderer) (models.Orderer, error) 
 	data := map[string]interface{}{
 		"Name":      orderer.Name,
 		"Domain":    orderer.Domain,
-		"Port":      orderer.Port,
 		"UpdatedAt": time.Now().UTC(),
 	}
 
-	entity, err := s.Repository.Update(int(orderer.ID), data)
+	entity, err := s.repository.Update(int(orderer.ID), data)
 
 	return entity, err
 }
 
 func (s *OrdererService) Delete(id uint) error {
-	if _, err := s.Repository.FindById(id); err != nil {
+	if _, err := s.repository.FindById(id); err != nil {
 		return err
 	}
 
-	err := s.Repository.Delete(id)
+	err := s.repository.Delete(id)
 
 	return err
 }

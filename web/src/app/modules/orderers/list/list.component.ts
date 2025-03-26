@@ -29,8 +29,7 @@ import { InputComponent } from '@app/components/input';
 import { TableComponent } from '@app/components/table';
 import { Breadcrumb, Column, ColumnType, Orderer } from '@app/models';
 import { BreadcrumbService } from '@app/services/breadcrumb';
-
-import { OrderersService } from '../services/orderers.service';
+import { OrderersService } from '@app/services/orderers';
 
 const COLUMNS: Column[] = [
   {
@@ -44,10 +43,6 @@ const COLUMNS: Column[] = [
   {
     id: 'domain',
     label: 'domain',
-  },
-  {
-    id: 'port',
-    label: 'port',
   },
   {
     id: 'createdAt',
@@ -122,9 +117,9 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
   private actionsRow = viewChild<TemplateRef<any>>('actionsRow');
 
   readonly dialog = inject(MatDialog);
-  private toastr = inject(ToastrService);
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);
+  private toastr = inject(ToastrService);
 
   constructor() {
     this.breadcrumbService.update(BREADCRUMB);
@@ -133,7 +128,6 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
       id: null,
       name: null,
       domain: null,
-      port: null,
       page: 1,
       pageSize: 20,
       orderBy: null,
@@ -194,10 +188,7 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.service.delete(id).subscribe({
           next: () => {
             this.data = this.data.filter(item => +(item.id ?? 0) !== id);
-            this.toastr.success('DELETED_SUCCESSFULLY', undefined, {
-              closeButton: true,
-              progressBar: true,
-            });
+            this.toastr.success('DELETED_SUCCESSFULLY');
           },
           error: error => {
             console.log('[error]', error);

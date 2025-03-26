@@ -12,7 +12,7 @@ import (
 func CreateAccessToken(id uint) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": strconv.FormatUint(uint64(id), 10),
-		"exp": time.Now().Add(time.Minute * 5).Unix(),
+		"exp": time.Now().Add(time.Hour * 24 * 7).Unix(),
 	})
 
 	return token.SignedString([]byte(os.Getenv("SECRET_KEY")))

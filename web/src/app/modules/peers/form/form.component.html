@@ -1,22 +1,13 @@
 <form [formGroup]="form" class="d-flex flex-column col-lg-6 col-md-12" (ngSubmit)="save()">
   <app-input
-    placeholder="Peer"
     formControlName="name"
     label="name"
     class="col mb-5"
   />
   <app-input
-    placeholder="peer.example.com"
     formControlName="domain"
     label="domain"
     class="col mb-5"
-  />
-  <app-input
-    placeholder="7050"
-    formControlName="port"
-    label="port"
-    type="number"
-    class="col mb-2"
   />
   <app-button label="save" class="w-100" type="submit" [disabled]="form.invalid" />
 </form>

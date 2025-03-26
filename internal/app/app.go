@@ -38,6 +38,9 @@ func Run() {
 	server.Use(middlewares.ErrorHandler())
 
 	db := database.Connection()
+
+	database.Seed(db)
+
 	api := server.Group("/api/v1")
 
 	routes.SetUpPublicRoutes(api, db)

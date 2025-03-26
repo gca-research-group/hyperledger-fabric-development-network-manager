@@ -14,18 +14,18 @@ import (
 )
 
 type PeerService struct {
-	Repository *repositories.PeerRepository
+	repository *repositories.PeerRepository
 }
 
 func NewPeerService(repository *repositories.PeerRepository) *PeerService {
-	return &PeerService{Repository: repository}
+	return &PeerService{repository: repository}
 }
 
 func (s *PeerService) FindAll(queryOptions sql.QueryOptions, queryParams dtos.PeerDto) (http.Response[[]models.Peer], error) {
 
 	var peers []models.Peer
 	var total int64
-	stmt := s.Repository.DB.Model(&models.Peer{})
+	stmt := s.repository.DB.Model(&models.Peer{})
 
 	if queryParams.Domain != "" {
 		stmt.Where("domain ilike ?", "%"+queryParams.Domain+"%")
@@ -33,10 +33,6 @@ func (s *PeerService) FindAll(queryOptions sql.QueryOptions, queryParams dtos.Pe
 
 	if queryParams.Name != "" {
 		stmt.Where("name ilike ?", "%"+queryParams.Name+"%")
-	}
-
-	if queryParams.Port != 0 {
-		stmt.Where("port = ?", queryParams.Port)
 	}
 
 	if queryParams.ID != 0 {
@@ -65,7 +61,7 @@ func (s *PeerService) FindAll(queryOptions sql.QueryOptions, queryParams dtos.Pe
 }
 
 func (s *PeerService) FindById(id uint) (models.Peer, error) {
-	entity, err := s.Repository.FindById(id)
+	entity, err := s.repository.FindById(id)
 
 	if err != nil {
 		return *entity, errors.New("RECORD_NOT_FOUND")
@@ -83,7 +79,7 @@ func (s *PeerService) Create(peer *models.Peer) (*models.Peer, error) {
 		return nil, errors.New("PEER_NAME_CANNOT_BE_EMPTY")
 	}
 
-	err := s.Repository.Create(peer)
+	err := s.repository.Create(peer)
 
 	return peer, err
 }
@@ -98,10 +94,6 @@ func (s *PeerService) Update(peer models.Peer) (models.Peer, error) {
 		return models.Peer{}, errors.New("PEER_DOMAIN_CANNOT_BE_EMPTY")
 	}
 
-	if peer.Port == 0 {
-		return models.Peer{}, errors.New("PORT_CANNOT_BE_EMPTY")
-	}
-
 	if peer.Name == "" {
 		return models.Peer{}, errors.New("PEER_NAME_CANNOT_BE_EMPTY")
 	}
@@ -113,11 +105,10 @@ func (s *PeerService) Update(peer models.Peer) (models.Peer, error) {
 	data := map[string]interface{}{
 		"Name":      peer.Name,
 		"Domain":    peer.Domain,
-		"Port":      peer.Port,
 		"UpdatedAt": time.Now().UTC(),
 	}
 
-	entity, err := s.Repository.Update(int(peer.ID), data)
+	entity, err := s.repository.Update(int(peer.ID), data)
 
 	return entity, err
 }
@@ -127,7 +118,7 @@ func (s *PeerService) Delete(id uint) error {
 		return err
 	}
 
-	err := s.Repository.Delete(id)
+	err := s.repository.Delete(id)
 
 	return err
 }

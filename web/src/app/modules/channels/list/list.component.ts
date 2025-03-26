@@ -9,7 +9,6 @@ import {
   ElementRef,
   inject,
   OnDestroy,
-  OnInit,
   TemplateRef,
   viewChild,
 } from '@angular/core';
@@ -29,8 +28,7 @@ import { InputComponent } from '@app/components/input';
 import { TableComponent } from '@app/components/table';
 import { Column, ColumnType, Channel, Breadcrumb } from '@app/models';
 import { BreadcrumbService } from '@app/services/breadcrumb';
-
-import { ChannelsService } from '../services/channels.service';
+import { ChannelsService } from '@app/services/channels';
 
 const COLUMNS: Column[] = [
   {
@@ -87,7 +85,7 @@ const BREADCRUMB: Breadcrumb[] = [
     IconButtonComponent,
   ],
 })
-export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
+export class ListComponent implements AfterViewInit, OnDestroy {
   columns = COLUMNS;
 
   displayedColumns = COLUMNS.map(column => column.id);
@@ -125,7 +123,6 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
       id: null,
       name: null,
       domain: null,
-      port: null,
       page: 1,
       pageSize: 20,
       orderBy: null,
@@ -142,10 +139,6 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
         queryParamsHandling: 'merge',
       });
     });
-  }
-
-  ngOnInit(): void {
-    this.search();
   }
 
   ngAfterViewInit(): void {
@@ -186,10 +179,7 @@ export class ListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.service.delete(id).subscribe({
           next: () => {
             this.data = this.data.filter(item => item.id !== id);
-            this.toastr.success('DELETED_SUCCESSFULLY', undefined, {
-              closeButton: true,
-              progressBar: true,
-            });
+            this.toastr.success('DELETED_SUCCESSFULLY');
           },
           error: error => {
             console.log('[error]', error);

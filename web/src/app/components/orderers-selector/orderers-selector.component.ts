@@ -5,15 +5,15 @@ import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { CustomControlValueAccessorDirective } from '@app/directives/custom-control-value-accessor';
-import { Peer } from '@app/models';
-import { PeersService } from '@app/services/peers';
+import { Orderer } from '@app/models';
+import { OrderersService } from '@app/services/orderers';
 
 import { IconButtonComponent } from '../icon-button';
 
 @Component({
-  selector: 'app-peers-selector',
-  templateUrl: './peers-selector.component.html',
-  styleUrl: './peers-selector.component.scss',
+  selector: 'app-orderers-selector',
+  templateUrl: './orderers-selector.component.html',
+  styleUrl: './orderers-selector.component.scss',
   imports: [
     NgSelectComponent,
     FormsModule,
@@ -21,20 +21,20 @@ import { IconButtonComponent } from '../icon-button';
     IconButtonComponent,
   ],
 })
-export class PeersSelectorComponent
+export class OrderersSelectorComponent
   extends CustomControlValueAccessorDirective
   implements OnInit
 {
-  peers: Peer[] = [];
+  orderers: Orderer[] = [];
   loading = false;
-  private service = inject(PeersService);
+  private service = inject(OrderersService);
 
   override ngOnInit() {
     super.ngOnInit();
-    this.getAllPeers();
+    this.getAllOrderers();
   }
 
-  getAllPeers() {
+  getAllOrderers() {
     this.loading = true;
     this.service
       .findAll()
@@ -44,11 +44,11 @@ export class PeersSelectorComponent
         }),
       )
       .subscribe(response => {
-        this.peers = response.data;
+        this.orderers = response.data;
       });
   }
 
-  addPeer() {
-    window.open('/peers/add', '_blank');
+  addOrderer() {
+    window.open('/orderers/add', '_blank');
   }
 }

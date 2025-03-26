@@ -8,16 +8,16 @@ import (
 )
 
 type User struct {
-	ID      uint
-	Name    string
-	Email   string
-	IsSuper bool
+	ID      uint   `json:"id"`
+	Name    string `json:"name"`
+	Email   string `json:"email"`
+	IsSuper bool   `json:"isSuper"`
 }
 
 type Response struct {
-	AccessToken  string
-	RefreshToken string
-	User         User
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+	User         User   `json:"user"`
 }
 
 type AuthService struct {

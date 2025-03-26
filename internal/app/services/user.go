@@ -15,11 +15,11 @@ import (
 )
 
 type UserService struct {
-	Repository *repositories.UserRepository
+	repository *repositories.UserRepository
 }
 
 func NewUserService(repository *repositories.UserRepository) *UserService {
-	return &UserService{Repository: repository}
+	return &UserService{repository: repository}
 }
 
 func (s *UserService) Create(entity *models.User) (*models.User, error) {
@@ -35,7 +35,7 @@ func (s *UserService) Create(entity *models.User) (*models.User, error) {
 		return nil, errors.New("USER_PASSWORD_CANNOT_BE_EMPTY")
 	}
 
-	if existingUser, _ := s.Repository.FindByEmail(entity.Email); existingUser.ID != 0 {
+	if existingUser, _ := s.repository.FindByEmail(entity.Email); existingUser.ID != 0 {
 		return nil, errors.New("USER_ALREADY_EXISTS")
 	}
 
@@ -47,17 +47,17 @@ func (s *UserService) Create(entity *models.User) (*models.User, error) {
 
 	entity.Password = string(hashedPassword)
 
-	err = s.Repository.Create(entity)
+	err = s.repository.Create(entity)
 
 	return entity.Sanitize(), err
 }
 
 func (s *UserService) Delete(id uint) error {
-	if _, err := s.Repository.FindById(id); err != nil {
+	if _, err := s.repository.FindById(id); err != nil {
 		return err
 	}
 
-	err := s.Repository.Delete(id)
+	err := s.repository.Delete(id)
 
 	return err
 }
@@ -66,7 +66,7 @@ func (s *UserService) FindAll(queryOptions sql.QueryOptions, queryParams dtos.Us
 
 	var users []models.User
 	var total int64
-	stmt := s.Repository.DB.Model(&models.User{})
+	stmt := s.repository.DB.Model(&models.User{})
 
 	if queryParams.Name != "" {
 		stmt.Where("name ilike ?", "%"+queryParams.Name+"%")
@@ -98,7 +98,7 @@ func (s *UserService) FindAll(queryOptions sql.QueryOptions, queryParams dtos.Us
 }
 
 func (s *UserService) FindByEmail(email string) (models.User, error) {
-	entity, err := s.Repository.FindByEmail(email)
+	entity, err := s.repository.FindByEmail(email)
 
 	if err != nil || entity.ID == 0 {
 		return entity, errors.New("RECORD_NOT_FOUND")
@@ -108,7 +108,7 @@ func (s *UserService) FindByEmail(email string) (models.User, error) {
 }
 
 func (s *UserService) FindById(id uint) (*models.User, error) {
-	entity, err := s.Repository.FindById(id)
+	entity, err := s.repository.FindById(id)
 
 	if err != nil {
 		return &entity, errors.New("RECORD_NOT_FOUND")
@@ -141,7 +141,7 @@ func (s *UserService) Update(entity models.User) (*models.User, error) {
 	}
 
 	_user := models.User{}
-	err = s.Repository.DB.Model(&_user).Where("id = ?", entity.ID).UpdateColumns(models.User{
+	err = s.repository.DB.Model(&_user).Where("id = ?", entity.ID).UpdateColumns(models.User{
 		Name:      entity.Name,
 		Email:     entity.Email,
 		Password:  hashedPassword,

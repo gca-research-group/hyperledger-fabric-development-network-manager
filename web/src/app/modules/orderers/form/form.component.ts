@@ -2,10 +2,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
 import { finalize } from 'rxjs';
 
-import { Location } from '@angular/common';
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import {
-  AbstractControl,
   FormBuilder,
   FormControl,
   FormGroup,
@@ -13,14 +11,13 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { ButtonComponent } from '@app/components/button';
+import { InputComponent } from '@app/components/input';
 import { Orderer } from '@app/models';
 import { BreadcrumbService } from '@app/services/breadcrumb';
-
-import { InputComponent } from '../../../components/input/input.component';
-import { OrderersService } from '../services/orderers.service';
+import { OrderersService } from '@app/services/orderers';
 
 const BREADCRUMB = [
   {
@@ -48,27 +45,24 @@ const BREADCRUMB = [
 })
 export class FormComponent implements OnInit, OnDestroy {
   form!: FormGroup<{
-    id: FormControl<string | null>;
+    id: FormControl<number | null>;
     name: FormControl<string | null>;
     domain: FormControl<string | null>;
-    port: FormControl<string | null>;
   }>;
 
   private formBuilder = inject(FormBuilder);
   private breadcrumbService = inject(BreadcrumbService);
   private service = inject(OrderersService);
-  private location = inject(Location);
-  private activatedRoute = inject(ActivatedRoute);
-  loading = false;
-
   private toastr = inject(ToastrService);
+  private activatedRoute = inject(ActivatedRoute);
+  private router = inject(Router);
+  loading = false;
 
   constructor() {
     this.form = this.formBuilder.group({
-      id: '',
-      name: ['', (control: AbstractControl) => Validators.required(control)],
-      domain: ['', (control: AbstractControl) => Validators.required(control)],
-      port: ['', (control: AbstractControl) => Validators.required(control)],
+      id: new FormControl<number | null>(null),
+      name: new FormControl<string | null>(null, Validators.required),
+      domain: new FormControl<string | null>(null, Validators.required),
     });
 
     this.breadcrumbService.update([
@@ -96,21 +90,15 @@ export class FormComponent implements OnInit, OnDestroy {
       next: orderer => {
         this.form.patchValue(orderer);
       },
-      error: (error: { message: string }) => {
-        this.toastr.error(error.message, undefined, {
-          closeButton: true,
-          progressBar: true,
-        });
+      error: (error: { error?: { message: string } }) => {
+        this.toastr.error(error.error?.message ?? 'INTERNAL_SERVER_ERROR');
       },
     });
   }
 
   save() {
     if (this.form.invalid) {
-      this.toastr.warning('INVALID_FORM', undefined, {
-        closeButton: true,
-        progressBar: true,
-      });
+      this.toastr.warning('INVALID_FORM');
       return;
     }
 
@@ -118,7 +106,6 @@ export class FormComponent implements OnInit, OnDestroy {
     this.service
       .save({
         ...this.form.value,
-        port: +(this.form.value.port ?? 0),
       } as unknown as Orderer)
       .pipe(
         finalize(() => {
@@ -131,17 +118,13 @@ export class FormComponent implements OnInit, OnDestroy {
             ? 'RECORD_UPDATED_SUCCESSFULLY'
             : 'RECORD_CREATED_SUCCESSFULLY';
 
-          this.toastr.success(message, undefined, {
-            closeButton: true,
-            progressBar: true,
+          this.toastr.success(message);
+          void this.router.navigate(['./..'], {
+            relativeTo: this.activatedRoute,
           });
-          this.location.back();
         },
-        error: (error: { message: string }) => {
-          this.toastr.error(error.message, undefined, {
-            closeButton: true,
-            progressBar: true,
-          });
+        error: (error: { error?: { message: string } }) => {
+          this.toastr.error(error.error?.message ?? 'INTERNAL_SERVER_ERROR');
         },
       });
   }

@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 
 import { Orderer } from '@app/models';
 
-import { environment } from '../../../../environments/environment';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',

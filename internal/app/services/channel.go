@@ -15,18 +15,18 @@ import (
 )
 
 type ChannelService struct {
-	Repository *repositories.ChannelRepository
+	repository *repositories.ChannelRepository
 }
 
 func NewChannelService(repository *repositories.ChannelRepository) *ChannelService {
-	return &ChannelService{Repository: repository}
+	return &ChannelService{repository: repository}
 }
 
 func (s *ChannelService) FindAll(queryOptions sql.QueryOptions, queryParams dtos.ChannelDto) (http.Response[[]models.Channel], error) {
 
 	var channels []models.Channel
 	var total int64
-	stmt := s.Repository.DB.Model(&models.Channel{})
+	stmt := s.repository.DB.Model(&models.Channel{})
 
 	if queryParams.Name != "" {
 		stmt.Where("name ilike ?", "%"+queryParams.Name+"%")
@@ -56,7 +56,7 @@ func (s *ChannelService) FindAll(queryOptions sql.QueryOptions, queryParams dtos
 func (s *ChannelService) FindById(id uint) (models.Channel, error) {
 	var channel models.Channel
 
-	if err := s.Repository.DB.Preload("Peers").First(&channel, id).Error; err != nil {
+	if err := s.repository.DB.Preload("Peers").Preload("Orderers").First(&channel, id).Error; err != nil {
 		return channel, errors.New("RECORD_NOT_FOUND")
 	}
 
@@ -68,7 +68,7 @@ func (s *ChannelService) Create(channel *models.Channel) (*models.Channel, error
 		return nil, errors.New("CHANNEL_NAME_CANNOT_BE_EMPTY")
 	}
 
-	err := s.Repository.Create(channel)
+	err := s.repository.Create(channel)
 
 	return channel, err
 }
@@ -82,11 +82,16 @@ func (s *ChannelService) Update(channel *models.Channel) (*models.Channel, error
 		return nil, errors.New("CHANNEL_NAME_CANNOT_BE_EMPTY")
 	}
 
-	tx := s.Repository.DB.Begin()
+	tx := s.repository.DB.Begin()
 
 	if err := s.DeletePeers(channel.ID); err != nil {
 		tx.Rollback()
 		return nil, fmt.Errorf("failed to delete peers: %w", err)
+	}
+
+	if err := s.DeleteOrderers(channel.ID); err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("failed to delete orderers: %w", err)
 	}
 
 	updatedChannel := models.Channel{ID: channel.ID}
@@ -107,7 +112,14 @@ func (s *ChannelService) Update(channel *models.Channel) (*models.Channel, error
 		}
 	}
 
-	if err := tx.Preload("Peers").First(&updatedChannel, channel.ID).Error; err != nil {
+	if len(channel.Orderers) > 0 {
+		if err := tx.Model(&updatedChannel).Association("Orderers").Append(channel.Orderers); err != nil {
+			tx.Rollback()
+			return nil, fmt.Errorf("failed to update orderers: %w", err)
+		}
+	}
+
+	if err := tx.Preload("Peers").Preload("Orderers").First(&updatedChannel, channel.ID).Error; err != nil {
 		tx.Rollback()
 		return nil, fmt.Errorf("failed to reload updated channel: %w", err)
 	}
@@ -117,7 +129,7 @@ func (s *ChannelService) Update(channel *models.Channel) (*models.Channel, error
 }
 
 func (s *ChannelService) Delete(id uint) error {
-	if _, err := s.Repository.FindById(id); err != nil {
+	if _, err := s.repository.FindById(id); err != nil {
 		return err
 	}
 
@@ -125,7 +137,11 @@ func (s *ChannelService) Delete(id uint) error {
 		return err
 	}
 
-	err := s.Repository.Delete(id)
+	if err := s.DeleteOrderers(id); err != nil {
+		return err
+	}
+
+	err := s.repository.Delete(id)
 
 	return err
 }
@@ -133,11 +149,25 @@ func (s *ChannelService) Delete(id uint) error {
 func (s *ChannelService) DeletePeers(id uint) error {
 	var channel models.Channel
 
-	if err := s.Repository.DB.Preload("Peers").First(&channel, id).Error; err != nil {
+	if err := s.repository.DB.Preload("Peers").First(&channel, id).Error; err != nil {
 		return err
 	}
 
-	if err := s.Repository.DB.Model(&channel).Association("Peers").Clear(); err != nil {
+	if err := s.repository.DB.Model(&channel).Association("Peers").Clear(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *ChannelService) DeleteOrderers(id uint) error {
+	var channel models.Channel
+
+	if err := s.repository.DB.Preload("Orderers").First(&channel, id).Error; err != nil {
+		return err
+	}
+
+	if err := s.repository.DB.Model(&channel).Association("Orderers").Clear(); err != nil {
 		return err
 	}
 

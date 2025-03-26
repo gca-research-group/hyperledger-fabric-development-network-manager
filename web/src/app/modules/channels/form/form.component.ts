@@ -2,10 +2,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ToastrService } from 'ngx-toastr';
 import { finalize } from 'rxjs';
 
-import { Location } from '@angular/common';
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import {
-  AbstractControl,
   FormBuilder,
   FormControl,
   FormGroup,
@@ -13,15 +11,15 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 import { ButtonComponent } from '@app/components/button';
+import { InputComponent } from '@app/components/input';
+import { OrderersSelectorComponent } from '@app/components/orderers-selector/orderers-selector.component';
 import { PeersSelectorComponent } from '@app/components/peers-selector';
 import { Channel } from '@app/models';
 import { BreadcrumbService } from '@app/services/breadcrumb';
-
-import { InputComponent } from '../../../components/input/input.component';
-import { ChannelsService } from '../services/channels.service';
+import { ChannelsService } from '@app/services/channels';
 
 const BREADCRUMB = [
   {
@@ -46,6 +44,7 @@ const BREADCRUMB = [
     InputComponent,
     ButtonComponent,
     PeersSelectorComponent,
+    OrderersSelectorComponent,
   ],
 })
 export class FormComponent implements OnInit, OnDestroy {
@@ -53,24 +52,23 @@ export class FormComponent implements OnInit, OnDestroy {
     id: FormControl<number | null>;
     name: FormControl<string | null>;
     peers: FormControl<number[] | null>;
+    orderers: FormControl<number[] | null>;
   }>;
 
   private formBuilder = inject(FormBuilder);
   private breadcrumbService = inject(BreadcrumbService);
   private service = inject(ChannelsService);
-  private location = inject(Location);
-  private activatedRoute = inject(ActivatedRoute);
-  loading = false;
-
   private toastr = inject(ToastrService);
+  private activatedRoute = inject(ActivatedRoute);
+  private router = inject(Router);
+  loading = false;
 
   constructor() {
     this.form = this.formBuilder.group({
       id: new FormControl(),
-      name: new FormControl('', [
-        (control: AbstractControl) => Validators.required(control),
-      ]),
+      name: new FormControl('', Validators.required),
       peers: new FormControl<number[]>([]),
+      orderers: new FormControl<number[]>([]),
     });
 
     this.breadcrumbService.update([
@@ -99,23 +97,18 @@ export class FormComponent implements OnInit, OnDestroy {
         this.form.patchValue({
           ...channel,
           peers: channel.peers.map(peer => peer.id),
+          orderers: channel.orderers.map(orderer => orderer.id),
         });
       },
-      error: (error: { message: string }) => {
-        this.toastr.error(error.message, undefined, {
-          closeButton: true,
-          progressBar: true,
-        });
+      error: (error: { error?: { message: string } }) => {
+        this.toastr.error(error.error?.message ?? 'INTERNAL_SERVER_ERROR');
       },
     });
   }
 
   save() {
     if (this.form.invalid) {
-      this.toastr.warning('INVALID_FORM', undefined, {
-        closeButton: true,
-        progressBar: true,
-      });
+      this.toastr.warning('INVALID_FORM');
       return;
     }
 
@@ -133,17 +126,13 @@ export class FormComponent implements OnInit, OnDestroy {
             ? 'RECORD_UPDATED_SUCCESSFULLY'
             : 'RECORD_CREATED_SUCCESSFULLY';
 
-          this.toastr.success(message, undefined, {
-            closeButton: true,
-            progressBar: true,
+          this.toastr.success(message);
+          void this.router.navigate(['./..'], {
+            relativeTo: this.activatedRoute,
           });
-          this.location.back();
         },
-        error: (error: { message: string }) => {
-          this.toastr.error(error.message, undefined, {
-            closeButton: true,
-            progressBar: true,
-          });
+        error: (error: { error?: { message: string } }) => {
+          this.toastr.error(error.error?.message ?? 'INTERNAL_SERVER_ERROR');
         },
       });
   }

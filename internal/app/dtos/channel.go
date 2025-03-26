@@ -6,6 +6,7 @@ type ChannelDto struct {
 	ID             int    `form:"id"`
 	Name           string `form:"name"`
 	Peers          []int  `form:"peers"`
+	Orderers       []int  `form:"orderers"`
 	OrderBy        string `form:"orderBy"`
 	OrderDirection string `form:"orderDirection"`
 }
@@ -19,6 +20,12 @@ func (d *ChannelDto) ToEntity() models.Channel {
 		currentPeer := models.Peer{}
 		currentPeer.ID = uint(id)
 		entity.Peers = append(entity.Peers, &currentPeer)
+	}
+
+	for _, id := range d.Orderers {
+		currentOrderer := models.Orderer{}
+		currentOrderer.ID = uint(id)
+		entity.Orderers = append(entity.Orderers, &currentOrderer)
 	}
 
 	return entity

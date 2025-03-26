@@ -31,7 +31,7 @@ func (h *UserHandler) Index(c *gin.Context) {
 	data, err := h.service.FindAll(queryOptions, queryParams)
 
 	if err != nil {
-		slog.Error("[User -> Index]", "err", err)
+		slog.Error("[User -> Index]", "Index", err)
 		c.Error(&errors.AppError{
 			Code:    http.StatusBadRequest,
 			Message: err.Error(),

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/errors"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/app/utils"
 	"github.com/gin-gonic/gin"
 )
@@ -16,9 +17,11 @@ func AuthHandler() gin.HandlerFunc {
 		parts := strings.Split(authorization, " ")
 
 		if len(parts) != 2 {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"message": "TOKEN_IS_REQUIRED",
+			c.Error(&errors.AppError{
+				Code:    http.StatusUnauthorized,
+				Message: "INVALID_TOKEN",
 			})
+			c.Abort()
 			return
 		}
 
@@ -27,9 +30,11 @@ func AuthHandler() gin.HandlerFunc {
 		_, err := utils.VerifyToken(token)
 
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-				"message": err,
+			c.Error(&errors.AppError{
+				Code:    http.StatusUnauthorized,
+				Message: "TOKEN_EXPIRED",
 			})
+			c.Abort()
 			return
 		}
 
