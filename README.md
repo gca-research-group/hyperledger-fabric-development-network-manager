@@ -74,6 +74,41 @@ Setting up a Hyperledger Fabric network can be a challenging task, even for expe
 git clone https://github.com/gca-research-group/hyperledger-fabric-development-network-manager.git
 ```
 
+- Setting up the .env file
+
+Create a .env file at the root directory and fill it with the following values:
+> There is a .env.example with default values.
+
+```.env
+# server host
+HOST=
+
+# server port
+PORT=
+
+# gin mode: debug or release
+GIN_MODE=
+
+# docker configuration files to hyperledger fabric
+DOCKER_ARTIFACTS_FOLDER=
+
+# crypto-config file to generate the crypto material to hyperledger fabric
+CRYPTO_CONFIG_FILE=
+
+# postgres configuration
+DATABASE_HOST=
+DATABASE_PORT=
+DATABASE_USER=
+DATABASE_PASSWORD=
+DATABASE_NAME=
+
+# the migration folder
+MIGRATION_FOLDER=./internal/app/database/migrations
+
+# secret key used to generate the jwt token
+SECRET_KEY=
+```
+
 - Running the api
 
 ```sh
