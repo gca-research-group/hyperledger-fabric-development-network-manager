@@ -17,4 +17,5 @@ func SetUpProtectedRoutes(engine *gin.RouterGroup, db *gorm.DB) {
 	SetupOrdererRoutes(engine, db)
 	SetupPeerRoutes(engine, db)
 	SetupUserRoutes(engine, db)
+	SetupCryptoConfigRoutes(engine, db)
 }
