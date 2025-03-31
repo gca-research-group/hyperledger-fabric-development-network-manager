@@ -1,0 +1,15 @@
+<div style="display: flex; gap: 8px;">
+  <app-icon-button icon="add_circle" tooltip="add-channel" (click)="addChannel()" />
+  <app-icon-button icon="refresh" tooltip="refresh" (click)="getAllChannel()" />
+</div>
+<ng-select
+  [items]="channel"
+  bindLabel="name"
+  bindValue="id"
+  placeholder="channel"
+  label="channel"
+  [multiple]="true"
+  [formControl]="formControl"
+  appearance="outline"
+  [loading]="loading"
+/>

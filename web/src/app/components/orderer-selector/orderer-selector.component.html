@@ -1,0 +1,15 @@
+<div style="display: flex; gap: 8px;">
+  <app-icon-button icon="add_circle" tooltip="add-orderer" (click)="addOrderer()" />
+  <app-icon-button icon="refresh" tooltip="refresh" (click)="getAllOrderer()" />
+</div>
+<ng-select
+  [items]="orderer"
+  bindLabel="name"
+  bindValue="id"
+  placeholder="orderer"
+  label="orderer"
+  [multiple]="true"
+  [formControl]="formControl"
+  appearance="outline"
+  [loading]="loading"
+/>

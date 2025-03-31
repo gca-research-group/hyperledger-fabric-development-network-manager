@@ -1,0 +1,16 @@
+<form
+  [formGroup]="form"
+  class="d-flex flex-column col-lg-6 col-md-12"
+  (ngSubmit)="save()"
+>
+  <app-input formControlName="name" label="name" class="col mb-5" />
+
+  <app-input formControlName="domain" label="domain" class="col mb-5" />
+
+  <app-button
+    label="save"
+    class="w-100"
+    type="submit"
+    [disabled]="form.invalid"
+  />
+</form>

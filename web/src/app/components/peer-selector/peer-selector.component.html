@@ -1,0 +1,15 @@
+<div style="display: flex; gap: 8px;">
+  <app-icon-button icon="add_circle" tooltip="add-peer" (click)="addPeer()" />
+  <app-icon-button icon="refresh" tooltip="refresh" (click)="getAllPeer()" />
+</div>
+<ng-select
+  [items]="peer"
+  bindLabel="name"
+  bindValue="id"
+  placeholder="peer"
+  label="peer"
+  [multiple]="true"
+  [formControl]="formControl"
+  appearance="outline"
+  [loading]="loading"
+/>

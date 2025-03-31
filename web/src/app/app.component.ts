@@ -19,9 +19,8 @@ export class AppComponent {
 
   menus: Sidebar[] = [
     { label: 'home', icon: 'home', url: '' },
-    { label: 'orderers', icon: 'swap_vert', url: 'orderers' },
-    { label: 'peers', icon: 'network_node', url: 'peers' },
-    { label: 'channels', icon: 'hub', url: 'channels' },
-    { label: 'config', icon: 'link', url: 'config' },
+    { label: 'orderer', icon: 'swap_vert', url: 'orderer' },
+    { label: 'peer', icon: 'network_node', url: 'peer' },
+    { label: 'channel', icon: 'hub', url: 'channel' },
   ];
 }

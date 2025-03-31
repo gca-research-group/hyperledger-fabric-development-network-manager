@@ -1,16 +1,16 @@
 import { Routes } from '@angular/router';
 
 import { isAuthenticatedGuard } from './guards';
-import { channelsRoutes } from './modules/channels';
+import { channelRoutes } from './modules/channel';
 import { loginRoutes } from './modules/login';
-import { orderersRoutes } from './modules/orderers';
-import { peersRoutes } from './modules/peers';
+import { ordererRoutes } from './modules/orderer';
+import { peerRoutes } from './modules/peer';
 
 export const routes: Routes = [
   ...loginRoutes,
   {
     path: '',
-    children: [...orderersRoutes, ...peersRoutes, ...channelsRoutes],
+    children: [...channelRoutes, ...ordererRoutes, ...peerRoutes],
     canActivate: [isAuthenticatedGuard],
   },
 ];
