@@ -27,16 +27,23 @@ Setting up a Hyperledger Fabric network can be a challenging task, even for expe
 
 ## Table of contents
 
-- [Project papers](#project-papers)
+- [Papers](#papers)
 - [Project repositories](#project-repositories)
 - [Features](#features)
 - [How to execute](#how-to-execute)
 
-## Project papers
+## Papers
 
-- [Advances in a DSL to Specify Smart Contracts for Application Integration Processes](https://sol.sbc.org.br/index.php/cibse/article/view/20962)
-- [On the Need to Use Smart Contracts in Enterprise Application Integration](https://idus.us.es/handle/11441/140199)
-- [Jabuti CE: A Tool for Specifying Smart Contracts in the Domain of Enterprise Application Integration](https://www.scitepress.org/Link.aspx?doi=10.5220/0012413300003645)
+- 2025
+  - [Proposing a Tool to Monitor Smart Contract Execution in Integration Processes](https://sol.sbc.org.br/index.php/sbsi_estendido/article/view/34617)
+  - [Towards a Smart Contract Toolkit for Application Integration](#)
+ 
+- 2024
+  - [Jabuti CE: A Tool for Specifying Smart Contracts in the Domain of Enterprise Application Integration](https://www.scitepress.org/Link.aspx?doi=10.5220/0012413300003645)
+
+- 2022
+  - [Advances in a DSL to Specify Smart Contracts for Application Integration Processes](https://sol.sbc.org.br/index.php/cibse/article/view/20962)
+  - [On the Need to Use Smart Contracts in Enterprise Application Integration](https://idus.us.es/handle/11441/140199)
 
 ## Project repositories
 
