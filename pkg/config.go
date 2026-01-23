@@ -1,26 +1,36 @@
 package pkg
 
+type OrdererAddress struct {
+	Host string
+	Port int
+}
+
 type Orderer struct {
-	Name   string
-	Domain string
-	Port   int
+	Name      string
+	Domain    string
+	Addresses []OrdererAddress
 }
 
-type Peer struct {
-	Name   string
-	Domain string
-	Port   int
-	Peers  int
-	Users  int
+type AnchorPeer struct {
+	Host string
+	Port int
 }
 
-type Channel struct {
+type Organization struct {
+	Name       string
+	Domain     string
+	AnchorPeer AnchorPeer
+	Peers      int
+	Users      int
+}
+
+type Profile struct {
 	Name          string
 	Organizations []string
 }
 
 type Config struct {
-	Orderers []Orderer
-	Peers    []Peer
-	Channels []Channel
+	Orderers      []Orderer
+	Organizations []Organization
+	Profiles      []Profile
 }
