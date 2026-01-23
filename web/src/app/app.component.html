@@ -1,8 +1,0 @@
-@let isAuthenticated = currentUser$()?.isAuthenticated;
-
-@if (isAuthenticated) {
-  <app-toolbar />
-  <app-sidebar [items]="menus"><router-outlet /></app-sidebar>
-} @else {
-  <router-outlet />
-}
