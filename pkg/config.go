@@ -16,12 +16,17 @@ type AnchorPeer struct {
 	Port int
 }
 
+type CertificateAuthority struct {
+	ExposePort int
+}
+
 type Organization struct {
-	Name       string
-	Domain     string
-	AnchorPeer AnchorPeer
-	Peers      int
-	Users      int
+	Name                 string
+	Domain               string
+	AnchorPeer           AnchorPeer
+	Peers                int
+	Users                int
+	CertificateAuthority CertificateAuthority
 }
 
 type Profile struct {
@@ -29,8 +34,13 @@ type Profile struct {
 	Organizations []string
 }
 
+type Docker struct {
+	NetworkName string
+}
+
 type Config struct {
 	Orderers      []Orderer
 	Organizations []Organization
 	Profiles      []Profile
+	Docker        Docker
 }
