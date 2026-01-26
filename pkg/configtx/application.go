@@ -1,37 +1,39 @@
 package configtx
 
+import "github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
+
 type ApplicationNode struct {
-	*Node
+	*yaml.Node
 }
 
 func NewApplication() *ApplicationNode {
-	return &ApplicationNode{MappingNode()}
+	return &ApplicationNode{yaml.MappingNode()}
 }
 
 func (an *ApplicationNode) WithPolicies() *ApplicationNode {
-	an.GetOrCreateValue(PoliciesKey, MappingNode(
-		ScalarNode(LifecycleEndorsementKey), NewImplicitMetaPolicy(Policy{Rule: EndorsementKey, Qualifier: MAJORITYKey}),
-		ScalarNode(EndorsementKey), NewImplicitMetaPolicy(Policy{Rule: EndorsementKey, Qualifier: MAJORITYKey}),
-		ScalarNode(AdminsKey), NewImplicitMetaPolicy(Policy{Rule: AdminsKey, Qualifier: MAJORITYKey}),
-		ScalarNode(ReadersKey), NewImplicitMetaPolicy(Policy{Rule: ReadersKey}),
-		ScalarNode(WritersKey), NewImplicitMetaPolicy(Policy{Rule: WritersKey}),
+	an.GetOrCreateValue(PoliciesKey, yaml.MappingNode(
+		yaml.ScalarNode(LifecycleEndorsementKey), NewImplicitMetaPolicy(Policy{Rule: EndorsementKey, Qualifier: MAJORITYKey}),
+		yaml.ScalarNode(EndorsementKey), NewImplicitMetaPolicy(Policy{Rule: EndorsementKey, Qualifier: MAJORITYKey}),
+		yaml.ScalarNode(AdminsKey), NewImplicitMetaPolicy(Policy{Rule: AdminsKey, Qualifier: MAJORITYKey}),
+		yaml.ScalarNode(ReadersKey), NewImplicitMetaPolicy(Policy{Rule: ReadersKey}),
+		yaml.ScalarNode(WritersKey), NewImplicitMetaPolicy(Policy{Rule: WritersKey}),
 	))
 
 	return an
 }
 
-func (on *ApplicationNode) WithCapabilities(node *Node) *ApplicationNode {
+func (on *ApplicationNode) WithCapabilities(node *yaml.Node) *ApplicationNode {
 	on.GetOrCreateValue(CapabilitiesKey,
-		MappingNode(
-			ScalarNode("<<"),
-			AliasNode(ApplicationCapabilitiesKey, node),
+		yaml.MappingNode(
+			yaml.ScalarNode("<<"),
+			yaml.AliasNode(ApplicationCapabilitiesKey, node),
 		),
 	)
 
 	return on
 }
 
-func (on *ApplicationNode) WithOrganizations(nodes []*Node) *ApplicationNode {
-	on.GetOrCreateValue(OrganizationsKey, SequenceNode(nodes...))
+func (on *ApplicationNode) WithOrganizations(nodes []*yaml.Node) *ApplicationNode {
+	on.GetOrCreateValue(OrganizationsKey, yaml.SequenceNode(nodes...))
 	return on
 }

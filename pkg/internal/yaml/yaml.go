@@ -1,6 +1,11 @@
-package configtx
+package yaml
 
-import "gopkg.in/yaml.v3"
+import (
+	"os"
+	"path/filepath"
+
+	"gopkg.in/yaml.v3"
+)
 
 type Node yaml.Node
 
@@ -47,18 +52,62 @@ func (n *Node) MarshalYAML() (*yaml.Node, error) {
 	return (*yaml.Node)(n), nil
 }
 
-func (n *Node) GetOrCreateValue(keyName string, defaultNode *Node) *Node {
+func (n *Node) GetValue(keyName string) *Node {
 	for i := 0; i < len(n.Content); i += 2 {
 		if n.Content[i].Value == keyName {
 			return (*Node)(n.Content[i+1])
 		}
 	}
 
-	n.Content = append(n.Content, (*yaml.Node)(ScalarNode(keyName)), (*yaml.Node)(defaultNode))
+	return nil
+}
+
+func (n *Node) GetOrCreateValue(keyName string, defaultNode *Node) *Node {
+	if node := n.GetValue(keyName); node == nil {
+		n.Content = append(n.Content, (*yaml.Node)(ScalarNode(keyName)), (*yaml.Node)(defaultNode))
+	}
+
 	return defaultNode
 }
 
 func (n *Node) WithStyle(style yaml.Style) *Node {
 	n.Style = style
 	return n
+}
+
+func (n *Node) WithDoubleQuotedStyle() *Node {
+	n.WithStyle(yaml.DoubleQuotedStyle)
+	return n
+}
+
+func (n *Node) ToFile(name string) error {
+	_, err := os.Stat(filepath.Dir(name))
+
+	if os.IsNotExist(err) {
+		os.MkdirAll(filepath.Dir(name), 0755)
+	} else if err != nil {
+		return err
+	}
+
+	node, err := n.MarshalYAML()
+
+	if err != nil {
+		return err
+	}
+
+	f, err := os.Create(name)
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	encoder := yaml.NewEncoder(f)
+	encoder.SetIndent(2)
+
+	if err := encoder.Encode(node); err != nil {
+		return err
+	}
+
+	return nil
 }

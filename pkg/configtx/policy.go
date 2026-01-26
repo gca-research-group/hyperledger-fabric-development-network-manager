@@ -3,7 +3,7 @@ package configtx
 import (
 	"fmt"
 
-	"gopkg.in/yaml.v3"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
 )
 
 type Policy struct {
@@ -11,36 +11,36 @@ type Policy struct {
 	Rule      string
 }
 
-func NewSignaturePolicy(mspID string, role string) *Node {
-	return MappingNode(
-		ScalarNode(TypeKey),
-		ScalarNode(SignatureKey),
-		ScalarNode(RuleKey),
-		ScalarNode(fmt.Sprintf("OR('%s.%s')", mspID, role)).WithStyle(yaml.DoubleQuotedStyle),
+func NewSignaturePolicy(mspID string, role string) *yaml.Node {
+	return yaml.MappingNode(
+		yaml.ScalarNode(TypeKey),
+		yaml.ScalarNode(SignatureKey),
+		yaml.ScalarNode(RuleKey),
+		yaml.ScalarNode(fmt.Sprintf("OR('%s.%s')", mspID, role)).WithDoubleQuotedStyle(),
 	)
 }
 
-func NewImplicitMetaPolicy(policy Policy) *Node {
+func NewImplicitMetaPolicy(policy Policy) *yaml.Node {
 	if policy.Qualifier == "" {
 		policy.Qualifier = "ANY"
 	}
 
-	return MappingNode(
-		ScalarNode(TypeKey),
-		ScalarNode(ImplicitMetaKey),
-		ScalarNode(RuleKey),
-		ScalarNode(fmt.Sprintf("%s %s", policy.Qualifier, policy.Rule)).WithStyle(yaml.DoubleQuotedStyle),
+	return yaml.MappingNode(
+		yaml.ScalarNode(TypeKey),
+		yaml.ScalarNode(ImplicitMetaKey),
+		yaml.ScalarNode(RuleKey),
+		yaml.ScalarNode(fmt.Sprintf("%s %s", policy.Qualifier, policy.Rule)).WithDoubleQuotedStyle(),
 	)
 }
 
-func NewMemberPolicy(mspID string) *Node {
+func NewMemberPolicy(mspID string) *yaml.Node {
 	return NewSignaturePolicy(mspID, memberKey)
 }
 
-func NewPeerPolicy(mspID string) *Node {
+func NewPeerPolicy(mspID string) *yaml.Node {
 	return NewSignaturePolicy(mspID, peerKey)
 }
 
-func NewAdminPolicy(mspID string) *Node {
+func NewAdminPolicy(mspID string) *yaml.Node {
 	return NewSignaturePolicy(mspID, adminKey)
 }

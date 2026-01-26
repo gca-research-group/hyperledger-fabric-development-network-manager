@@ -1,28 +1,30 @@
 package configtx
 
+import "github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
+
 type ChannelNode struct {
-	*Node
+	*yaml.Node
 }
 
 func NewChannel() *ChannelNode {
-	return &ChannelNode{MappingNode()}
+	return &ChannelNode{yaml.MappingNode()}
 }
 
 func (ch *ChannelNode) WithPolicies() *ChannelNode {
-	ch.GetOrCreateValue(PoliciesKey, MappingNode(
-		ScalarNode(ReadersKey), NewImplicitMetaPolicy(Policy{Rule: ReadersKey}),
-		ScalarNode(WritersKey), NewImplicitMetaPolicy(Policy{Rule: WritersKey}),
-		ScalarNode(AdminsKey), NewImplicitMetaPolicy(Policy{Rule: AdminsKey, Qualifier: MAJORITYKey}),
+	ch.GetOrCreateValue(PoliciesKey, yaml.MappingNode(
+		yaml.ScalarNode(ReadersKey), NewImplicitMetaPolicy(Policy{Rule: ReadersKey}),
+		yaml.ScalarNode(WritersKey), NewImplicitMetaPolicy(Policy{Rule: WritersKey}),
+		yaml.ScalarNode(AdminsKey), NewImplicitMetaPolicy(Policy{Rule: AdminsKey, Qualifier: MAJORITYKey}),
 	))
 
 	return ch
 }
 
-func (on *ChannelNode) WithCapabilities(node *Node) *ChannelNode {
+func (on *ChannelNode) WithCapabilities(node *yaml.Node) *ChannelNode {
 	on.GetOrCreateValue(CapabilitiesKey,
-		MappingNode(
-			ScalarNode("<<"),
-			AliasNode(ChannelCapabilitiesKey, node),
+		yaml.MappingNode(
+			yaml.ScalarNode("<<"),
+			yaml.AliasNode(ChannelCapabilitiesKey, node),
 		),
 	)
 

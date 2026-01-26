@@ -4,15 +4,16 @@ import (
 	"fmt"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
 )
 
 type Builder struct {
 	config pkg.Config
 
-	ordererOrgs      []*Node
-	appOrgs          []*Node
-	ordererAliases   []*Node
-	appAliases       []*Node
+	ordererOrgs      []*yaml.Node
+	appOrgs          []*yaml.Node
+	ordererAliases   []*yaml.Node
+	appAliases       []*yaml.Node
 	ordererAddresses []string
 }
 
@@ -28,7 +29,7 @@ func (c *Builder) BuildOrganizations() {
 			WithDefaultOrdererPolicies(mspID)
 
 		c.ordererOrgs = append(c.ordererOrgs, org.Build())
-		c.ordererAliases = append(c.ordererAliases, AliasNode(orderer.Name, org.Build()))
+		c.ordererAliases = append(c.ordererAliases, yaml.AliasNode(orderer.Name, org.Build()))
 
 		for _, addr := range orderer.Addresses {
 			c.ordererAddresses = append(c.ordererAddresses, fmt.Sprintf("%s:%d", addr.Host, addr.Port))
@@ -43,11 +44,11 @@ func (c *Builder) BuildOrganizations() {
 			WithDefaultApplicationPolicies(mspID)
 
 		c.appOrgs = append(c.appOrgs, org.Build())
-		c.appAliases = append(c.appAliases, AliasNode(organization.Name, org.Build()))
+		c.appAliases = append(c.appAliases, yaml.AliasNode(organization.Name, org.Build()))
 	}
 }
 
-func (c *Builder) Build() (*Node, error) {
+func (c *Builder) Build() (*yaml.Node, error) {
 	c.BuildOrganizations()
 
 	appCapLabel, appCapVal := NewApplicationCapability()
@@ -76,12 +77,12 @@ func (c *Builder) Build() (*Node, error) {
 
 	profiles := NewDefaultProfiles(orderer, application, channel, c.ordererAliases, c.appAliases)
 
-	return MappingNode(
-		ScalarNode(CapabilitiesKey), MappingNode(appCapLabel, appCapVal, ordCapLabel, ordCapVal, chCapLabel, chCapVal),
-		ScalarNode(OrganizationsKey), SequenceNode(append(c.ordererOrgs, c.appOrgs...)...),
-		ScalarNode(OrdererKey), orderer,
-		ScalarNode(ApplicationKey), application,
-		ScalarNode(ChannelKey), channel,
-		ScalarNode(ProfilesKey), profiles,
+	return yaml.MappingNode(
+		yaml.ScalarNode(CapabilitiesKey), yaml.MappingNode(appCapLabel, appCapVal, ordCapLabel, ordCapVal, chCapLabel, chCapVal),
+		yaml.ScalarNode(OrganizationsKey), yaml.SequenceNode(append(c.ordererOrgs, c.appOrgs...)...),
+		yaml.ScalarNode(OrdererKey), orderer,
+		yaml.ScalarNode(ApplicationKey), application,
+		yaml.ScalarNode(ChannelKey), channel,
+		yaml.ScalarNode(ProfilesKey), profiles,
 	), nil
 }

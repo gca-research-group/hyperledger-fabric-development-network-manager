@@ -1,65 +1,56 @@
 package configtx
 
+import "github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
+
 type ProfileNode struct {
-	*Node
+	*yaml.Node
 }
 
 func NewDefaultProfiles(
-	ordererDefaults *Node,
-	applicationDefaults *Node,
-	channelDefaults *Node,
-	ordererOrganizations []*Node,
-	applicationOrganizations []*Node,
-) *Node {
-	return MappingNode(
-		ScalarNode(OrdererGenesisProfileKey),
-		MappingNode(
-			ScalarNode("<<"),
-			AliasNode(ChannelDefaultsKey, channelDefaults),
-			ScalarNode(OrdererKey),
-			MappingNode(
-				ScalarNode("<<"),
-				AliasNode(OrdererDefaultsKey, ordererDefaults),
-				ScalarNode(OrganizationsKey),
-				SequenceNode(ordererOrganizations...),
+	ordererDefaults *yaml.Node,
+	applicationDefaults *yaml.Node,
+	channelDefaults *yaml.Node,
+	ordererOrganizations []*yaml.Node,
+	applicationOrganizations []*yaml.Node,
+) *yaml.Node {
+	return yaml.MappingNode(
+		yaml.ScalarNode(OrdererGenesisProfileKey),
+		yaml.MappingNode(
+			yaml.ScalarNode("<<"),
+			yaml.AliasNode(ChannelDefaultsKey, channelDefaults),
+			yaml.ScalarNode(OrdererKey),
+			yaml.MappingNode(
+				yaml.ScalarNode("<<"),
+				yaml.AliasNode(OrdererDefaultsKey, ordererDefaults),
+				yaml.ScalarNode(OrganizationsKey),
+				yaml.SequenceNode(ordererOrganizations...),
 			),
-			ScalarNode(ConsortiumsKey),
-			MappingNode(
-				ScalarNode(DefaultConsortiumKey),
-				MappingNode(
-					ScalarNode(OrganizationsKey),
-					SequenceNode(applicationOrganizations...),
+			yaml.ScalarNode(ConsortiumsKey),
+			yaml.MappingNode(
+				yaml.ScalarNode(DefaultConsortiumKey),
+				yaml.MappingNode(
+					yaml.ScalarNode(OrganizationsKey),
+					yaml.SequenceNode(applicationOrganizations...),
 				),
 			),
 		),
-		ScalarNode(SampleProfileKey),
-		MappingNode(
-			ScalarNode("<<"),
-			AliasNode(ChannelDefaultsKey, channelDefaults),
-			ScalarNode(ConsortiumKey),
-			ScalarNode(DefaultConsortiumKey),
-			ScalarNode(ApplicationKey),
-			MappingNode(
-				ScalarNode("<<"),
-				AliasNode(ApplicationDefaultsKey, applicationDefaults),
-				ScalarNode(OrganizationsKey),
-				SequenceNode(applicationOrganizations...),
+		yaml.ScalarNode(SampleProfileKey),
+		yaml.MappingNode(
+			yaml.ScalarNode("<<"),
+			yaml.AliasNode(ChannelDefaultsKey, channelDefaults),
+			yaml.ScalarNode(ConsortiumKey),
+			yaml.ScalarNode(DefaultConsortiumKey),
+			yaml.ScalarNode(ApplicationKey),
+			yaml.MappingNode(
+				yaml.ScalarNode("<<"),
+				yaml.AliasNode(ApplicationDefaultsKey, applicationDefaults),
+				yaml.ScalarNode(OrganizationsKey),
+				yaml.SequenceNode(applicationOrganizations...),
 			),
 		),
 	)
 }
 
-/* MultiChannel:
-<<: *ChannelDefaults
-Consortium: MultiConsortium
-Application:
-  <<: *ApplicationDefaults
-  Organizations:
-    - *Org1
-    - *Org2
-    - *Org3
-*/
-
-func (pn *ProfileNode) Build() *Node {
+func (pn *ProfileNode) Build() *yaml.Node {
 	return pn.Node
 }

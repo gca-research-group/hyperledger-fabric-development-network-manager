@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
-	"gopkg.in/yaml.v3"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
 )
 
 type OrganizationNode struct {
-	*Node
+	*yaml.Node
 }
 
 func BuildMSPID(name string) string {
@@ -16,26 +16,26 @@ func BuildMSPID(name string) string {
 }
 
 func NewApplicationOrganization(name string, domain string, mspID string) *OrganizationNode {
-	node := MappingNode(
-		ScalarNode(NameKey),
-		ScalarNode(name),
-		ScalarNode(IDKey),
-		ScalarNode(mspID),
-		ScalarNode(MSPDirKey),
-		ScalarNode(fmt.Sprintf("./crypto-materials/peerOrganizations/%s/msp", domain)),
+	node := yaml.MappingNode(
+		yaml.ScalarNode(NameKey),
+		yaml.ScalarNode(name),
+		yaml.ScalarNode(IDKey),
+		yaml.ScalarNode(mspID),
+		yaml.ScalarNode(MSPDirKey),
+		yaml.ScalarNode(fmt.Sprintf("./crypto-materials/peerOrganizations/%s/msp", domain)),
 	).WithAnchor(name).WithTag("!!map")
 
 	return &OrganizationNode{node}
 }
 
 func NewOrdererOrganization(name string, domain string, mspID string) *OrganizationNode {
-	node := MappingNode(
-		ScalarNode(NameKey),
-		ScalarNode(name),
-		ScalarNode(IDKey),
-		ScalarNode(mspID),
-		ScalarNode(MSPDirKey),
-		ScalarNode(fmt.Sprintf("./crypto-materials/ordererOrganizations/%s/msp", domain)),
+	node := yaml.MappingNode(
+		yaml.ScalarNode(NameKey),
+		yaml.ScalarNode(name),
+		yaml.ScalarNode(IDKey),
+		yaml.ScalarNode(mspID),
+		yaml.ScalarNode(MSPDirKey),
+		yaml.ScalarNode(fmt.Sprintf("./crypto-materials/ordererOrganizations/%s/msp", domain)),
 	).WithAnchor(name).WithTag("!!map")
 
 	return &OrganizationNode{node}
@@ -46,26 +46,26 @@ func (on *OrganizationNode) WithAnchorPeer(anchorPeer pkg.AnchorPeer) *Organizat
 		return on
 	}
 
-	peer := on.GetOrCreateValue(AnchorPeersKey, SequenceNode())
+	peer := on.GetOrCreateValue(AnchorPeersKey, yaml.SequenceNode())
 
-	entry := MappingNode(
-		ScalarNode(HostKey),
-		ScalarNode(anchorPeer.Host),
-		ScalarNode(PortKey),
-		ScalarNode(fmt.Sprint(anchorPeer.Port)),
-	)
+	entry, _ := yaml.MappingNode(
+		yaml.ScalarNode(HostKey),
+		yaml.ScalarNode(anchorPeer.Host),
+		yaml.ScalarNode(PortKey),
+		yaml.ScalarNode(fmt.Sprint(anchorPeer.Port)),
+	).MarshalYAML()
 
-	peer.Content = append(peer.Content, (*yaml.Node)(entry))
+	peer.Content = append(peer.Content, entry)
 
 	return on
 }
 
 func (on *OrganizationNode) WithDefaultApplicationPolicies(mspID string) *OrganizationNode {
-	policies := MappingNode(
-		ScalarNode(ReadersKey), NewPeerPolicy(mspID),
-		ScalarNode(WritersKey), NewPeerPolicy(mspID),
-		ScalarNode(AdminsKey), NewAdminPolicy(mspID),
-		ScalarNode(EndorsementKey), NewPeerPolicy(mspID),
+	policies := yaml.MappingNode(
+		yaml.ScalarNode(ReadersKey), NewPeerPolicy(mspID),
+		yaml.ScalarNode(WritersKey), NewPeerPolicy(mspID),
+		yaml.ScalarNode(AdminsKey), NewAdminPolicy(mspID),
+		yaml.ScalarNode(EndorsementKey), NewPeerPolicy(mspID),
 	)
 
 	on.GetOrCreateValue(PoliciesKey, policies)
@@ -73,16 +73,16 @@ func (on *OrganizationNode) WithDefaultApplicationPolicies(mspID string) *Organi
 }
 
 func (on *OrganizationNode) WithDefaultOrdererPolicies(mspID string) *OrganizationNode {
-	policies := MappingNode(
-		ScalarNode(ReadersKey), NewMemberPolicy(mspID),
-		ScalarNode(WritersKey), NewMemberPolicy(mspID),
-		ScalarNode(AdminsKey), NewAdminPolicy(mspID),
+	policies := yaml.MappingNode(
+		yaml.ScalarNode(ReadersKey), NewMemberPolicy(mspID),
+		yaml.ScalarNode(WritersKey), NewMemberPolicy(mspID),
+		yaml.ScalarNode(AdminsKey), NewAdminPolicy(mspID),
 	)
 
 	on.GetOrCreateValue(PoliciesKey, policies)
 	return on
 }
 
-func (on OrganizationNode) Build() *Node {
+func (on OrganizationNode) Build() *yaml.Node {
 	return on.Node
 }

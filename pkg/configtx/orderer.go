@@ -4,26 +4,27 @@ import (
 	"fmt"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
 )
 
 type OrdererNode struct {
-	*Node
+	*yaml.Node
 }
 
 func NewOrderer() *OrdererNode {
-	node := MappingNode(
-		ScalarNode(OrdererTypeKey),
-		ScalarNode(etcdraftKey),
+	node := yaml.MappingNode(
+		yaml.ScalarNode(OrdererTypeKey),
+		yaml.ScalarNode(etcdraftKey),
 	)
 
 	return &OrdererNode{node}
 }
 
-func (on *OrdererNode) WithCapabilities(node *Node) *OrdererNode {
+func (on *OrdererNode) WithCapabilities(node *yaml.Node) *OrdererNode {
 	on.GetOrCreateValue(CapabilitiesKey,
-		MappingNode(
-			ScalarNode("<<"),
-			AliasNode(OrdererCapabilitiesKey, node),
+		yaml.MappingNode(
+			yaml.ScalarNode("<<"),
+			yaml.AliasNode(OrdererCapabilitiesKey, node),
 		),
 	)
 
@@ -31,38 +32,38 @@ func (on *OrdererNode) WithCapabilities(node *Node) *OrdererNode {
 }
 
 func (on *OrdererNode) WithAddresses(addresses []string) *OrdererNode {
-	var nodes []*Node
+	var nodes []*yaml.Node
 
 	for _, address := range addresses {
-		nodes = append(nodes, ScalarNode(address))
+		nodes = append(nodes, yaml.ScalarNode(address))
 	}
 
-	on.GetOrCreateValue(AddressesKey, SequenceNode(nodes...))
+	on.GetOrCreateValue(AddressesKey, yaml.SequenceNode(nodes...))
 	return on
 }
 
 func (on *OrdererNode) WithPolicies() *OrdererNode {
-	on.GetOrCreateValue(PoliciesKey, MappingNode(
-		ScalarNode(ReadersKey), NewImplicitMetaPolicy(Policy{Rule: ReadersKey}),
-		ScalarNode(WritersKey), NewImplicitMetaPolicy(Policy{Rule: WritersKey}),
-		ScalarNode(AdminsKey), NewImplicitMetaPolicy(Policy{Rule: AdminsKey, Qualifier: MAJORITYKey}),
-		ScalarNode(BlockValidationKey), NewImplicitMetaPolicy(Policy{Rule: WritersKey}),
+	on.GetOrCreateValue(PoliciesKey, yaml.MappingNode(
+		yaml.ScalarNode(ReadersKey), NewImplicitMetaPolicy(Policy{Rule: ReadersKey}),
+		yaml.ScalarNode(WritersKey), NewImplicitMetaPolicy(Policy{Rule: WritersKey}),
+		yaml.ScalarNode(AdminsKey), NewImplicitMetaPolicy(Policy{Rule: AdminsKey, Qualifier: MAJORITYKey}),
+		yaml.ScalarNode(BlockValidationKey), NewImplicitMetaPolicy(Policy{Rule: WritersKey}),
 	))
 	return on
 }
 
-func (on *OrdererNode) WithOrganizations(nodes []*Node) *OrdererNode {
-	on.GetOrCreateValue(OrganizationsKey, SequenceNode(nodes...))
+func (on *OrdererNode) WithOrganizations(nodes []*yaml.Node) *OrdererNode {
+	on.GetOrCreateValue(OrganizationsKey, yaml.SequenceNode(nodes...))
 
 	return on
 }
 
 func (on *OrdererNode) WithBatchConfig() *OrdererNode {
-	on.GetOrCreateValue(BatchTimeoutKey, ScalarNode("2s"))
-	on.GetOrCreateValue(BatchSizeKey, MappingNode(
-		ScalarNode(MaxMessageCountKey), ScalarNode("10"),
-		ScalarNode(AbsoluteMaxBytesKey), ScalarNode("99 MB"),
-		ScalarNode(PreferredMaxBytesKey), ScalarNode("512 KB"),
+	on.GetOrCreateValue(BatchTimeoutKey, yaml.ScalarNode("2s"))
+	on.GetOrCreateValue(BatchSizeKey, yaml.MappingNode(
+		yaml.ScalarNode(MaxMessageCountKey), yaml.ScalarNode("10"),
+		yaml.ScalarNode(AbsoluteMaxBytesKey), yaml.ScalarNode("99 MB"),
+		yaml.ScalarNode(PreferredMaxBytesKey), yaml.ScalarNode("512 KB"),
 	))
 
 	return on
@@ -70,31 +71,31 @@ func (on *OrdererNode) WithBatchConfig() *OrdererNode {
 
 func (on *OrdererNode) WithRaftConfig(orderers []pkg.Orderer) *OrdererNode {
 
-	var nodes []*Node
+	var nodes []*yaml.Node
 
 	for _, orderer := range orderers {
 		for _, address := range orderer.Addresses {
 			nodes = append(nodes,
-				MappingNode(
-					ScalarNode(HostKey),
-					ScalarNode(address.Host),
-					ScalarNode(PortKey),
-					ScalarNode(fmt.Sprint(address.Port)),
-					ScalarNode(ClientTLSCertKey),
-					ScalarNode(fmt.Sprintf("crypto-config/ordererOrganizations/%s/orderers/%s/tls/server.crt", orderer.Domain, address.Host)),
-					ScalarNode(ServerTLSCertKey),
-					ScalarNode(fmt.Sprintf("crypto-config/ordererOrganizations/%s/orderers/%s/tls/server.crt", orderer.Domain, address.Host)),
+				yaml.MappingNode(
+					yaml.ScalarNode(HostKey),
+					yaml.ScalarNode(address.Host),
+					yaml.ScalarNode(PortKey),
+					yaml.ScalarNode(fmt.Sprint(address.Port)),
+					yaml.ScalarNode(ClientTLSCertKey),
+					yaml.ScalarNode(fmt.Sprintf("crypto-config/ordererOrganizations/%s/orderers/%s/tls/server.crt", orderer.Domain, address.Host)),
+					yaml.ScalarNode(ServerTLSCertKey),
+					yaml.ScalarNode(fmt.Sprintf("crypto-config/ordererOrganizations/%s/orderers/%s/tls/server.crt", orderer.Domain, address.Host)),
 				),
 			)
 		}
 	}
 
 	on.GetOrCreateValue(EtcdRaftKey,
-		MappingNode(ScalarNode(ConsentersKey), SequenceNode(nodes...)),
+		yaml.MappingNode(yaml.ScalarNode(ConsentersKey), yaml.SequenceNode(nodes...)),
 	)
 	return on
 }
 
-func (on *OrdererNode) Build() *Node {
+func (on *OrdererNode) Build() *yaml.Node {
 	return on.Node
 }
