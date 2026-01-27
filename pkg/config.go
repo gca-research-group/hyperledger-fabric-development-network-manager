@@ -1,14 +1,10 @@
 package pkg
 
-type OrdererAddress struct {
-	Host string
-	Port int
-}
-
 type Orderer struct {
-	Name      string
-	Domain    string
-	Addresses []OrdererAddress
+	Name     string
+	Hostname string
+	Domain   string
+	Port     int
 }
 
 type AnchorPeer struct {

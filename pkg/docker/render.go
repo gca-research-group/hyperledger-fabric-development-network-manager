@@ -38,14 +38,13 @@ func RenderNetwork(networkName string, path string) (string, error) {
 func (r *Renderer) RenderOrderers() error {
 	var _orderers []*yaml.Node
 	for _, orderer := range r.config.Orderers {
-		for _, address := range orderer.Addresses {
-			node := NewOrderer(address.Host).
-				WithPort(address.Port).
-				WithNetworks([]*yaml.Node{yaml.ScalarNode(r.network)})
-			for _, n := range node.Content {
-				_orderers = append(_orderers, (*yaml.Node)(n))
-			}
+		node := NewOrderer(fmt.Sprintf("%s.%s", orderer.Hostname, orderer.Domain)).
+			WithPort(orderer.Port).
+			WithNetworks([]*yaml.Node{yaml.ScalarNode(r.network)})
+		for _, n := range node.Content {
+			_orderers = append(_orderers, (*yaml.Node)(n))
 		}
+
 	}
 
 	return yaml.MappingNode(

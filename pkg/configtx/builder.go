@@ -31,9 +31,7 @@ func (c *Builder) BuildOrganizations() {
 		c.ordererOrgs = append(c.ordererOrgs, org.Build())
 		c.ordererAliases = append(c.ordererAliases, yaml.AliasNode(orderer.Name, org.Build()))
 
-		for _, addr := range orderer.Addresses {
-			c.ordererAddresses = append(c.ordererAddresses, fmt.Sprintf("%s:%d", addr.Host, addr.Port))
-		}
+		c.ordererAddresses = append(c.ordererAddresses, fmt.Sprintf("%s.%s:%d", orderer.Hostname, orderer.Domain, orderer.Port))
 	}
 
 	// Build Application Orgs

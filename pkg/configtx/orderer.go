@@ -74,20 +74,18 @@ func (on *OrdererNode) WithRaftConfig(orderers []pkg.Orderer) *OrdererNode {
 	var nodes []*yaml.Node
 
 	for _, orderer := range orderers {
-		for _, address := range orderer.Addresses {
-			nodes = append(nodes,
-				yaml.MappingNode(
-					yaml.ScalarNode(HostKey),
-					yaml.ScalarNode(address.Host),
-					yaml.ScalarNode(PortKey),
-					yaml.ScalarNode(fmt.Sprint(address.Port)),
-					yaml.ScalarNode(ClientTLSCertKey),
-					yaml.ScalarNode(fmt.Sprintf("crypto-config/ordererOrganizations/%s/orderers/%s/tls/server.crt", orderer.Domain, address.Host)),
-					yaml.ScalarNode(ServerTLSCertKey),
-					yaml.ScalarNode(fmt.Sprintf("crypto-config/ordererOrganizations/%s/orderers/%s/tls/server.crt", orderer.Domain, address.Host)),
-				),
-			)
-		}
+		nodes = append(nodes,
+			yaml.MappingNode(
+				yaml.ScalarNode(HostKey),
+				yaml.ScalarNode(fmt.Sprintf("%s.%s", orderer.Hostname, orderer.Domain)),
+				yaml.ScalarNode(PortKey),
+				yaml.ScalarNode(fmt.Sprint(orderer.Port)),
+				yaml.ScalarNode(ClientTLSCertKey),
+				yaml.ScalarNode(fmt.Sprintf("crypto-config/ordererOrganizations/%s/orderers/%s/tls/server.crt", orderer.Domain, fmt.Sprintf("%s.%s", orderer.Hostname, orderer.Domain))),
+				yaml.ScalarNode(ServerTLSCertKey),
+				yaml.ScalarNode(fmt.Sprintf("crypto-config/ordererOrganizations/%s/orderers/%s/tls/server.crt", orderer.Domain, fmt.Sprintf("%s.%s", orderer.Hostname, orderer.Domain))),
+			),
+		)
 	}
 
 	on.GetOrCreateValue(EtcdRaftKey,

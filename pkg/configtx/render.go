@@ -1,6 +1,8 @@
 package configtx
 
 import (
+	"fmt"
+
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
 )
 
@@ -11,5 +13,5 @@ func Render(config pkg.Config, path string) error {
 		return err
 	}
 
-	return cfg.ToFile(path)
+	return cfg.ToFile(fmt.Sprintf("%s/configtx.yml", path))
 }
