@@ -11,6 +11,8 @@ type ToolsNode struct {
 }
 
 func NewTools(name string, domain string, corePeerHost string, mspID string, network string) *ToolsNode {
+	basePath := "/opt/gopath/src/github.com/hyperledger/fabric/crypto-materials/peerOrganizations"
+
 	node := yaml.MappingNode(
 		yaml.ScalarNode(fmt.Sprintf("hyperledger-fabric-tools-%s", name)),
 		yaml.MappingNode(
@@ -24,29 +26,17 @@ func NewTools(name string, domain string, corePeerHost string, mspID string, net
 			yaml.ScalarNode("open"),
 			yaml.ScalarNode("environment"),
 			yaml.SequenceNode(
-				yaml.MappingNode(yaml.ScalarNode("GOPATH"), yaml.ScalarNode("/opt/gopath")),
-				yaml.MappingNode(yaml.ScalarNode("CORE_VM_ENDPOINT"), yaml.ScalarNode("unix:///host/var/run/docker.sock")),
-				yaml.MappingNode(yaml.ScalarNode("FABRIC_LOGGING_SPEC"), yaml.ScalarNode("INFO")),
-				yaml.MappingNode(yaml.ScalarNode("CORE_PEER_ID"), yaml.ScalarNode("cli")),
-				yaml.MappingNode(yaml.ScalarNode("CORE_PEER_ADDRESS"), yaml.ScalarNode(corePeerHost)),
-				yaml.MappingNode(yaml.ScalarNode("CORE_PEER_LOCALMSPID"), yaml.ScalarNode(mspID)),
-				yaml.MappingNode(yaml.ScalarNode("CORE_PEER_TLS_ENABLED"), yaml.ScalarNode("true")),
-				yaml.MappingNode(
-					yaml.ScalarNode("CORE_PEER_TLS_CERT_FILE"),
-					yaml.ScalarNode(fmt.Sprintf("/opt/gopath/src/github.com/hyperledger/fabric/crypto-materials/peerOrganizations/%s/peers/peer0.%s/tls/server.crt", domain, domain)),
-				),
-				yaml.MappingNode(
-					yaml.ScalarNode("CORE_PEER_TLS_KEY_FILE"),
-					yaml.ScalarNode(fmt.Sprintf("/opt/gopath/src/github.com/hyperledger/fabric/crypto-materials/peerOrganizations/%s/peers/peer0.%s/tls/server.key", domain, domain)),
-				),
-				yaml.MappingNode(
-					yaml.ScalarNode("CORE_PEER_TLS_ROOTCERT_FILE"),
-					yaml.ScalarNode(fmt.Sprintf("/opt/gopath/src/github.com/hyperledger/fabric/crypto-materials/peerOrganizations/%s/peers/peer0.%s/tls/ca.crt", domain, domain)),
-				),
-				yaml.MappingNode(
-					yaml.ScalarNode("CORE_PEER_MSPCONFIGPATH"),
-					yaml.ScalarNode(fmt.Sprintf("/opt/gopath/src/github.com/hyperledger/fabric/crypto-materials/peerOrganizations/%s/users/Admin@%s/msp", domain, domain)),
-				),
+				yaml.ScalarNode("GOPATH=/opt/gopath"),
+				yaml.ScalarNode("CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock"),
+				yaml.ScalarNode("FABRIC_LOGGING_SPEC=INFO"),
+				yaml.ScalarNode("CORE_PEER_ID=cli"),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_ADDRESS=%s", corePeerHost)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_LOCALMSPID=%s", mspID)),
+				yaml.ScalarNode("CORE_PEER_TLS_ENABLED=true"),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_CERT_FILE=%s/%s/peers/peer0.%s/tls/server.crt", basePath, domain, domain)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_KEY_FILE=%s/%s/peers/peer0.%s/tls/server.key", basePath, domain, domain)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_ROOTCERT_FILE=%s/%s/peers/peer0.%s/tls/ca.crt", basePath, domain, domain)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_MSPCONFIGPATH=%s/%s/users/Admin@%s/msp", basePath, domain, domain)),
 			),
 			yaml.ScalarNode("working_dir"),
 			yaml.ScalarNode("/opt/gopath/src/github.com/hyperledger/fabric/"),
@@ -54,7 +44,7 @@ func NewTools(name string, domain string, corePeerHost string, mspID string, net
 			yaml.ScalarNode("/bin/bash"),
 			yaml.ScalarNode("volumes"),
 			yaml.SequenceNode(
-				yaml.ScalarNode(fmt.Sprintf("./artifacts/crypto-materials/peerOrganizations/%s:/opt/gopath/src/github.com/hyperledger/fabric/crypto-materials/peerOrganizations/%s", domain, domain)),
+				yaml.ScalarNode(fmt.Sprintf("./artifacts/crypto-materials/peerOrganizations/%s:%s/%s", domain, basePath, domain)),
 			),
 			yaml.ScalarNode("networks"),
 			yaml.SequenceNode(yaml.ScalarNode(network)),
