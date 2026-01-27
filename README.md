@@ -64,73 +64,13 @@ Setting up a Hyperledger Fabric network can be a challenging task, even for expe
 
 ## How to execute
 
-> Currently, you can only execute this project by cloning it. However, we are working on developing a Docker image. Therefore, in the coming weeks, you will be able to run it with a single, fast command.
 
 ### Prerequisites
 
 - Docker
-- NodeJs +22.0
 - Golang +1.24
-- [Air](https://github.com/air-verse/air)
 
 ### Executing
-
-- Clone this repository
-
-```sh
-git clone https://github.com/gca-research-group/hyperledger-fabric-development-network-manager.git
-```
-
-- Setting up the .env file
-
-Create a .env file at the root directory and fill it with the following values:
-> There is a .env.example with default values.
-
-```.env
-# server host
-HOST=
-
-# server port
-PORT=
-
-# gin mode: debug or release
-GIN_MODE=
-
-# docker configuration files to hyperledger fabric
-DOCKER_ARTIFACTS_FOLDER=
-
-# crypto-config file to generate the crypto material to hyperledger fabric
-CRYPTO_CONFIG_FILE=
-
-# postgres configuration
-DATABASE_HOST=
-DATABASE_PORT=
-DATABASE_USER=
-DATABASE_PASSWORD=
-DATABASE_NAME=
-
-# the migration folder
-MIGRATION_FOLDER=./internal/app/database/migrations
-
-# secret key used to generate the jwt token
-SECRET_KEY=
-```
-
-- Running the api
-
-```sh
-./.scripts/app/api/up.sh
-```
-
-- Running the frontend
-
-```sh
-./.scripts/app/web/up.sh
-```
-
-- Executing the application
-
-You have to access the address [https://localhost:4200](https://localhost:4200) on your web browser. The default user is `admin@admin.com` and the default password is `admin`
 
 ## License
 

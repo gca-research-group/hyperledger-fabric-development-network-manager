@@ -6,6 +6,7 @@
 *.test
 *.so
 *.dll
+dist
 
 # Go Modules & Dependencies
 /vendor/
