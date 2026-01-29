@@ -22,19 +22,6 @@ func NewBuilder(config pkg.Config) *Builder {
 }
 
 func (c *Builder) BuildOrganizations() {
-	// Build Orderer Orgs
-	for _, orderer := range c.config.Orderers {
-		mspID := BuildMSPID(orderer.Name)
-		org := NewOrdererOrganization(orderer.Name, orderer.Domain, mspID).
-			WithDefaultOrdererPolicies(mspID)
-
-		c.ordererOrgs = append(c.ordererOrgs, org.Build())
-		c.ordererAliases = append(c.ordererAliases, yaml.AliasNode(orderer.Name, org.Build()))
-
-		c.ordererAddresses = append(c.ordererAddresses, fmt.Sprintf("%s.%s:%d", orderer.Hostname, orderer.Domain, orderer.Port))
-	}
-
-	// Build Application Orgs
 	for _, organization := range c.config.Organizations {
 		mspID := BuildMSPID(organization.Name)
 		org := NewApplicationOrganization(organization.Name, organization.Domain, mspID).
@@ -43,6 +30,17 @@ func (c *Builder) BuildOrganizations() {
 
 		c.appOrgs = append(c.appOrgs, org.Build())
 		c.appAliases = append(c.appAliases, yaml.AliasNode(organization.Name, org.Build()))
+
+		for _, orderer := range organization.Orderers {
+			mspID := BuildMSPID(orderer.Name)
+			org := NewOrdererOrganization(orderer.Name, organization.Domain, mspID).
+				WithDefaultOrdererPolicies(mspID)
+
+			c.ordererOrgs = append(c.ordererOrgs, org.Build())
+			c.ordererAliases = append(c.ordererAliases, yaml.AliasNode(orderer.Name, org.Build()))
+
+			c.ordererAddresses = append(c.ordererAddresses, fmt.Sprintf("%s.%s:%d", orderer.Hostname, organization.Domain, orderer.Port))
+		}
 	}
 }
 
@@ -59,7 +57,7 @@ func (c *Builder) Build() (*yaml.Node, error) {
 		WithPolicies().
 		WithOrganizations(c.ordererAliases).
 		WithBatchConfig().
-		WithRaftConfig(c.config.Orderers).
+		WithRaftConfig(c.config.Organizations).
 		WithAnchor(OrdererDefaultsKey)
 
 	application := NewApplication().

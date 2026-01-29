@@ -8,22 +8,30 @@ import (
 
 type ToolsNode struct {
 	*yaml.Node
+	domain string
 }
 
 func NewTools(name string, domain string, corePeerHost string, mspID string, network string) *ToolsNode {
-	basePath := "/opt/gopath/src/github.com/hyperledger/fabric/crypto-materials/peerOrganizations"
+	basePath := fmt.Sprintf("/opt/gopath/src/github.com/hyperledger/fabric/%s/crypto-materials", domain)
+
+	volumes := []*yaml.Node{
+		yaml.ScalarNode(fmt.Sprintf("./%s/crypto-config.yml:/opt/gopath/src/github.com/hyperledger/fabric/crypto-config.yml", domain)),
+		yaml.ScalarNode("./configtx.yml:/opt/gopath/src/github.com/hyperledger/fabric/configtx.yml"),
+		yaml.ScalarNode(fmt.Sprintf("./%s/crypto-materials:/opt/gopath/src/github.com/hyperledger/fabric/crypto-materials", domain)),
+		yaml.ScalarNode(fmt.Sprintf("./%s/channel:/opt/gopath/src/github.com/hyperledger/fabric/channel", domain)),
+	}
 
 	node := yaml.MappingNode(
-		yaml.ScalarNode(fmt.Sprintf("hyperledger-fabric-tools-%s", name)),
+		yaml.ScalarNode(fmt.Sprintf("hyperledger-fabric-%s-tools", domain)),
 		yaml.MappingNode(
 			yaml.ScalarNode("container_name"),
-			yaml.ScalarNode(fmt.Sprintf("hyperledger-fabric-tools-%s", name)),
+			yaml.ScalarNode(fmt.Sprintf("hyperledger-fabric-%s-tools", domain)),
 			yaml.ScalarNode("image"),
 			yaml.ScalarNode("hyperledger/fabric-tools:latest"),
 			yaml.ScalarNode("tty"),
 			yaml.ScalarNode("true"),
 			yaml.ScalarNode("stdin_open"),
-			yaml.ScalarNode("open"),
+			yaml.ScalarNode("true"),
 			yaml.ScalarNode("environment"),
 			yaml.SequenceNode(
 				yaml.ScalarNode("GOPATH=/opt/gopath"),
@@ -43,14 +51,35 @@ func NewTools(name string, domain string, corePeerHost string, mspID string, net
 			yaml.ScalarNode("command"),
 			yaml.ScalarNode("/bin/bash"),
 			yaml.ScalarNode("volumes"),
-			yaml.SequenceNode(
-				yaml.ScalarNode(fmt.Sprintf("./artifacts/crypto-materials/peerOrganizations/%s:%s/%s", domain, basePath, domain)),
-			),
+			yaml.SequenceNode(volumes...),
 			yaml.ScalarNode("networks"),
 			yaml.SequenceNode(yaml.ScalarNode(network)),
 		),
 	)
-	return &ToolsNode{node}
+
+	return &ToolsNode{node, domain}
+}
+
+func (tn *ToolsNode) WithMSPs(domains []string) *ToolsNode {
+	service := tn.GetValue(fmt.Sprintf("hyperledger-fabric-%s-tools", tn.domain))
+	volumes := service.GetValue("volumes")
+
+	for _, domain := range domains {
+		volume := fmt.Sprintf("./%s/crypto-materials/peerOrganizations/%s/msp:/opt/gopath/src/github.com/hyperledger/fabric/crypto-materials/peerOrganizations/%s/msp", domain, domain, domain)
+
+		var hasVolume bool
+
+		for _, content := range volumes.Content {
+			hasVolume = content.Value == volume
+		}
+
+		if !hasVolume {
+			entry, _ := yaml.ScalarNode(volume).MarshalYAML()
+			volumes.Content = append(volumes.Content, entry)
+		}
+	}
+
+	return tn
 }
 
 func (tn *ToolsNode) Build() *yaml.Node {

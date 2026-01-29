@@ -7,24 +7,46 @@ import (
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
 )
 
-func Render(config pkg.Config, path string) error {
+type Renderer struct {
+	config pkg.Config
+}
 
-	orderers := []*yaml.Node{}
+func NewRenderer(config pkg.Config) *Renderer {
+	return &Renderer{config}
+}
 
-	for _, orderer := range config.Orderers {
-		orderers = append(orderers, NewOrdererOrg(orderer).Build())
+func (r *Renderer) Render() error {
+
+	for _, organization := range r.config.Organizations {
+		orderers := []*yaml.Node{}
+		peerOrgnization := NewPeerOrg(organization).Build()
+
+		for _, orderer := range organization.Orderers {
+			orderers = append(orderers, NewOrdererOrg(organization.Domain, orderer).Build())
+		}
+
+		var err error
+
+		outputPath := fmt.Sprintf("%s/%s/crypto-config.yml", r.config.Output, organization.Domain)
+
+		if len(orderers) > 0 {
+			err = yaml.MappingNode(
+				yaml.ScalarNode("OrdererOrgs"),
+				yaml.SequenceNode(orderers...),
+				yaml.ScalarNode("PeerOrgs"),
+				yaml.SequenceNode([]*yaml.Node{peerOrgnization}...),
+			).ToFile(outputPath)
+		} else {
+			err = yaml.MappingNode(
+				yaml.ScalarNode("PeerOrgs"),
+				yaml.SequenceNode([]*yaml.Node{peerOrgnization}...),
+			).ToFile(outputPath)
+		}
+
+		if err != nil {
+			return fmt.Errorf("Error when rendering the crypto-config.yml for the organization %s: %w", organization.Name, err)
+		}
 	}
 
-	organizations := []*yaml.Node{}
-
-	for _, organization := range config.Organizations {
-		organizations = append(organizations, NewPeerOrg(organization).Build())
-	}
-
-	return yaml.MappingNode(
-		yaml.ScalarNode("OrdererOrgs"),
-		yaml.SequenceNode(orderers...),
-		yaml.ScalarNode("PeerOrgs"),
-		yaml.SequenceNode(organizations...),
-	).ToFile(fmt.Sprintf("%s/crypto-config.yml", path))
+	return nil
 }

@@ -25,7 +25,7 @@ func NewPeer(
 			yaml.ScalarNode("extends"),
 			yaml.MappingNode(
 				yaml.ScalarNode("file"),
-				yaml.ScalarNode("./orgs/peer.base.yml"),
+				yaml.ScalarNode("./peer.base.yml"),
 				yaml.ScalarNode("service"),
 				yaml.ScalarNode("peer.base"),
 			),
@@ -43,8 +43,8 @@ func NewPeer(
 			),
 			yaml.ScalarNode("volumes"),
 			yaml.SequenceNode(
-				yaml.ScalarNode(fmt.Sprintf("./artifacts/crypto-materials/peerOrganizations/%s/peers/%s/msp:/etc/hyperledger/fabric/msp", domain, host)),
-				yaml.ScalarNode(fmt.Sprintf("./artifacts/crypto-materials/peerOrganizations/%s/peers/%s/tls:/etc/hyperledger/fabric/tls", domain, host)),
+				yaml.ScalarNode(fmt.Sprintf("./crypto-materials/peerOrganizations/%s/peers/%s/msp:/etc/hyperledger/fabric/msp", domain, host)),
+				yaml.ScalarNode(fmt.Sprintf("./crypto-materials/peerOrganizations/%s/peers/%s/tls:/etc/hyperledger/fabric/tls", domain, host)),
 			),
 		),
 		yaml.ScalarNode(fmt.Sprintf("couchdb.%s", host)),

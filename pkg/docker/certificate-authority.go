@@ -33,7 +33,7 @@ func NewCertificateAuthority(host string) *CertificateAuthorityNode {
 			yaml.ScalarNode("command"),
 			yaml.ScalarNode("sh -c 'fabric-ca-server start -b admin:adminpw'"),
 			yaml.ScalarNode("volumes"),
-			yaml.SequenceNode(yaml.ScalarNode("./artifacts/crypto-materials/peerOrganizations/org1.example.com/ca/:/etc/hyperledger/fabric-ca-server-config")),
+			yaml.SequenceNode(yaml.ScalarNode("./crypto-materials/peerOrganizations/org1.example.com/ca/:/etc/hyperledger/fabric-ca-server-config")),
 		),
 	)
 

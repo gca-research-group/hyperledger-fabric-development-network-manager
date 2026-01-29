@@ -33,9 +33,9 @@ func NewPeerBase(network string) *PeerBaseNode {
 			yaml.ScalarNode("peer node start"),
 			yaml.ScalarNode("volumes"),
 			yaml.SequenceNode(
-				yaml.ScalarNode("./../artifacts/channel:/etc/hyperledger/fabric/channel"),
-				yaml.ScalarNode("./../artifacts/chaincode:/etc/hyperledger/fabric/chaincode"),
-				yaml.ScalarNode("./../artifacts/crypto-materials:/etc/hyperledger/fabric/crypto-materials"),
+				yaml.ScalarNode("./../channel:/etc/hyperledger/fabric/channel"),
+				yaml.ScalarNode("./../chaincode:/etc/hyperledger/fabric/chaincode"),
+				yaml.ScalarNode("./../crypto-materials:/etc/hyperledger/fabric/crypto-materials"),
 				yaml.ScalarNode("/var/run/docker.sock:/host/var/run/docker.sock"),
 			),
 			yaml.ScalarNode("networks"),

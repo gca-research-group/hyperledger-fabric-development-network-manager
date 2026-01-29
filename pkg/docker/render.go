@@ -8,39 +8,32 @@ import (
 )
 
 type Renderer struct {
-	config  pkg.Config
-	path    string
-	network string
+	config pkg.Config
 }
 
-func NewRenderer(config pkg.Config, network string, outputPath string) *Renderer {
+func NewRenderer(config pkg.Config) *Renderer {
+	if config.Network == "" {
+		config.Network = "hyperledger_fabric_network"
+	}
+
 	return &Renderer{
-		config:  config,
-		network: network,
-		path:    outputPath,
+		config: config,
 	}
 }
 
-func RenderNetwork(networkName string, path string) (string, error) {
-
-	if networkName == "" {
-		networkName = "hyperledger_fabric_network"
-	}
-
-	err := yaml.MappingNode(
+func (r *Renderer) RenderNetwork(networkName string, path string) error {
+	return yaml.MappingNode(
 		yaml.ScalarNode("networks"),
 		NewBridgeNetwork(networkName),
 	).ToFile(fmt.Sprintf("%s/network.yml", path))
-
-	return networkName, err
 }
 
-func (r *Renderer) RenderOrderers() error {
+func (r *Renderer) RenderOrderers(organization pkg.Organization) error {
 	var _orderers []*yaml.Node
-	for _, orderer := range r.config.Orderers {
-		node := NewOrderer(fmt.Sprintf("%s.%s", orderer.Hostname, orderer.Domain)).
+	for _, orderer := range organization.Orderers {
+		node := NewOrderer(fmt.Sprintf("%s.%s", orderer.Hostname, organization.Domain)).
 			WithPort(orderer.Port).
-			WithNetworks([]*yaml.Node{yaml.ScalarNode(r.network)})
+			WithNetworks([]*yaml.Node{yaml.ScalarNode(r.config.Network)})
 		for _, n := range node.Content {
 			_orderers = append(_orderers, (*yaml.Node)(n))
 		}
@@ -50,22 +43,22 @@ func (r *Renderer) RenderOrderers() error {
 	return yaml.MappingNode(
 		yaml.ScalarNode("services"),
 		yaml.MappingNode(_orderers...),
-	).ToFile(fmt.Sprintf("%s/orderer.yml", r.path))
+	).ToFile(fmt.Sprintf("%s/%s/orderers.yml", r.config.Output, organization.Domain))
 }
 
 func (r *Renderer) RenderPeerBase() error {
 	return yaml.MappingNode(
 		yaml.ScalarNode("services"),
-		NewPeerBase(r.network).
+		NewPeerBase(r.config.Network).
 			Build(),
-	).ToFile(fmt.Sprintf("%s/orgs/peer.base.yml", r.path))
+	).ToFile(fmt.Sprintf("%s/peer.base.yml", r.config.Output))
 }
 
 func (r *Renderer) RenderCertificateAuthority(organization pkg.Organization) error {
 	var nodes []*yaml.Node
 
 	node := NewCertificateAuthority(fmt.Sprintf("ca.%s", organization.Domain)).
-		WithNetworks([]*yaml.Node{yaml.ScalarNode(r.network)})
+		WithNetworks([]*yaml.Node{yaml.ScalarNode(r.config.Network)})
 
 	if organization.CertificateAuthority.ExposePort > 0 {
 		node.WithPort(organization.CertificateAuthority.ExposePort)
@@ -78,7 +71,7 @@ func (r *Renderer) RenderCertificateAuthority(organization pkg.Organization) err
 	return yaml.MappingNode(
 		yaml.ScalarNode("services"),
 		yaml.MappingNode(nodes...),
-	).ToFile(fmt.Sprintf("%s/orgs/%s/ca.yml", r.path, organization.Domain))
+	).ToFile(fmt.Sprintf("%s/%s/ca.yml", r.config.Output, organization.Domain))
 }
 
 func (r *Renderer) RenderPeer(organization pkg.Organization, corePeerGossipBootstrap string, index int) error {
@@ -87,13 +80,13 @@ func (r *Renderer) RenderPeer(organization pkg.Organization, corePeerGossipBoots
 		fmt.Sprintf("peer%d.%s", index, organization.Domain),
 		organization.Domain,
 		corePeerGossipBootstrap,
-		r.network,
+		r.config.Network,
 	).Build()
 
 	return yaml.MappingNode(
 		yaml.ScalarNode("services"),
 		node,
-	).ToFile(fmt.Sprintf("%s/orgs/%s/peer%d.yml", r.path, organization.Domain, index))
+	).ToFile(fmt.Sprintf("%s/%s/peer%d.yml", r.config.Output, organization.Domain, index))
 }
 
 func (r *Renderer) RenderPeers(organization pkg.Organization) error {
@@ -126,19 +119,33 @@ func (r *Renderer) RenderOrganizations() error {
 			return fmt.Errorf("Error when rendering the certificate authority for the organization %s: %w", organization.Name, err)
 		}
 
+		if len(organization.Orderers) > 0 {
+			if err := r.RenderOrderers(organization); err != nil {
+				return fmt.Errorf("Error when rendering the orderers: %w", err)
+			}
+		}
+
 		if err := r.RenderPeers(organization); err != nil {
 			return err
 		}
 
-		if err := r.RenderTools(organization); err != nil {
-			return fmt.Errorf("Error when rendering the tools for the organization %s: %w", organization.Name, err)
+		var domains []string
+
+		for _, o := range r.config.Organizations {
+			if o.Domain != organization.Domain {
+				domains = append(domains, o.Domain)
+			}
+		}
+
+		if err := r.RenderTools(organization, domains); err != nil {
+			return fmt.Errorf("Error when rendering the cryptomaterial.yml file for the organization %s: %w", organization.Name, err)
 		}
 	}
 
 	return nil
 }
 
-func (r *Renderer) RenderTools(organization pkg.Organization) error {
+func (r *Renderer) RenderTools(organization pkg.Organization, domains []string) error {
 	return yaml.MappingNode(
 		yaml.ScalarNode("services"),
 		NewTools(
@@ -146,30 +153,41 @@ func (r *Renderer) RenderTools(organization pkg.Organization) error {
 			organization.Domain,
 			fmt.Sprintf("peer0.%s:7051", organization.Domain),
 			fmt.Sprintf("%sMSP", organization.Name),
-			r.network).
-			Build(),
-	).ToFile(fmt.Sprintf("%s/orgs/%s/tools.yml", r.path, organization.Domain))
+			r.config.Network).Build(),
+	).ToFile(fmt.Sprintf("%s/%s/tools.yml", r.config.Output, organization.Domain))
 }
 
-func Render(config pkg.Config, path string) error {
+func (r *Renderer) RenderToolsWithMSP(currentOrganization pkg.Organization) error {
+	var domains []string
 
-	network, err := RenderNetwork(config.Docker.NetworkName, path)
+	for _, organization := range r.config.Organizations {
+		if organization.Domain != currentOrganization.Domain {
+			domains = append(domains, organization.Domain)
+		}
+	}
 
-	if err != nil {
+	return yaml.MappingNode(
+		yaml.ScalarNode("services"),
+		NewTools(
+			currentOrganization.Name,
+			currentOrganization.Domain,
+			fmt.Sprintf("peer0.%s:7051", currentOrganization.Domain),
+			fmt.Sprintf("%sMSP", currentOrganization.Name),
+			r.config.Network).WithMSPs(domains).Build(),
+	).ToFile(fmt.Sprintf("%s/%s/tools.yml", r.config.Output, currentOrganization.Domain))
+}
+
+func (r *Renderer) Render() error {
+
+	if err := r.RenderNetwork(r.config.Network, r.config.Output); err != nil {
 		return fmt.Errorf("Error when rendering the network: %w", err)
 	}
 
-	renderer := NewRenderer(config, network, path)
-
-	if err := renderer.RenderOrderers(); err != nil {
-		return fmt.Errorf("Error when rendering the orderers: %w", err)
-	}
-
-	if err := renderer.RenderPeerBase(); err != nil {
+	if err := r.RenderPeerBase(); err != nil {
 		return fmt.Errorf("Error when rendering the peer base: %w", err)
 	}
 
-	if err := renderer.RenderOrganizations(); err != nil {
+	if err := r.RenderOrganizations(); err != nil {
 		return err
 	}
 

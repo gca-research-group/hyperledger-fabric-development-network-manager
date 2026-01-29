@@ -3,7 +3,6 @@ package pkg
 type Orderer struct {
 	Name     string
 	Hostname string
-	Domain   string
 	Port     int
 }
 
@@ -17,12 +16,15 @@ type CertificateAuthority struct {
 }
 
 type Organization struct {
-	Name                 string
-	Domain               string
-	AnchorPeer           AnchorPeer
-	Peers                int
-	Users                int
-	CertificateAuthority CertificateAuthority
+	Name                        string
+	Domain                      string
+	AnchorPeer                  AnchorPeer
+	Peers                       int
+	Users                       int
+	CertificateAuthority        CertificateAuthority
+	Orderers                    []Orderer
+	GenerateOrdererGenesisBlock bool
+	GenerateDefaultChannel      bool
 }
 
 type Profile struct {
@@ -35,7 +37,8 @@ type Docker struct {
 }
 
 type Config struct {
-	Orderers      []Orderer
+	Output        string
+	Network       string
 	Organizations []Organization
 	Profiles      []Profile
 	Docker        Docker

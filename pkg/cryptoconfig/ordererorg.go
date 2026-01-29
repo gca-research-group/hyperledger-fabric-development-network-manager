@@ -9,12 +9,13 @@ type OrdererOrgNode struct {
 	*yaml.Node
 }
 
-func NewOrdererOrg(orderer pkg.Orderer) *OrdererOrgNode {
+func NewOrdererOrg(domain string, orderer pkg.Orderer) *OrdererOrgNode {
 	node := yaml.MappingNode(
 		yaml.ScalarNode("Name"),
 		yaml.ScalarNode(orderer.Name),
 		yaml.ScalarNode("Domain"),
-		yaml.ScalarNode(orderer.Domain),
+		yaml.ScalarNode(domain),
+		yaml.ScalarNode("Specs"),
 		yaml.SequenceNode(
 			yaml.MappingNode(yaml.ScalarNode("Hostname"), yaml.ScalarNode(orderer.Hostname)),
 		),
