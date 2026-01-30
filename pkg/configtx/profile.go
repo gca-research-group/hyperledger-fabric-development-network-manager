@@ -1,19 +1,22 @@
 package configtx
 
-import "github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
+import (
+	"fmt"
+
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
+)
 
 type ProfileNode struct {
 	*yaml.Node
 }
 
-func NewDefaultProfiles(
+func NewDefaultProfile(
 	ordererDefaults *yaml.Node,
-	applicationDefaults *yaml.Node,
 	channelDefaults *yaml.Node,
 	ordererOrganizations []*yaml.Node,
 	applicationOrganizations []*yaml.Node,
-) *yaml.Node {
-	return yaml.MappingNode(
+) *ProfileNode {
+	node := yaml.MappingNode(
 		yaml.ScalarNode(OrdererGenesisProfileKey),
 		yaml.MappingNode(
 			yaml.ScalarNode("<<"),
@@ -34,12 +37,25 @@ func NewDefaultProfiles(
 				),
 			),
 		),
-		yaml.ScalarNode(SampleProfileKey),
+	)
+
+	return &ProfileNode{node}
+}
+
+func NewProfile(
+	name string,
+	ordererDefaults *yaml.Node,
+	applicationDefaults *yaml.Node,
+	channelDefaults *yaml.Node,
+	ordererOrganizations []*yaml.Node,
+	applicationOrganizations []*yaml.Node,
+) *ProfileNode {
+	node := yaml.MappingNode(yaml.ScalarNode(name),
 		yaml.MappingNode(
 			yaml.ScalarNode("<<"),
 			yaml.AliasNode(ChannelDefaultsKey, channelDefaults),
 			yaml.ScalarNode(ConsortiumKey),
-			yaml.ScalarNode(DefaultConsortiumKey),
+			yaml.ScalarNode(fmt.Sprintf("%sConsortium", name)),
 			yaml.ScalarNode(ApplicationKey),
 			yaml.MappingNode(
 				yaml.ScalarNode("<<"),
@@ -49,6 +65,8 @@ func NewDefaultProfiles(
 			),
 		),
 	)
+
+	return &ProfileNode{node}
 }
 
 func (pn *ProfileNode) Build() *yaml.Node {
