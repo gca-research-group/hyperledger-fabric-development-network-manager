@@ -12,7 +12,7 @@ type ToolsNode struct {
 }
 
 func NewTools(name string, domain string, corePeerHost string, mspID string, network string) *ToolsNode {
-	basePath := fmt.Sprintf("/opt/gopath/src/github.com/hyperledger/fabric/%s/crypto-materials", domain)
+	basePath := "/opt/gopath/src/github.com/hyperledger/fabric/crypto-materials"
 
 	volumes := []*yaml.Node{
 		yaml.ScalarNode(fmt.Sprintf("./%s/crypto-config.yml:/opt/gopath/src/github.com/hyperledger/fabric/crypto-config.yml", domain)),
@@ -41,10 +41,10 @@ func NewTools(name string, domain string, corePeerHost string, mspID string, net
 				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_ADDRESS=%s", corePeerHost)),
 				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_LOCALMSPID=%s", mspID)),
 				yaml.ScalarNode("CORE_PEER_TLS_ENABLED=true"),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_CERT_FILE=%s/%s/peers/peer0.%s/tls/server.crt", basePath, domain, domain)),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_KEY_FILE=%s/%s/peers/peer0.%s/tls/server.key", basePath, domain, domain)),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_ROOTCERT_FILE=%s/%s/peers/peer0.%s/tls/ca.crt", basePath, domain, domain)),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_MSPCONFIGPATH=%s/%s/users/Admin@%s/msp", basePath, domain, domain)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_CERT_FILE=%s/%s/peerOrganizations/peers/peer0.%s/tls/server.crt", basePath, domain, domain)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_KEY_FILE=%s/%s/peerOrganizations/peers/peer0.%s/tls/server.key", basePath, domain, domain)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_ROOTCERT_FILE=%s/peerOrganizations/%s/peers/peer0.%s/tls/ca.crt", basePath, domain, domain)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_MSPCONFIGPATH=%s/peerOrganizations/%s/users/Admin@%s/msp", basePath, domain, domain)),
 			),
 			yaml.ScalarNode("working_dir"),
 			yaml.ScalarNode("/opt/gopath/src/github.com/hyperledger/fabric/"),
@@ -60,7 +60,7 @@ func NewTools(name string, domain string, corePeerHost string, mspID string, net
 	return &ToolsNode{node, domain}
 }
 
-func (tn *ToolsNode) WithMSPs(domains []string) *ToolsNode {
+func (tn *ToolsNode) WithPeerMSPs(domains []string) *ToolsNode {
 	service := tn.GetValue(fmt.Sprintf("hyperledger-fabric-%s-tools", tn.domain))
 	volumes := service.GetValue("volumes")
 

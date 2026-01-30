@@ -1,0 +1,26 @@
+output: ./dist/hyperledger-fabric
+
+organizations:
+  - name: Org1
+    domain: org1.com
+    peers: 3
+    orderers:
+      - name: Orderer
+        hostname: orderer
+        port: 7050
+    generateOrdererGenesisBlock: true
+    generateDefaultChannel: true
+
+  - name: Org2
+    domain: org2.com
+
+  - name: Org3
+    domain: org3.com
+
+profiles:
+  - name: MultiChannel
+    organizations:
+      - Org1
+      - Org2
+      - Org3
+

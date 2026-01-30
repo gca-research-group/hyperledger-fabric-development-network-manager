@@ -11,7 +11,7 @@ type OrdererNode struct {
 	*yaml.Node
 }
 
-func NewOrderer(name string) *OrdererNode {
+func NewOrderer(name string, domain string) *OrdererNode {
 	node := yaml.MappingNode(
 		yaml.ScalarNode(name),
 		yaml.MappingNode(
@@ -33,6 +33,12 @@ func NewOrderer(name string) *OrdererNode {
 				yaml.ScalarNode("ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key"),
 				yaml.ScalarNode("ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt"),
 				yaml.ScalarNode("ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]"),
+			),
+			yaml.ScalarNode("volumes"),
+			yaml.SequenceNode(
+				yaml.ScalarNode(fmt.Sprintf("./%s/crypto-materials/ordererOrganizations/%s/orderers/%s/msp:/var/hyperledger/orderer/msp", domain, domain, name)),
+				yaml.ScalarNode(fmt.Sprintf("./%s/crypto-materials/ordererOrganizations/%s/orderers/%s/tls:/var/hyperledger/orderer/tls", domain, domain, name)),
+				yaml.ScalarNode(fmt.Sprintf("./%s/channel/orderer.genesis.block:/var/hyperledger/orderer/orderer.genesis.block", domain)),
 			),
 		),
 	)

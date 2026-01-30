@@ -1,8 +1,6 @@
 package configtx
 
 import (
-	"fmt"
-
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
 )
 
@@ -55,7 +53,7 @@ func NewProfile(
 			yaml.ScalarNode("<<"),
 			yaml.AliasNode(ChannelDefaultsKey, channelDefaults),
 			yaml.ScalarNode(ConsortiumKey),
-			yaml.ScalarNode(fmt.Sprintf("%sConsortium", name)),
+			yaml.ScalarNode(DefaultConsortiumKey),
 			yaml.ScalarNode(ApplicationKey),
 			yaml.MappingNode(
 				yaml.ScalarNode("<<"),

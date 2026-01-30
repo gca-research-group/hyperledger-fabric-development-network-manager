@@ -11,11 +11,13 @@ CONTAINER=hyperledger-fabric-tools
 
 echo -e "${PROCESSING_ICON} Installing dependencies."
 COMMAND="cd $CHAINCODE_PATH && go mod tidy"
-result=(docker exec -it $CONTAINER bash -c "$COMMAND")
+docker exec -it $CONTAINER bash -c "$COMMAND"
 echo -e "${SUCCESS_ICON} Dependencies installed."
 
 COMMAND="cd $CHAINCODE_PATH && peer lifecycle chaincode package $CC_PACKAGE_FILE -p $CHAINCODE_NAME.go --label $CC_LABEL"
-result=(docker exec -it $CONTAINER bash -c "$COMMAND")
+docker exec -it $CONTAINER bash -c "$COMMAND"
+
+sleep 10
 
 echo -e "${SUCCESS_ICON} Finished succesfully."
 exit 0

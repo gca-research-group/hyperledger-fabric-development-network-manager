@@ -16,15 +16,14 @@ type CertificateAuthority struct {
 }
 
 type Organization struct {
-	Name                        string
-	Domain                      string
-	AnchorPeer                  AnchorPeer
-	Peers                       int
-	Users                       int
-	CertificateAuthority        CertificateAuthority
-	Orderers                    []Orderer
-	GenerateOrdererGenesisBlock bool
-	GenerateDefaultChannel      bool
+	Name                 string
+	Domain               string
+	AnchorPeer           AnchorPeer
+	Peers                int
+	Users                int
+	CertificateAuthority CertificateAuthority
+	Orderers             []Orderer
+	Bootstrap            bool
 }
 
 type Profile struct {

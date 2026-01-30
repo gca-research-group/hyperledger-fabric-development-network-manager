@@ -1,6 +1,8 @@
 package cryptoconfig
 
 import (
+	"fmt"
+
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
 )
@@ -10,6 +12,12 @@ type PeerOrgNode struct {
 }
 
 func NewPeerOrg(organization pkg.Organization) *PeerOrgNode {
+	peers := 1
+
+	if organization.Peers > 0 {
+		peers = organization.Peers
+	}
+
 	node := yaml.MappingNode(
 		yaml.ScalarNode("Name"),
 		yaml.ScalarNode(organization.Name),
@@ -17,7 +25,7 @@ func NewPeerOrg(organization pkg.Organization) *PeerOrgNode {
 		yaml.ScalarNode(organization.Domain),
 		yaml.ScalarNode("Template"),
 		yaml.MappingNode(
-			yaml.ScalarNode("Count"), yaml.ScalarNode("1"),
+			yaml.ScalarNode("Count"), yaml.ScalarNode(fmt.Sprintf("%d", peers)),
 		),
 		yaml.ScalarNode("Users"),
 		yaml.MappingNode(

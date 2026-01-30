@@ -3,7 +3,7 @@ source ./.scripts/config/_colors.sh
 source ./.scripts/config/_icons.sh
 source ./.scripts/hyperledger-fabric/_variables.sh
 
-ORGS="Org1" # org2 org3
+ORGS="Org1"
 
 VERSION=1.0
 SEQUENCE=1
