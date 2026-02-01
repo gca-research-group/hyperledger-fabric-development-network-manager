@@ -2,13 +2,15 @@ package docker
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
 )
 
 type ToolsNode struct {
 	*yaml.Node
-	domain string
+	name string
 }
 
 func NewTools(name string, domain string, corePeerHost string, mspID string, network string) *ToolsNode {
@@ -22,12 +24,12 @@ func NewTools(name string, domain string, corePeerHost string, mspID string, net
 	}
 
 	node := yaml.MappingNode(
-		yaml.ScalarNode(fmt.Sprintf("hyperledger-fabric-%s-tools", domain)),
+		yaml.ScalarNode(fmt.Sprintf("hyperledger-fabric-tools-%s", strings.ToLower(name))),
 		yaml.MappingNode(
 			yaml.ScalarNode("container_name"),
-			yaml.ScalarNode(fmt.Sprintf("hyperledger-fabric-%s-tools", domain)),
+			yaml.ScalarNode(fmt.Sprintf("hyperledger-fabric-tools-%s", strings.ToLower(name))),
 			yaml.ScalarNode("image"),
-			yaml.ScalarNode("hyperledger/fabric-tools:latest"),
+			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-tools:%s", FABRIC_VERSION)),
 			yaml.ScalarNode("tty"),
 			yaml.ScalarNode("true"),
 			yaml.ScalarNode("stdin_open"),
@@ -57,11 +59,11 @@ func NewTools(name string, domain string, corePeerHost string, mspID string, net
 		),
 	)
 
-	return &ToolsNode{node, domain}
+	return &ToolsNode{node, name}
 }
 
 func (tn *ToolsNode) WithPeerMSPs(domains []string) *ToolsNode {
-	service := tn.GetValue(fmt.Sprintf("hyperledger-fabric-%s-tools", tn.domain))
+	service := tn.GetValue(fmt.Sprintf("hyperledger-fabric-tools-%s", strings.ToLower(tn.name)))
 	volumes := service.GetValue("volumes")
 
 	for _, domain := range domains {
@@ -76,6 +78,47 @@ func (tn *ToolsNode) WithPeerMSPs(domains []string) *ToolsNode {
 		if !hasVolume {
 			entry, _ := yaml.ScalarNode(volume).MarshalYAML()
 			volumes.Content = append(volumes.Content, entry)
+		}
+	}
+
+	return tn
+}
+
+func (tn *ToolsNode) WithOrdererMSPs(organizations []pkg.Organization) *ToolsNode {
+	service := tn.GetValue(fmt.Sprintf("hyperledger-fabric-tools-%s", strings.ToLower(tn.name)))
+	volumes := service.GetValue("volumes")
+
+	for _, organization := range organizations {
+		for _, orderer := range organization.Orderers {
+			domain := organization.Domain
+			hostname := orderer.Hostname
+			host := fmt.Sprintf("./%s/crypto-materials/ordererOrganizations/%s/orderers/%s.%s/msp", domain, domain, hostname, domain)
+			container := fmt.Sprintf("/opt/gopath/src/github.com/hyperledger/fabric/crypto-materials/ordererOrganizations/%s/orderers/%s.%s/msp", domain, hostname, domain)
+			volume := fmt.Sprintf("%s:%s", host, container)
+
+			var hasVolume bool
+
+			for _, content := range volumes.Content {
+				hasVolume = content.Value == volume
+			}
+
+			if !hasVolume {
+				entry, _ := yaml.ScalarNode(volume).MarshalYAML()
+				volumes.Content = append(volumes.Content, entry)
+			}
+
+			host = fmt.Sprintf("./%s/crypto-materials/ordererOrganizations/%s/orderers/%s.%s/tls/ca.crt", domain, domain, hostname, domain)
+			container = fmt.Sprintf("/opt/gopath/src/github.com/hyperledger/fabric/crypto-materials/ordererOrganizations/%s/orderers/%s.%s/tls/ca.crt", domain, hostname, domain)
+			volume = fmt.Sprintf("%s:%s", host, container)
+
+			for _, content := range volumes.Content {
+				hasVolume = content.Value == volume
+			}
+
+			if !hasVolume {
+				entry, _ := yaml.ScalarNode(volume).MarshalYAML()
+				volumes.Content = append(volumes.Content, entry)
+			}
 		}
 	}
 

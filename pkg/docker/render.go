@@ -157,11 +157,15 @@ func (r *Renderer) RenderTools(organization pkg.Organization, domains []string) 
 }
 
 func (r *Renderer) RenderToolsWithMSP(currentOrganization pkg.Organization) error {
-	var domains []string
+	var peerDomains []string
+	var organizations []pkg.Organization
 
 	for _, organization := range r.config.Organizations {
 		if organization.Domain != currentOrganization.Domain {
-			domains = append(domains, organization.Domain)
+			peerDomains = append(peerDomains, organization.Domain)
+			if len(organization.Orderers) > 0 {
+				organizations = append(organizations, organization)
+			}
 		}
 	}
 
@@ -172,7 +176,10 @@ func (r *Renderer) RenderToolsWithMSP(currentOrganization pkg.Organization) erro
 			currentOrganization.Domain,
 			fmt.Sprintf("peer0.%s:7051", currentOrganization.Domain),
 			fmt.Sprintf("%sMSP", currentOrganization.Name),
-			r.config.Network).WithPeerMSPs(domains).Build(),
+			r.config.Network).
+			WithPeerMSPs(peerDomains).
+			WithOrdererMSPs(organizations).
+			Build(),
 	).ToFile(fmt.Sprintf("%s/%s/tools.yml", r.config.Output, currentOrganization.Domain))
 }
 

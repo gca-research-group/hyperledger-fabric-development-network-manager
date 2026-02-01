@@ -8,37 +8,37 @@ type ProfileNode struct {
 	*yaml.Node
 }
 
-func NewDefaultProfile(
-	ordererDefaults *yaml.Node,
-	channelDefaults *yaml.Node,
-	ordererOrganizations []*yaml.Node,
-	applicationOrganizations []*yaml.Node,
-) *ProfileNode {
-	node := yaml.MappingNode(
-		yaml.ScalarNode(OrdererGenesisProfileKey),
-		yaml.MappingNode(
-			yaml.ScalarNode("<<"),
-			yaml.AliasNode(ChannelDefaultsKey, channelDefaults),
-			yaml.ScalarNode(OrdererKey),
-			yaml.MappingNode(
-				yaml.ScalarNode("<<"),
-				yaml.AliasNode(OrdererDefaultsKey, ordererDefaults),
-				yaml.ScalarNode(OrganizationsKey),
-				yaml.SequenceNode(ordererOrganizations...),
-			),
-			yaml.ScalarNode(ConsortiumsKey),
-			yaml.MappingNode(
-				yaml.ScalarNode(DefaultConsortiumKey),
-				yaml.MappingNode(
-					yaml.ScalarNode(OrganizationsKey),
-					yaml.SequenceNode(applicationOrganizations...),
-				),
-			),
-		),
-	)
+// func NewDefaultProfile(
+// 	ordererDefaults *yaml.Node,
+// 	channelDefaults *yaml.Node,
+// 	ordererOrganizations []*yaml.Node,
+// 	applicationOrganizations []*yaml.Node,
+// ) *ProfileNode {
+// 	node := yaml.MappingNode(
+// 		yaml.ScalarNode(OrdererGenesisProfileKey),
+// 		yaml.MappingNode(
+// 			yaml.ScalarNode("<<"),
+// 			yaml.AliasNode(ChannelDefaultsKey, channelDefaults),
+// 			yaml.ScalarNode(OrdererKey),
+// 			yaml.MappingNode(
+// 				yaml.ScalarNode("<<"),
+// 				yaml.AliasNode(OrdererDefaultsKey, ordererDefaults),
+// 				yaml.ScalarNode(OrganizationsKey),
+// 				yaml.SequenceNode(ordererOrganizations...),
+// 			),
+// 			yaml.ScalarNode(ConsortiumsKey),
+// 			yaml.MappingNode(
+// 				yaml.ScalarNode(DefaultConsortiumKey),
+// 				yaml.MappingNode(
+// 					yaml.ScalarNode(OrganizationsKey),
+// 					yaml.SequenceNode(applicationOrganizations...),
+// 				),
+// 			),
+// 		),
+// 	)
 
-	return &ProfileNode{node}
-}
+// 	return &ProfileNode{node}
+// }
 
 func NewProfile(
 	name string,
@@ -52,6 +52,13 @@ func NewProfile(
 		yaml.MappingNode(
 			yaml.ScalarNode("<<"),
 			yaml.AliasNode(ChannelDefaultsKey, channelDefaults),
+			yaml.ScalarNode(OrdererKey),
+			yaml.MappingNode(
+				yaml.ScalarNode("<<"),
+				yaml.AliasNode(OrdererDefaultsKey, ordererDefaults),
+				yaml.ScalarNode(OrganizationsKey),
+				yaml.SequenceNode(ordererOrganizations...),
+			),
 			yaml.ScalarNode(ConsortiumKey),
 			yaml.ScalarNode(DefaultConsortiumKey),
 			yaml.ScalarNode(ApplicationKey),
