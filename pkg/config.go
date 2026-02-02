@@ -1,45 +1,39 @@
 package pkg
 
 type Orderer struct {
-	Name     string
-	Hostname string
-	Port     int
+	Name     string `yaml:"name"`
+	Hostname string `yaml:"hostname"`
+	Port     int    `yaml:"port"`
 }
 
 type AnchorPeer struct {
-	Host string
-	Port int
+	Host string `yaml:"host"`
+	Port int    `yaml:"port"`
 }
 
 type CertificateAuthority struct {
-	ExposePort int
+	ExposePort int `yaml:"exposePort,omitempty"`
 }
 
 type Organization struct {
-	Name                        string
-	Domain                      string
-	AnchorPeer                  AnchorPeer
-	Peers                       int
-	Users                       int
-	CertificateAuthority        CertificateAuthority
-	Orderers                    []Orderer
-	GenerateOrdererGenesisBlock bool
-	GenerateDefaultChannel      bool
+	Name                 string               `yaml:"name"`
+	Domain               string               `yaml:"domain"`
+	AnchorPeer           AnchorPeer           `yaml:"anchorPeer"`
+	Peers                int                  `yaml:"peers"`
+	Users                int                  `yaml:"users"`
+	CertificateAuthority CertificateAuthority `yaml:"certificateAuthority"`
+	Orderers             []Orderer            `yaml:"orderers"`
+	Bootstrap            bool                 `yaml:"bootstrap,omitempty"`
 }
 
 type Profile struct {
-	Name          string
-	Organizations []string
-}
-
-type Docker struct {
-	NetworkName string
+	Name          string   `yaml:"name"`
+	Organizations []string `yaml:"organizations"`
 }
 
 type Config struct {
-	Output        string
-	Network       string
-	Organizations []Organization
-	Profiles      []Profile
-	Docker        Docker
+	Output        string         `yaml:"output"`
+	Network       string         `yaml:"network"`
+	Organizations []Organization `yaml:"organizations"`
+	Profiles      []Profile      `yaml:"profiles"`
 }

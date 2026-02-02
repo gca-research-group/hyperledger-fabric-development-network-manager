@@ -29,21 +29,20 @@ func (r *Renderer) RenderNetwork(networkName string, path string) error {
 }
 
 func (r *Renderer) RenderOrderers(organization pkg.Organization) error {
-	var _orderers []*yaml.Node
 	for _, orderer := range organization.Orderers {
-		node := NewOrderer(fmt.Sprintf("%s.%s", orderer.Hostname, organization.Domain)).
+		node := NewOrderer(fmt.Sprintf("%s.%s", orderer.Hostname, organization.Domain), organization.Domain).
 			WithPort(orderer.Port).
 			WithNetworks([]*yaml.Node{yaml.ScalarNode(r.config.Network)})
-		for _, n := range node.Content {
-			_orderers = append(_orderers, (*yaml.Node)(n))
-		}
 
+		err := yaml.MappingNode(
+			yaml.ScalarNode("services"),
+			node.Build(),
+		).ToFile(fmt.Sprintf("%s/%s/%s.yml", r.config.Output, organization.Domain, orderer.Hostname))
+
+		return err
 	}
 
-	return yaml.MappingNode(
-		yaml.ScalarNode("services"),
-		yaml.MappingNode(_orderers...),
-	).ToFile(fmt.Sprintf("%s/%s/orderers.yml", r.config.Output, organization.Domain))
+	return nil
 }
 
 func (r *Renderer) RenderPeerBase() error {
@@ -158,11 +157,15 @@ func (r *Renderer) RenderTools(organization pkg.Organization, domains []string) 
 }
 
 func (r *Renderer) RenderToolsWithMSP(currentOrganization pkg.Organization) error {
-	var domains []string
+	var peerDomains []string
+	var organizations []pkg.Organization
 
 	for _, organization := range r.config.Organizations {
 		if organization.Domain != currentOrganization.Domain {
-			domains = append(domains, organization.Domain)
+			peerDomains = append(peerDomains, organization.Domain)
+			if len(organization.Orderers) > 0 {
+				organizations = append(organizations, organization)
+			}
 		}
 	}
 
@@ -173,7 +176,10 @@ func (r *Renderer) RenderToolsWithMSP(currentOrganization pkg.Organization) erro
 			currentOrganization.Domain,
 			fmt.Sprintf("peer0.%s:7051", currentOrganization.Domain),
 			fmt.Sprintf("%sMSP", currentOrganization.Name),
-			r.config.Network).WithMSPs(domains).Build(),
+			r.config.Network).
+			WithPeerMSPs(peerDomains).
+			WithOrdererMSPs(organizations).
+			Build(),
 	).ToFile(fmt.Sprintf("%s/%s/tools.yml", r.config.Output, currentOrganization.Domain))
 }
 

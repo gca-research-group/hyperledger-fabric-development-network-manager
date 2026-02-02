@@ -1,6 +1,10 @@
 package docker
 
-import "github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
+import (
+	"fmt"
+
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
+)
 
 type PeerBaseNode struct {
 	*yaml.Node
@@ -11,7 +15,7 @@ func NewPeerBase(network string) *PeerBaseNode {
 		yaml.ScalarNode("peer.base"),
 		yaml.MappingNode(
 			yaml.ScalarNode("image"),
-			yaml.ScalarNode("hyperledger/fabric-peer:latest"),
+			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-peer:%s", FABRIC_VERSION)),
 			yaml.ScalarNode("environment"),
 			yaml.SequenceNode(
 				yaml.ScalarNode("CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock"),
@@ -33,9 +37,6 @@ func NewPeerBase(network string) *PeerBaseNode {
 			yaml.ScalarNode("peer node start"),
 			yaml.ScalarNode("volumes"),
 			yaml.SequenceNode(
-				yaml.ScalarNode("./../channel:/etc/hyperledger/fabric/channel"),
-				yaml.ScalarNode("./../chaincode:/etc/hyperledger/fabric/chaincode"),
-				yaml.ScalarNode("./../crypto-materials:/etc/hyperledger/fabric/crypto-materials"),
 				yaml.ScalarNode("/var/run/docker.sock:/host/var/run/docker.sock"),
 			),
 			yaml.ScalarNode("networks"),

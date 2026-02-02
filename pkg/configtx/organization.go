@@ -62,8 +62,8 @@ func (on *OrganizationNode) WithAnchorPeer(anchorPeer pkg.AnchorPeer) *Organizat
 
 func (on *OrganizationNode) WithDefaultApplicationPolicies(mspID string) *OrganizationNode {
 	policies := yaml.MappingNode(
-		yaml.ScalarNode(ReadersKey), NewPeerPolicy(mspID),
-		yaml.ScalarNode(WritersKey), NewPeerPolicy(mspID),
+		yaml.ScalarNode(ReadersKey), NewMemberPolicy(mspID),
+		yaml.ScalarNode(WritersKey), NewMemberPolicy(mspID),
 		yaml.ScalarNode(AdminsKey), NewAdminPolicy(mspID),
 		yaml.ScalarNode(EndorsementKey), NewPeerPolicy(mspID),
 	)

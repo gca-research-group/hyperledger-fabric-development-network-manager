@@ -52,12 +52,6 @@ func (c *Builder) BuildProfiles(
 ) []*yaml.Node {
 	var profiles []*yaml.Node
 
-	defaultProfile := NewDefaultProfile(orderer, channel, c.ordererAliases, appAliases).Build()
-
-	for _, node := range defaultProfile.Content {
-		profiles = append(profiles, (*yaml.Node)(node))
-	}
-
 	for _, profile := range c.config.Profiles {
 		var appAliases []*yaml.Node
 		for _, organization := range profile.Organizations {
