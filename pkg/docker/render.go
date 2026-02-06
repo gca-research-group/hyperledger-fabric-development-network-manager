@@ -30,7 +30,7 @@ func (r *Renderer) RenderNetwork(networkName string, path string) error {
 
 func (r *Renderer) RenderOrderers(organization pkg.Organization) error {
 	for _, orderer := range organization.Orderers {
-		node := NewOrderer(fmt.Sprintf("%s.%s", orderer.Hostname, organization.Domain), organization.Domain).
+		node := NewOrderer(orderer.Hostname, organization.Domain).
 			WithPort(orderer.Port).
 			WithNetworks([]*yaml.Node{yaml.ScalarNode(r.config.Network)})
 
@@ -56,7 +56,7 @@ func (r *Renderer) RenderPeerBase() error {
 func (r *Renderer) RenderCertificateAuthority(organization pkg.Organization) error {
 	var nodes []*yaml.Node
 
-	node := NewCertificateAuthority(fmt.Sprintf("ca.%s", organization.Domain)).
+	node := NewCertificateAuthority(organization).
 		WithNetworks([]*yaml.Node{yaml.ScalarNode(r.config.Network)})
 
 	if organization.CertificateAuthority.ExposePort > 0 {
@@ -148,40 +148,38 @@ func (r *Renderer) RenderTools(organization pkg.Organization, domains []string) 
 	return yaml.MappingNode(
 		yaml.ScalarNode("services"),
 		NewTools(
-			organization.Name,
-			organization.Domain,
-			fmt.Sprintf("peer0.%s:7051", organization.Domain),
-			fmt.Sprintf("%sMSP", organization.Name),
+			organization,
+			r.config.Organizations,
 			r.config.Network).Build(),
 	).ToFile(fmt.Sprintf("%s/%s/tools.yml", r.config.Output, organization.Domain))
 }
 
-func (r *Renderer) RenderToolsWithMSP(currentOrganization pkg.Organization) error {
-	var peerDomains []string
-	var organizations []pkg.Organization
+// func (r *Renderer) RenderToolsWithMSP(currentOrganization pkg.Organization) error {
+// 	var peerDomains []string
+// 	var organizations []pkg.Organization
 
-	for _, organization := range r.config.Organizations {
-		if organization.Domain != currentOrganization.Domain {
-			peerDomains = append(peerDomains, organization.Domain)
-			if len(organization.Orderers) > 0 {
-				organizations = append(organizations, organization)
-			}
-		}
-	}
+// 	for _, organization := range r.config.Organizations {
+// 		if organization.Domain != currentOrganization.Domain {
+// 			peerDomains = append(peerDomains, organization.Domain)
+// 			if len(organization.Orderers) > 0 {
+// 				organizations = append(organizations, organization)
+// 			}
+// 		}
+// 	}
 
-	return yaml.MappingNode(
-		yaml.ScalarNode("services"),
-		NewTools(
-			currentOrganization.Name,
-			currentOrganization.Domain,
-			fmt.Sprintf("peer0.%s:7051", currentOrganization.Domain),
-			fmt.Sprintf("%sMSP", currentOrganization.Name),
-			r.config.Network).
-			WithPeerMSPs(peerDomains).
-			WithOrdererMSPs(organizations).
-			Build(),
-	).ToFile(fmt.Sprintf("%s/%s/tools.yml", r.config.Output, currentOrganization.Domain))
-}
+// 	return yaml.MappingNode(
+// 		yaml.ScalarNode("services"),
+// 		NewTools(
+// 			currentOrganization.Name,
+// 			currentOrganization.Domain,
+// 			fmt.Sprintf("peer0.%s:7051", currentOrganization.Domain),
+// 			fmt.Sprintf("%sMSP", currentOrganization.Name),
+// 			r.config.Network).
+// 			WithPeerMSPs(peerDomains).
+// 			WithOrdererMSPs(organizations).
+// 			Build(),
+// 	).ToFile(fmt.Sprintf("%s/%s/tools.yml", r.config.Output, currentOrganization.Domain))
+// }
 
 func (r *Renderer) Render() error {
 

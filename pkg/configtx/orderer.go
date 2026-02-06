@@ -82,9 +82,9 @@ func (on *OrdererNode) WithRaftConfig(organizations []pkg.Organization) *Orderer
 					yaml.ScalarNode(PortKey),
 					yaml.ScalarNode(fmt.Sprint(orderer.Port)),
 					yaml.ScalarNode(ClientTLSCertKey),
-					yaml.ScalarNode(fmt.Sprintf("./crypto-materials/ordererOrganizations/%s/orderers/%s/tls/server.crt", organization.Domain, fmt.Sprintf("%s.%s", orderer.Hostname, organization.Domain))),
+					yaml.ScalarNode(fmt.Sprintf("./%s/ordererOrganizations/%s/orderers/%s.%s/tls/server.crt", organization.Domain, organization.Domain, orderer.Hostname, organization.Domain)),
 					yaml.ScalarNode(ServerTLSCertKey),
-					yaml.ScalarNode(fmt.Sprintf("./crypto-materials/ordererOrganizations/%s/orderers/%s/tls/server.crt", organization.Domain, fmt.Sprintf("%s.%s", orderer.Hostname, organization.Domain))),
+					yaml.ScalarNode(fmt.Sprintf("./%s/ordererOrganizations/%s/orderers/%s.%s/tls/server.crt", organization.Domain, organization.Domain, orderer.Hostname, organization.Domain)),
 				),
 			)
 		}

@@ -11,14 +11,16 @@ type OrdererNode struct {
 	*yaml.Node
 }
 
-func NewOrderer(name string, domain string) *OrdererNode {
+func NewOrderer(hostname string, domain string) *OrdererNode {
+	ordererDomain := fmt.Sprintf("%s.%s", hostname, domain)
+
 	node := yaml.MappingNode(
-		yaml.ScalarNode(name),
+		yaml.ScalarNode(ordererDomain),
 		yaml.MappingNode(
 			yaml.ScalarNode("image"),
 			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-orderer:%s", FABRIC_VERSION)),
 			yaml.ScalarNode("container_name"),
-			yaml.ScalarNode(name),
+			yaml.ScalarNode(ordererDomain),
 			yaml.ScalarNode("working_dir"),
 			yaml.ScalarNode("/var/hyperledger/orderer"),
 			yaml.ScalarNode("environment"),
@@ -41,13 +43,13 @@ func NewOrderer(name string, domain string) *OrdererNode {
 			),
 			yaml.ScalarNode("volumes"),
 			yaml.SequenceNode(
-				yaml.ScalarNode(fmt.Sprintf("./%s/crypto-materials/ordererOrganizations/%s/orderers/%s/msp:/var/hyperledger/orderer/msp", domain, domain, name)),
-				yaml.ScalarNode(fmt.Sprintf("./%s/crypto-materials/ordererOrganizations/%s/orderers/%s/tls:/var/hyperledger/orderer/tls", domain, domain, name)),
+				yaml.ScalarNode(fmt.Sprintf("./%s/certificates/crypto-material/ordererOrganizations/%s/orderers/%s/msp:/var/hyperledger/orderer/msp", domain, domain, ordererDomain)),
+				yaml.ScalarNode(fmt.Sprintf("./%s/certificates/crypto-material/ordererOrganizations/%s/orderers/%s/tls:/var/hyperledger/orderer/tls", domain, domain, ordererDomain)),
 			),
 		),
 	)
 
-	return &OrdererNode{name, node}
+	return &OrdererNode{ordererDomain, node}
 }
 
 func (o *OrdererNode) WithNetworks(nodes []*yaml.Node) *OrdererNode {

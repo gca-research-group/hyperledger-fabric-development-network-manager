@@ -52,6 +52,12 @@ func NewFabric(config pkg.Config, executor command.Executor) (*Fabric, error) {
 		executor = &command.DefaultExecutor{}
 	}
 
+	for i := range config.Organizations {
+		if config.Organizations[i].Peers == 0 {
+			config.Organizations[i].Peers = 1
+		}
+	}
+
 	network := fmt.Sprintf("%s/network.yml", config.Output)
 
 	crytpoConfigRenderer := cryptoconfig.NewRenderer(config)
@@ -74,16 +80,21 @@ func (f *Fabric) DeployNetwork() error {
 		fn   func() error
 	}{
 		{"Check Docker", f.IsDockerRunning},
-		{"Remove Old Containers", f.RemoveContainers},
 		{"Clean Workspace", f.CleanUp},
 		{"Render Config Files", f.RenderConfigFiles},
-		{"Generate Crypto Material", f.GenerateCryptoMaterial},
+		{"Remove Old Containers", f.RemoveContainers},
+
+		{"Start Certificate Authorities", f.RunCAContainers},
+		{"Generate Certificates", f.GenerateCertificates},
+		{"Build Fabric Folder Structure", f.BuildFabricFolderStructure},
+
 		{"Generate Genesis", f.GenerateGenesisBlock},
+
 		{"Start Orderers", f.RunOrdererContainers},
 		{"Start Peers", f.RunPeerContainers},
 		{"Join Orderers", f.JoinOrdererToTheChannel},
-		{"Fetch Genesis Block", f.FetchGenesisBlock},
-		{"Join Peers", f.JoinPeersToTheChannels},
+		//{"Fetch Genesis Block", f.FetchGenesisBlock},
+		//{"Join Peers", f.JoinPeersToTheChannels},
 	}
 
 	for _, step := range steps {
