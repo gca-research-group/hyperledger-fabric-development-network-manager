@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/command"
 )
 
 const (
@@ -13,31 +14,43 @@ const (
 	ordererOrgPath = "/etc/hyperledger/organizations/ordererOrganizations"
 )
 
-func (f *Fabric) GenerateIdentityCertificates() error {
-	for _, organization := range f.config.Organizations {
+type IdentityManager struct {
+	config   pkg.Config
+	executor command.Executor
+}
+
+func NewIdentityManager(config pkg.Config, executor command.Executor) *IdentityManager {
+	return &IdentityManager{
+		config:   config,
+		executor: executor,
+	}
+}
+
+func (im *IdentityManager) GenerateAll() error {
+	for _, organization := range im.config.Organizations {
 		steps := []struct {
 			name string
 			fn   func(organization pkg.Organization) error
 		}{
-			{"Enroll CA Admin", f.enrollCAadmin},
-			{"Generate Config YAML", f.generateConfigYaml},
-			{"Copy Peer CA Certs", f.copyPeersCACertificates},
-			{"Copy Orderer CA Certs", f.copyOrderersCACertificates},
-			{"Register Peers", f.registerPeers},
-			{"Register Orderers", f.registerOrderes},
-			{"Register User", f.registerUser},
-			{"Register Org Admin", f.registerOrgAdmin},
+			{"Enroll CA Admin", im.enrollCAadmin},
+			{"Generate Config YAML", im.generateConfigYaml},
+			{"Copy Peer CA Certs", im.copyPeersCACertificates},
+			{"Copy Orderer CA Certs", im.copyOrderersCACertificates},
+			{"Register Peers", im.registerPeers},
+			{"Register Orderers", im.registerOrderes},
+			{"Register User", im.registerUser},
+			{"Register Org Admin", im.registerOrgAdmin},
 
-			{"Generate Peers MSP", f.generatePeersMSP},
-			{"Generate Peer User MSP", f.generatePeerUserMSP},
-			{"Generate Peer Org Admin MSP", f.generatePeerOrgAdminMSP},
+			{"Generate Peers MSP", im.generatePeersMSP},
+			{"Generate Peer User MSP", im.generatePeerUserMSP},
+			{"Generate Peer Org Admin MSP", im.generatePeerOrgAdminMSP},
 
-			{"Generate Orderers MSP", f.generateOrderersMSP},
-			{"Generate Orderer Org Admin MSP", f.generateOrdererOrgAdminMSP},
-			{"Generate Orderer User MSP", f.generateOrdererUserMSP},
+			{"Generate Orderers MSP", im.generateOrderersMSP},
+			{"Generate Orderer Org Admin MSP", im.generateOrdererOrgAdminMSP},
+			{"Generate Orderer User MSP", im.generateOrdererUserMSP},
 
-			{"Generate Peer TLS Certs", f.generatePeerTlsCertificates},
-			{"Generate Orderer TLS Certs", f.generateOrdererTlsCertificates},
+			{"Generate Peer TLS Certs", im.generatePeerTlsCertificates},
+			{"Generate Orderer TLS Certs", im.generateOrdererTlsCertificates},
 		}
 
 		for _, step := range steps {
@@ -51,10 +64,10 @@ func (f *Fabric) GenerateIdentityCertificates() error {
 	return nil
 }
 
-func (f *Fabric) execInCA(domain string, script string) error {
+func (im *IdentityManager) execInCA(domain string, script string) error {
 	caContainer := fmt.Sprintf("ca.%s", domain)
 	args := []string{"exec", caContainer, "sh", "-c", script}
-	return f.executor.ExecCommand("docker", args...)
+	return im.executor.ExecCommand("docker", args...)
 }
 
 func getOrgBaseDir(domain string, orgType string) string {
@@ -64,7 +77,7 @@ func getOrgBaseDir(domain string, orgType string) string {
 	return fmt.Sprintf("%s/%s", ordererOrgPath, domain)
 }
 
-func (f *Fabric) enrollCAadmin(organization pkg.Organization) error {
+func (im *IdentityManager) enrollCAadmin(organization pkg.Organization) error {
 	tls := "/etc/hyperledger/fabric-ca-server/ca-cert.pem"
 	u := "https://admin:adminpw@localhost:7054"
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
@@ -77,14 +90,14 @@ func (f *Fabric) enrollCAadmin(organization pkg.Organization) error {
 		"--tls.certfiles", tls,
 	}
 
-	if err := f.executor.ExecCommand("docker", args...); err != nil {
+	if err := im.executor.ExecCommand("docker", args...); err != nil {
 		return fmt.Errorf("Error when enrolling the ca admin for the organization %s: %v", organization.Name, err)
 	}
 
 	return nil
 }
 
-func (f *Fabric) generateConfigYaml(organization pkg.Organization) error {
+func (im *IdentityManager) generateConfigYaml(organization pkg.Organization) error {
 	template := `
 NodeOUs:
   Enable: true
@@ -106,7 +119,7 @@ NodeOUs:
 	for _, path := range []string{fmt.Sprintf("%s/%s", peerOrgPath, organization.Domain), fmt.Sprintf("%s/%s", ordererOrgPath, organization.Domain)} {
 		script := fmt.Sprintf("mkdir -p '%[1]s/msp' && cat <<EOF > %[1]s/msp/config.yaml\n%[2]s\nEOF", path, content)
 
-		if err := f.execInCA(organization.Domain, script); err != nil {
+		if err := im.execInCA(organization.Domain, script); err != nil {
 			return fmt.Errorf("Error when creating the config.yaml for organization %s: %v", organization.Name, err)
 		}
 	}
@@ -114,7 +127,7 @@ NodeOUs:
 	return nil
 }
 
-func (f *Fabric) copyCACertificates(organization pkg.Organization, orgType string) error {
+func (im *IdentityManager) copyCACertificates(organization pkg.Organization, orgType string) error {
 	basePath := getOrgBaseDir(organization.Domain, orgType)
 	scripts := []string{
 		fmt.Sprintf("mkdir -p '%[1]s/msp/tlscacerts' && cp '%[2]s' '%[1]s/msp/tlscacerts/ca.crt'", basePath, caTlsCertPath),
@@ -124,22 +137,22 @@ func (f *Fabric) copyCACertificates(organization pkg.Organization, orgType strin
 	}
 
 	for _, script := range scripts {
-		if err := f.execInCA(organization.Domain, script); err != nil {
+		if err := im.execInCA(organization.Domain, script); err != nil {
 			return fmt.Errorf("Error when executing the script %s for organization %s: %v", script, organization.Name, err)
 		}
 	}
 	return nil
 }
 
-func (f *Fabric) copyPeersCACertificates(organization pkg.Organization) error {
-	return f.copyCACertificates(organization, "peer")
+func (im *IdentityManager) copyPeersCACertificates(organization pkg.Organization) error {
+	return im.copyCACertificates(organization, "peer")
 }
 
-func (f *Fabric) copyOrderersCACertificates(organization pkg.Organization) error {
-	return f.copyCACertificates(organization, "orderer")
+func (im *IdentityManager) copyOrderersCACertificates(organization pkg.Organization) error {
+	return im.copyCACertificates(organization, "orderer")
 }
 
-func (f *Fabric) registerPeers(organization pkg.Organization) error {
+func (im *IdentityManager) registerPeers(organization pkg.Organization) error {
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
 
 	for i := range organization.Peers {
@@ -155,7 +168,7 @@ func (f *Fabric) registerPeers(organization pkg.Organization) error {
 			"--tls.certfiles", caTlsCertPath,
 		}
 
-		if err := f.executor.ExecCommand("docker", args...); err != nil {
+		if err := im.executor.ExecCommand("docker", args...); err != nil {
 			return fmt.Errorf("Error when registering the peer %d for organization %s: %v", i, organization.Name, err)
 		}
 	}
@@ -163,7 +176,7 @@ func (f *Fabric) registerPeers(organization pkg.Organization) error {
 	return nil
 }
 
-func (f *Fabric) registerOrderes(organization pkg.Organization) error {
+func (im *IdentityManager) registerOrderes(organization pkg.Organization) error {
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
 
 	for _, orderer := range organization.Orderers {
@@ -178,7 +191,7 @@ func (f *Fabric) registerOrderes(organization pkg.Organization) error {
 			"--tls.certfiles", caTlsCertPath,
 		}
 
-		if err := f.executor.ExecCommand("docker", args...); err != nil {
+		if err := im.executor.ExecCommand("docker", args...); err != nil {
 			return fmt.Errorf("Error when registering the orderer %s for organization %s: %v", orderer.Hostname, organization.Name, err)
 		}
 	}
@@ -186,7 +199,7 @@ func (f *Fabric) registerOrderes(organization pkg.Organization) error {
 	return nil
 }
 
-func (f *Fabric) registerUser(organization pkg.Organization) error {
+func (im *IdentityManager) registerUser(organization pkg.Organization) error {
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
 
 	args := []string{
@@ -199,14 +212,14 @@ func (f *Fabric) registerUser(organization pkg.Organization) error {
 		"--tls.certfiles", caTlsCertPath,
 	}
 
-	if err := f.executor.ExecCommand("docker", args...); err != nil {
+	if err := im.executor.ExecCommand("docker", args...); err != nil {
 		return fmt.Errorf("Error when registering the user for organization %s: %v", organization.Name, err)
 	}
 
 	return nil
 }
 
-func (f *Fabric) registerOrgAdmin(organization pkg.Organization) error {
+func (im *IdentityManager) registerOrgAdmin(organization pkg.Organization) error {
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
 
 	args := []string{
@@ -219,14 +232,14 @@ func (f *Fabric) registerOrgAdmin(organization pkg.Organization) error {
 		"--tls.certfiles", caTlsCertPath,
 	}
 
-	if err := f.executor.ExecCommand("docker", args...); err != nil {
+	if err := im.executor.ExecCommand("docker", args...); err != nil {
 		return fmt.Errorf("Error when registering the admin for organization %s: %v", organization.Name, err)
 	}
 
 	return nil
 }
 
-func (f *Fabric) generateMSP(organization pkg.Organization, mspPath string, id string) error {
+func (im *IdentityManager) generateMSP(organization pkg.Organization, mspPath string, id string) error {
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
 	u := fmt.Sprintf("https://%[1]s:%[1]spw@localhost:7054", id)
 
@@ -239,7 +252,7 @@ func (f *Fabric) generateMSP(organization pkg.Organization, mspPath string, id s
 		"-M", mspPath,
 	}
 
-	if err := f.executor.ExecCommand("docker", args...); err != nil {
+	if err := im.executor.ExecCommand("docker", args...); err != nil {
 		return fmt.Errorf("Error when enrolling the %s for organization %s: %v", id, organization.Name, err)
 	}
 
@@ -250,7 +263,7 @@ func (f *Fabric) generateMSP(organization pkg.Organization, mspPath string, id s
 	}
 
 	for _, script := range scripts {
-		if err := f.execInCA(organization.Domain, script); err != nil {
+		if err := im.execInCA(organization.Domain, script); err != nil {
 			return fmt.Errorf("Error when copying the config.yaml to the %s for organization %s: %v", id, organization.Name, err)
 		}
 	}
@@ -258,12 +271,12 @@ func (f *Fabric) generateMSP(organization pkg.Organization, mspPath string, id s
 	return nil
 }
 
-func (f *Fabric) generatePeersMSP(organization pkg.Organization) error {
+func (im *IdentityManager) generatePeersMSP(organization pkg.Organization) error {
 	for i := range organization.Peers {
 		id := fmt.Sprintf("peer%d", i)
 		mspPath := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s.%[2]s/msp", peerOrgPath, organization.Domain, id)
 
-		if err := f.generateMSP(organization, mspPath, id); err != nil {
+		if err := im.generateMSP(organization, mspPath, id); err != nil {
 			return err
 		}
 	}
@@ -271,34 +284,34 @@ func (f *Fabric) generatePeersMSP(organization pkg.Organization) error {
 	return nil
 }
 
-func (f *Fabric) generatePeerUserMSP(organization pkg.Organization) error {
+func (im *IdentityManager) generatePeerUserMSP(organization pkg.Organization) error {
 	id := "user1"
 	mspPath := fmt.Sprintf("%[1]s/%[2]s/users/User1@%[2]s/msp", peerOrgPath, organization.Domain)
 
-	if err := f.generateMSP(organization, mspPath, id); err != nil {
+	if err := im.generateMSP(organization, mspPath, id); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (f *Fabric) generatePeerOrgAdminMSP(organization pkg.Organization) error {
+func (im *IdentityManager) generatePeerOrgAdminMSP(organization pkg.Organization) error {
 	id := "orgadmin"
 	mspPath := fmt.Sprintf("%[1]s/%[2]s/users/Admin@%[2]s/msp", peerOrgPath, organization.Domain)
 
-	if err := f.generateMSP(organization, mspPath, id); err != nil {
+	if err := im.generateMSP(organization, mspPath, id); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (f *Fabric) generateOrderersMSP(organization pkg.Organization) error {
+func (im *IdentityManager) generateOrderersMSP(organization pkg.Organization) error {
 	for _, orderer := range organization.Orderers {
 		id := strings.ToLower(orderer.Hostname)
 		mspPath := fmt.Sprintf("%[1]s/%[2]s/orderers/%[3]s.%[2]s/msp", ordererOrgPath, organization.Domain, id)
 
-		if err := f.generateMSP(organization, mspPath, id); err != nil {
+		if err := im.generateMSP(organization, mspPath, id); err != nil {
 			return err
 		}
 	}
@@ -306,29 +319,29 @@ func (f *Fabric) generateOrderersMSP(organization pkg.Organization) error {
 	return nil
 }
 
-func (f *Fabric) generateOrdererUserMSP(organization pkg.Organization) error {
+func (im *IdentityManager) generateOrdererUserMSP(organization pkg.Organization) error {
 	id := "user1"
 	mspPath := fmt.Sprintf("%[1]s/%[2]s/users/User1@%[2]s/msp", ordererOrgPath, organization.Domain)
 
-	if err := f.generateMSP(organization, mspPath, id); err != nil {
+	if err := im.generateMSP(organization, mspPath, id); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (f *Fabric) generateOrdererOrgAdminMSP(organization pkg.Organization) error {
+func (im *IdentityManager) generateOrdererOrgAdminMSP(organization pkg.Organization) error {
 	id := "orgadmin"
 	mspPath := fmt.Sprintf("%[1]s/%[2]s/users/Admin@%[2]s/msp", ordererOrgPath, organization.Domain)
 
-	if err := f.generateMSP(organization, mspPath, id); err != nil {
+	if err := im.generateMSP(organization, mspPath, id); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (f *Fabric) generateTLS(organization pkg.Organization, tlsPath string, id string) error {
+func (im *IdentityManager) generateTLS(organization pkg.Organization, tlsPath string, id string) error {
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
 	u := fmt.Sprintf("https://%[1]s:%[1]spw@localhost:7054", id)
 
@@ -343,7 +356,7 @@ func (f *Fabric) generateTLS(organization pkg.Organization, tlsPath string, id s
 		"--tls.certfiles", caTlsCertPath,
 	}
 
-	if err := f.executor.ExecCommand("docker", args...); err != nil {
+	if err := im.executor.ExecCommand("docker", args...); err != nil {
 		return fmt.Errorf("Error when genereting the tls certificates of the %s for organization %s: %v", id, organization.Name, err)
 	}
 
@@ -354,7 +367,7 @@ func (f *Fabric) generateTLS(organization pkg.Organization, tlsPath string, id s
 	}
 
 	for _, script := range scripts {
-		if err := f.execInCA(organization.Domain, script); err != nil {
+		if err := im.execInCA(organization.Domain, script); err != nil {
 			return fmt.Errorf("Error when copying the tls certificate of the %s for organization %s: %v", id, organization.Name, err)
 		}
 	}
@@ -362,12 +375,12 @@ func (f *Fabric) generateTLS(organization pkg.Organization, tlsPath string, id s
 	return nil
 }
 
-func (f *Fabric) generatePeerTlsCertificates(organization pkg.Organization) error {
+func (im *IdentityManager) generatePeerTlsCertificates(organization pkg.Organization) error {
 	for i := range organization.Peers {
 		id := fmt.Sprintf("peer%d", i)
 		tlsPath := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s.%[2]s/tls", peerOrgPath, organization.Domain, id)
 
-		if err := f.generateTLS(organization, tlsPath, id); err != nil {
+		if err := im.generateTLS(organization, tlsPath, id); err != nil {
 			return err
 		}
 	}
@@ -375,12 +388,12 @@ func (f *Fabric) generatePeerTlsCertificates(organization pkg.Organization) erro
 	return nil
 }
 
-func (f *Fabric) generateOrdererTlsCertificates(organization pkg.Organization) error {
+func (im *IdentityManager) generateOrdererTlsCertificates(organization pkg.Organization) error {
 	for _, orderer := range organization.Orderers {
 		id := strings.ToLower(orderer.Hostname)
 		tlsPath := fmt.Sprintf("%[1]s/%[2]s/orderers/%[3]s.%[2]s/tls", ordererOrgPath, organization.Domain, id)
 
-		if err := f.generateTLS(organization, tlsPath, id); err != nil {
+		if err := im.generateTLS(organization, tlsPath, id); err != nil {
 			return err
 		}
 	}

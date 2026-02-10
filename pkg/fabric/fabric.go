@@ -20,6 +20,8 @@ type Fabric struct {
 	dockerRenderer       *docker.Renderer
 
 	executor command.Executor
+
+	identityManager *IdentityManager
 }
 
 func (f *Fabric) CleanUp() error {
@@ -58,6 +60,8 @@ func NewFabric(config pkg.Config, executor command.Executor) (*Fabric, error) {
 	configTxRenderer := configtx.NewRenderer(config)
 	dockerRenderer := docker.NewRenderer(config)
 
+	identityManager := NewIdentityManager(config, executor)
+
 	return &Fabric{
 		config,
 		network,
@@ -65,6 +69,7 @@ func NewFabric(config pkg.Config, executor command.Executor) (*Fabric, error) {
 		configTxRenderer,
 		dockerRenderer,
 		executor,
+		identityManager,
 	}, nil
 }
 
@@ -79,7 +84,7 @@ func (f *Fabric) DeployNetwork() error {
 		{"Remove Old Containers", f.RemoveContainers},
 
 		{"Start Certificate Authorities", f.RunCAContainers},
-		{"Generate Certificates", f.GenerateIdentityCertificates},
+		{"Generate Certificates", f.identityManager.GenerateAll},
 
 		{"Generate Genesis", f.GenerateGenesisBlock},
 
