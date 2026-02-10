@@ -22,7 +22,7 @@ func NewApplicationOrganization(name string, domain string, mspID string) *Organ
 		yaml.ScalarNode(IDKey),
 		yaml.ScalarNode(mspID),
 		yaml.ScalarNode(MSPDirKey),
-		yaml.ScalarNode(fmt.Sprintf("./crypto-materials/peerOrganizations/%s/msp", domain)),
+		yaml.ScalarNode(fmt.Sprintf("./%s/peerOrganizations/%s/msp", domain, domain)),
 	).WithAnchor(name).WithTag("!!map")
 
 	return &OrganizationNode{node}
@@ -35,7 +35,7 @@ func NewOrdererOrganization(name string, domain string, mspID string) *Organizat
 		yaml.ScalarNode(IDKey),
 		yaml.ScalarNode(mspID),
 		yaml.ScalarNode(MSPDirKey),
-		yaml.ScalarNode(fmt.Sprintf("./crypto-materials/ordererOrganizations/%s/msp", domain)),
+		yaml.ScalarNode(fmt.Sprintf("./%s/ordererOrganizations/%s/msp", domain, domain)),
 	).WithAnchor(name).WithTag("!!map")
 
 	return &OrganizationNode{node}

@@ -3,18 +3,18 @@ output: ./dist/hyperledger-fabric
 organizations:
   - name: Org1
     domain: org1.com
-    peers: 3
     orderers:
       - name: Orderer
         hostname: orderer
-        port: 7050
     bootstrap: true
 
   - name: Org2
     domain: org2.com
+    peers: 2
 
   - name: Org3
     domain: org3.com
+    peers: 2
 
 profiles:
   - name: MultiChannel

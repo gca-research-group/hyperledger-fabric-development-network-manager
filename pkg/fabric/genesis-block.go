@@ -5,11 +5,11 @@ import (
 	"strings"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/constants"
 )
 
 func (f *Fabric) GenerateGenesisBlock() error {
 	for _, organization := range f.config.Organizations {
-		f.dockerRenderer.RenderToolsWithMSP(organization)
 
 		if organization.Bootstrap {
 			for _, profile := range f.config.Profiles {
@@ -18,14 +18,14 @@ func (f *Fabric) GenerateGenesisBlock() error {
 				containerName := buildToolsContainerName(organization)
 				tools := fmt.Sprintf("%s/%s/tools.yml", f.config.Output, organization.Domain)
 
-				var args []string
-
-				args = append(args, "compose", "-f", f.network, "-f", tools, "run", "--rm", "-T", containerName)
-				args = append(args, "configtxgen")
-				args = append(args, "-outputBlock", fmt.Sprintf("%s/channel/%s.block", DEFAULT_FABRIC_DIRECTORY, strings.ToLower(profile.Name)))
-				args = append(args, "-profile", profile.Name)
-				args = append(args, "-channelID", strings.ToLower(profile.Name))
-				args = append(args, "-configPath", fmt.Sprintf("%s/", DEFAULT_FABRIC_DIRECTORY))
+				args := []string{
+					"compose", "-f", f.network, "-f", tools, "run", "--rm", "-T", containerName,
+					"configtxgen",
+					"-outputBlock", fmt.Sprintf("%s/channel/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(profile.Name)),
+					"-profile", profile.Name,
+					"-channelID", strings.ToLower(profile.Name),
+					"-configPath", fmt.Sprintf("%s/", constants.DEFAULT_FABRIC_DIRECTORY),
+				}
 
 				if err := f.executor.ExecCommand("docker", args...); err != nil {
 					return fmt.Errorf("Error when generating the genesis block for the organization %s: %v", organization.Name, err)
@@ -50,7 +50,7 @@ func (f *Fabric) FetchGenesisBlock() error {
 	}
 
 	ordererAddress := fmt.Sprintf("%s.%s:%d", orderer.Hostname, ordererDomain, orderer.Port)
-	caFile := fmt.Sprintf("%s/crypto-materials/ordererOrganizations/%s/orderers/%s.%s/tls/ca.crt", DEFAULT_FABRIC_DIRECTORY, ordererDomain, orderer.Hostname, ordererDomain)
+	caFile := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/ca.crt", constants.DEFAULT_FABRIC_DIRECTORY, ordererDomain, orderer.Hostname)
 
 	for _, organization := range f.config.Organizations {
 		if organization.Bootstrap {
@@ -60,11 +60,12 @@ func (f *Fabric) FetchGenesisBlock() error {
 		tools := fmt.Sprintf("%s/%s/tools.yml", f.config.Output, organization.Domain)
 		for _, profile := range f.config.Profiles {
 			containerName := buildToolsContainerName(organization)
-			block := fmt.Sprintf("%s/channel/%s.block", DEFAULT_FABRIC_DIRECTORY, strings.ToLower(profile.Name))
+			block := fmt.Sprintf("%s/channel/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(profile.Name))
 
-			var args []string
-			args = append(args, "compose", "-f", f.network, "-f", tools, "run", "--rm", "-T", containerName)
-			args = append(args, "peer", "channel", "fetch", "0", block, "-c", strings.ToLower(profile.Name), "-o", ordererAddress, "--tls", "--cafile", caFile)
+			args := []string{
+				"compose", "-f", f.network, "-f", tools, "run", "--rm", "-T", containerName,
+				"peer", "channel", "fetch", "0", block, "-c", strings.ToLower(profile.Name), "-o", ordererAddress, "--tls", "--cafile", caFile,
+			}
 
 			if err := f.executor.ExecCommand("docker", args...); err != nil {
 				return fmt.Errorf("Error when fetching the orderer %s of the organization %s to the channel %s: %v", orderer.Name, organization.Name, profile.Name, err)

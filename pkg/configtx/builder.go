@@ -18,6 +18,14 @@ type Builder struct {
 }
 
 func NewBuilder(config pkg.Config) *Builder {
+	for o := range config.Organizations {
+		for i := range config.Organizations[o].Orderers {
+			if config.Organizations[o].Orderers[i].Port == 0 {
+				config.Organizations[o].Orderers[i].Port = 7050
+			}
+		}
+	}
+
 	return &Builder{config: config, appAliases: make(map[string]*yaml.Node)}
 }
 

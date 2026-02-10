@@ -74,11 +74,15 @@ func (f *Fabric) DeployNetwork() error {
 		fn   func() error
 	}{
 		{"Check Docker", f.IsDockerRunning},
-		{"Remove Old Containers", f.RemoveContainers},
 		{"Clean Workspace", f.CleanUp},
 		{"Render Config Files", f.RenderConfigFiles},
-		{"Generate Crypto Material", f.GenerateCryptoMaterial},
+		{"Remove Old Containers", f.RemoveContainers},
+
+		{"Start Certificate Authorities", f.RunCAContainers},
+		{"Generate Certificates", f.GenerateIdentityCertificates},
+
 		{"Generate Genesis", f.GenerateGenesisBlock},
+
 		{"Start Orderers", f.RunOrdererContainers},
 		{"Start Peers", f.RunPeerContainers},
 		{"Join Orderers", f.JoinOrdererToTheChannel},

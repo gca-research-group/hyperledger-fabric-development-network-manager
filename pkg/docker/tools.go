@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/constants"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
 )
 
@@ -13,14 +14,54 @@ type ToolsNode struct {
 	name string
 }
 
-func NewTools(name string, domain string, corePeerHost string, mspID string, network string) *ToolsNode {
-	basePath := "/opt/gopath/src/github.com/hyperledger/fabric/crypto-materials"
+func NewTools(currentOrganization pkg.Organization, organizations []pkg.Organization, network string) *ToolsNode {
+	name := currentOrganization.Name
+	domain := currentOrganization.Domain
+	corePeerHost := fmt.Sprintf("peer0.%s:7051", currentOrganization.Domain)
+	mspID := fmt.Sprintf("%sMSP", currentOrganization.Name)
 
 	volumes := []*yaml.Node{
-		yaml.ScalarNode(fmt.Sprintf("./%s/crypto-config.yml:/opt/gopath/src/github.com/hyperledger/fabric/crypto-config.yml", domain)),
-		yaml.ScalarNode("./configtx.yml:/opt/gopath/src/github.com/hyperledger/fabric/configtx.yml"),
-		yaml.ScalarNode(fmt.Sprintf("./%s/crypto-materials:/opt/gopath/src/github.com/hyperledger/fabric/crypto-materials", domain)),
-		yaml.ScalarNode(fmt.Sprintf("./%s/channel:/opt/gopath/src/github.com/hyperledger/fabric/channel", domain)),
+		yaml.ScalarNode(fmt.Sprintf("./configtx.yml:%s/configtx.yml", constants.DEFAULT_FABRIC_DIRECTORY)),
+		yaml.ScalarNode(fmt.Sprintf("./%s/channel:%s/channel", domain, constants.DEFAULT_FABRIC_DIRECTORY)),
+
+		yaml.ScalarNode(fmt.Sprintf("./%[1]s/certificates/organizations:%[2]s/%[1]s", domain, constants.DEFAULT_FABRIC_DIRECTORY)),
+	}
+
+	for _, organization := range organizations {
+		if organization.Domain == currentOrganization.Domain {
+			continue
+		}
+
+		if len(organization.Orderers) > 0 {
+			for _, orderer := range organization.Orderers {
+
+				ordererHostDir := fmt.Sprintf("./%[1]s/certificates/organizations/ordererOrganizations/%[1]s/orderers/%[2]s.%[1]s", organization.Domain, orderer.Hostname)
+				ordererContainerDir := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Hostname)
+
+				volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%s/msp/cacerts:%s/msp/cacerts", ordererHostDir, ordererContainerDir)))
+				volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%s/msp/signcerts:%s/msp/signcerts", ordererHostDir, ordererContainerDir)))
+				volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%s/msp/tlscacerts:%s/msp/tlscacerts", ordererHostDir, ordererContainerDir)))
+
+				volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%s/tls/ca.crt:%s/tls/ca.crt", ordererHostDir, ordererContainerDir)))
+				volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%s/tls/server.crt:%s/tls/server.crt", ordererHostDir, ordererContainerDir)))
+			}
+		}
+
+		peerHostDir := fmt.Sprintf("./%[1]s/certificates/organizations/peerOrganizations/%[1]s", organization.Domain)
+		peerContainerDir := fmt.Sprintf("%[1]s/%[2]s/peerOrganizations/%[2]s", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain)
+
+		volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%s/msp/cacerts:%s/msp/cacerts", peerHostDir, peerContainerDir)))
+		volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%s/msp/config.yaml:%s/msp/config.yaml", peerHostDir, peerContainerDir)))
+
+		for i := 0; i < organization.Peers; i++ {
+			peerHostDir := fmt.Sprintf("./%[1]s/certificates/organizations/peerOrganizations/%[1]s/peers/peer%[2]d.%[1]s", organization.Domain, i)
+			peerContainerDir := fmt.Sprintf("%[1]s/%[2]s/peerOrganizations/%[2]s/peers/peer%[3]d.%[2]s", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, i)
+
+			volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%s/msp/signcerts:%s/msp/signcerts", peerHostDir, peerContainerDir)))
+
+			volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%s/tls/ca.crt:%s/tls/ca.crt", peerHostDir, peerContainerDir)))
+			volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%s/tls/server.crt:%s/tls/server.crt", peerHostDir, peerContainerDir)))
+		}
 	}
 
 	node := yaml.MappingNode(
@@ -43,13 +84,13 @@ func NewTools(name string, domain string, corePeerHost string, mspID string, net
 				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_ADDRESS=%s", corePeerHost)),
 				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_LOCALMSPID=%s", mspID)),
 				yaml.ScalarNode("CORE_PEER_TLS_ENABLED=true"),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_CERT_FILE=%s/%s/peerOrganizations/peers/peer0.%s/tls/server.crt", basePath, domain, domain)),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_KEY_FILE=%s/%s/peerOrganizations/peers/peer0.%s/tls/server.key", basePath, domain, domain)),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_ROOTCERT_FILE=%s/peerOrganizations/%s/peers/peer0.%s/tls/ca.crt", basePath, domain, domain)),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_MSPCONFIGPATH=%s/peerOrganizations/%s/users/Admin@%s/msp", basePath, domain, domain)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_CERT_FILE=%[1]s/%[2]s/peerOrganizations/%[2]s/peers/peer0.%[2]s/tls/server.crt", constants.DEFAULT_FABRIC_DIRECTORY, domain)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_KEY_FILE=%[1]s/%[2]s/peerOrganizations/%[2]s/peers/peer0.%[2]s/tls/server.key", constants.DEFAULT_FABRIC_DIRECTORY, domain)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_ROOTCERT_FILE=%[1]s/%[2]s/peerOrganizations/%[2]s/peers/peer0.%[2]s/tls/ca.crt", constants.DEFAULT_FABRIC_DIRECTORY, domain)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_MSPCONFIGPATH=%[1]s/%[2]s/peerOrganizations/%[2]s/users/Admin@%[2]s/msp", constants.DEFAULT_FABRIC_DIRECTORY, domain)),
 			),
 			yaml.ScalarNode("working_dir"),
-			yaml.ScalarNode("/opt/gopath/src/github.com/hyperledger/fabric/"),
+			yaml.ScalarNode(constants.DEFAULT_FABRIC_DIRECTORY),
 			yaml.ScalarNode("command"),
 			yaml.ScalarNode("/bin/bash"),
 			yaml.ScalarNode("volumes"),
@@ -60,69 +101,6 @@ func NewTools(name string, domain string, corePeerHost string, mspID string, net
 	)
 
 	return &ToolsNode{node, name}
-}
-
-func (tn *ToolsNode) WithPeerMSPs(domains []string) *ToolsNode {
-	service := tn.GetValue(fmt.Sprintf("hyperledger-fabric-tools-%s", strings.ToLower(tn.name)))
-	volumes := service.GetValue("volumes")
-
-	for _, domain := range domains {
-		volume := fmt.Sprintf("./%s/crypto-materials/peerOrganizations/%s/msp:/opt/gopath/src/github.com/hyperledger/fabric/crypto-materials/peerOrganizations/%s/msp", domain, domain, domain)
-
-		var hasVolume bool
-
-		for _, content := range volumes.Content {
-			hasVolume = content.Value == volume
-		}
-
-		if !hasVolume {
-			entry, _ := yaml.ScalarNode(volume).MarshalYAML()
-			volumes.Content = append(volumes.Content, entry)
-		}
-	}
-
-	return tn
-}
-
-func (tn *ToolsNode) WithOrdererMSPs(organizations []pkg.Organization) *ToolsNode {
-	service := tn.GetValue(fmt.Sprintf("hyperledger-fabric-tools-%s", strings.ToLower(tn.name)))
-	volumes := service.GetValue("volumes")
-
-	for _, organization := range organizations {
-		for _, orderer := range organization.Orderers {
-			domain := organization.Domain
-			hostname := orderer.Hostname
-			host := fmt.Sprintf("./%s/crypto-materials/ordererOrganizations/%s/orderers/%s.%s/msp", domain, domain, hostname, domain)
-			container := fmt.Sprintf("/opt/gopath/src/github.com/hyperledger/fabric/crypto-materials/ordererOrganizations/%s/orderers/%s.%s/msp", domain, hostname, domain)
-			volume := fmt.Sprintf("%s:%s", host, container)
-
-			var hasVolume bool
-
-			for _, content := range volumes.Content {
-				hasVolume = content.Value == volume
-			}
-
-			if !hasVolume {
-				entry, _ := yaml.ScalarNode(volume).MarshalYAML()
-				volumes.Content = append(volumes.Content, entry)
-			}
-
-			host = fmt.Sprintf("./%s/crypto-materials/ordererOrganizations/%s/orderers/%s.%s/tls/ca.crt", domain, domain, hostname, domain)
-			container = fmt.Sprintf("/opt/gopath/src/github.com/hyperledger/fabric/crypto-materials/ordererOrganizations/%s/orderers/%s.%s/tls/ca.crt", domain, hostname, domain)
-			volume = fmt.Sprintf("%s:%s", host, container)
-
-			for _, content := range volumes.Content {
-				hasVolume = content.Value == volume
-			}
-
-			if !hasVolume {
-				entry, _ := yaml.ScalarNode(volume).MarshalYAML()
-				volumes.Content = append(volumes.Content, entry)
-			}
-		}
-	}
-
-	return tn
 }
 
 func (tn *ToolsNode) Build() *yaml.Node {

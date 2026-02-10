@@ -18,7 +18,7 @@ func (f *Fabric) IsDockerRunning() error {
 }
 
 func (f *Fabric) RemoveContainers() error {
-	fmt.Print("\n=========== Removing peer containers in execution ===========\n")
+	fmt.Print("\n=========== Removing peer containers ===========\n")
 
 	for _, organization := range f.config.Organizations {
 		fmt.Printf(">> Removing peer of the org: %s...\n", organization.Name)
@@ -31,10 +31,8 @@ func (f *Fabric) RemoveContainers() error {
 
 		for _, entry := range entries {
 			if !entry.IsDir() && strings.Contains(entry.Name(), "peer") {
-				var args []string
-
 				file := fmt.Sprintf("%s/%s/%s", f.config.Output, organization.Domain, entry.Name())
-				args = append(args, "compose", "-f", f.network, "-f", file, "down", "-v")
+				args := []string{"compose", "-f", f.network, "-f", file, "down", "-v"}
 				if err := f.executor.ExecCommand("docker", args...); err != nil {
 					return fmt.Errorf("Error when removing the container for the organization %s, peer %s: %v\n", organization.Name, entry.Name(), err)
 				}
@@ -48,13 +46,20 @@ func (f *Fabric) RemoveContainers() error {
 			file := fmt.Sprintf("%s/%s/%s.yml", f.config.Output, organization.Domain, orderer.Hostname)
 
 			if directory.FileExists(file) {
-				var args []string
-
-				args = append(args, "compose", "-f", f.network, "-f", file, "down", "-v")
+				args := []string{"compose", "-f", f.network, "-f", file, "down", "-v"}
 				if err := f.executor.ExecCommand("docker", args...); err != nil {
 					return fmt.Errorf("Error when removing the container for the organization %s, orderer %s: %v\n", organization.Name, orderer.Name, err)
 				}
 			}
+		}
+	}
+
+	fmt.Print("\n=========== Removing certificate authority containers ===========\n")
+	for _, organization := range f.config.Organizations {
+		file := fmt.Sprintf("%s/%s/ca.yml", f.config.Output, organization.Domain)
+		args := []string{"compose", "-f", f.network, "-f", file, "down", "-v"}
+		if err := f.executor.ExecCommand("docker", args...); err != nil {
+			return fmt.Errorf("Error when removing the CA container for the organization %s: %v\n", organization.Name, err)
 		}
 	}
 
@@ -68,9 +73,7 @@ func (f *Fabric) RunOrdererContainers() error {
 			file := fmt.Sprintf("%s/%s/%s.yml", f.config.Output, organization.Domain, orderer.Hostname)
 
 			if directory.FileExists(file) {
-				var args []string
-
-				args = append(args, "compose", "-f", f.network, "-f", file, "up", "--build", "-d")
+				args := []string{"compose", "-f", f.network, "-f", file, "up", "--build", "-d"}
 				if err := f.executor.ExecCommand("docker", args...); err != nil {
 					return fmt.Errorf("Error when executing the orderer container for the organization %s, orderer %s: %v\n", organization.Name, orderer.Name, err)
 				}
@@ -92,14 +95,29 @@ func (f *Fabric) RunPeerContainers() error {
 
 		for _, entry := range entries {
 			if !entry.IsDir() && strings.Contains(entry.Name(), "peer") {
-				var args []string
-
 				file := fmt.Sprintf("%s/%s/%s", f.config.Output, organization.Domain, entry.Name())
-				args = append(args, "compose", "-f", f.network, "-f", file, "up", "--build", "-d")
+
+				args := []string{"compose", "-f", f.network, "-f", file, "up", "--build", "-d"}
+
 				if err := f.executor.ExecCommand("docker", args...); err != nil {
 					return fmt.Errorf("Error when executing the container for the organization %s, peer %s: %v\n", organization.Name, entry.Name(), err)
 				}
 			}
+		}
+	}
+
+	return nil
+}
+
+func (f *Fabric) RunCAContainers() error {
+	fmt.Print("\n=========== Executing certificate authority containers ===========\n")
+	for _, organization := range f.config.Organizations {
+		file := fmt.Sprintf("%s/%s/ca.yml", f.config.Output, organization.Domain)
+
+		args := []string{"compose", "-f", f.network, "-f", file, "up", "--build", "-d"}
+
+		if err := f.executor.ExecCommand("docker", args...); err != nil {
+			return fmt.Errorf("Error when executing the CA container for the organization %s: %v\n", organization.Name, err)
 		}
 	}
 

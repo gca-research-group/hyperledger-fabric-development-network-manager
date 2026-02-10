@@ -3,7 +3,7 @@ package pkg
 type Orderer struct {
 	Name     string `yaml:"name"`
 	Hostname string `yaml:"hostname"`
-	Port     int    `yaml:"port"`
+	Port     int
 }
 
 type AnchorPeer struct {
