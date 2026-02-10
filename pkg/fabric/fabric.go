@@ -6,7 +6,6 @@ import (
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/command"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/configtx"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/cryptoconfig"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/docker"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/directory"
 )
@@ -15,9 +14,8 @@ type Fabric struct {
 	config  pkg.Config
 	network string
 
-	crytpoConfigRenderer *cryptoconfig.Renderer
-	configTxRenderer     *configtx.Renderer
-	dockerRenderer       *docker.Renderer
+	configTxRenderer *configtx.Renderer
+	dockerRenderer   *docker.Renderer
 
 	executor command.Executor
 
@@ -30,10 +28,6 @@ func (f *Fabric) CleanUp() error {
 }
 
 func (f *Fabric) RenderConfigFiles() error {
-	if err := f.crytpoConfigRenderer.Render(); err != nil {
-		return err
-	}
-
 	if err := f.configTxRenderer.Render(); err != nil {
 		return err
 	}
@@ -56,7 +50,6 @@ func NewFabric(config pkg.Config, executor command.Executor) (*Fabric, error) {
 
 	network := fmt.Sprintf("%s/network.yml", config.Output)
 
-	crytpoConfigRenderer := cryptoconfig.NewRenderer(config)
 	configTxRenderer := configtx.NewRenderer(config)
 	dockerRenderer := docker.NewRenderer(config)
 
@@ -65,7 +58,6 @@ func NewFabric(config pkg.Config, executor command.Executor) (*Fabric, error) {
 	return &Fabric{
 		config,
 		network,
-		crytpoConfigRenderer,
 		configTxRenderer,
 		dockerRenderer,
 		executor,

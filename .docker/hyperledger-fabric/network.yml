@@ -1,4 +1,0 @@
-networks:
-  hyperledger_fabric_network:
-    name: hyperledger_fabric_network
-    driver: bridge
