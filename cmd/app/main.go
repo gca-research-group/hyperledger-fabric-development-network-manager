@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
@@ -10,9 +11,22 @@ import (
 
 func main() {
 
-	config, err := pkg.LoadConfigFromPath("./cmd/app/config.yml")
+	configFlag := flag.String("config", "", "Path to config file")
 
-	fabric, err := fabric.NewFabric(config, &command.DefaultExecutor{})
+	flag.Parse()
+
+	if *configFlag == "" {
+		log.Fatal("Config is required")
+	}
+
+	config, err := pkg.LoadConfigFromPath(*configFlag)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fabric, err := fabric.NewFabric(*config, &command.DefaultExecutor{})
+
 	if err != nil {
 		log.Fatal(err)
 	}
