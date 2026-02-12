@@ -3,12 +3,12 @@ module github.com/gca-research-group/hyperledger-fabric-development-network-mana
 go 1.24.0
 
 require (
+	github.com/BurntSushi/toml v1.6.0
 	github.com/docker/docker v28.5.2+incompatible
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
-	github.com/BurntSushi/toml v1.6.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
