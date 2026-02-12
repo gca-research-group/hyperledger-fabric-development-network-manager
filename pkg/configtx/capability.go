@@ -2,9 +2,9 @@ package configtx
 
 import "github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
 
-func defaultCapability() *yaml.Node {
+func capability(version string) *yaml.Node {
 	node := yaml.MappingNode(
-		yaml.ScalarNode("V2_0"),
+		yaml.ScalarNode(version),
 		yaml.ScalarNode("true"),
 	)
 
@@ -12,13 +12,13 @@ func defaultCapability() *yaml.Node {
 }
 
 func NewApplicationCapability() (*yaml.Node, *yaml.Node) {
-	return yaml.ScalarNode(ApplicationKey), defaultCapability().WithAnchor(ApplicationCapabilitiesKey)
+	return yaml.ScalarNode(ApplicationKey), capability("V2_5").WithAnchor(ApplicationCapabilitiesKey)
 }
 
 func NewOrdererCapability() (*yaml.Node, *yaml.Node) {
-	return yaml.ScalarNode(OrdererKey), defaultCapability().WithAnchor(OrdererCapabilitiesKey)
+	return yaml.ScalarNode(OrdererKey), capability("V2_0").WithAnchor(OrdererCapabilitiesKey)
 }
 
 func NewChannelCapability() (*yaml.Node, *yaml.Node) {
-	return yaml.ScalarNode(ChannelKey), defaultCapability().WithAnchor(ChannelCapabilitiesKey)
+	return yaml.ScalarNode(ChannelKey), capability("V2_0").WithAnchor(ChannelCapabilitiesKey)
 }

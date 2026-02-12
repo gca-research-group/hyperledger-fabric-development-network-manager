@@ -13,8 +13,8 @@ func NewProfile(
 	ordererDefaults *yaml.Node,
 	applicationDefaults *yaml.Node,
 	channelDefaults *yaml.Node,
-	ordererOrganizations []*yaml.Node,
 	applicationOrganizations []*yaml.Node,
+	appCapability *yaml.Node,
 ) *ProfileNode {
 	node := yaml.MappingNode(yaml.ScalarNode(name),
 		yaml.MappingNode(
@@ -24,17 +24,19 @@ func NewProfile(
 			yaml.MappingNode(
 				yaml.ScalarNode("<<"),
 				yaml.AliasNode(OrdererDefaultsKey, ordererDefaults),
-				yaml.ScalarNode(OrganizationsKey),
-				yaml.SequenceNode(ordererOrganizations...),
 			),
-			yaml.ScalarNode(ConsortiumKey),
-			yaml.ScalarNode(DefaultConsortiumKey),
+
 			yaml.ScalarNode(ApplicationKey),
 			yaml.MappingNode(
 				yaml.ScalarNode("<<"),
 				yaml.AliasNode(ApplicationDefaultsKey, applicationDefaults),
 				yaml.ScalarNode(OrganizationsKey),
 				yaml.SequenceNode(applicationOrganizations...),
+				yaml.ScalarNode(CapabilitiesKey),
+				yaml.MappingNode(
+					yaml.ScalarNode("<<"),
+					yaml.AliasNode(ApplicationCapabilitiesKey, appCapability),
+				),
 			),
 		),
 	)

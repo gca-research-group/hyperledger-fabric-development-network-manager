@@ -15,7 +15,13 @@ func BuildMSPID(name string) string {
 	return fmt.Sprintf("%sMSP", name)
 }
 
-func NewApplicationOrganization(name string, domain string, mspID string) *OrganizationNode {
+func NewApplicationOrganization(name string, domain string, mspID string, ordererAddresses []string) *OrganizationNode {
+	ordererEndpoints := []*yaml.Node{}
+
+	for _, address := range ordererAddresses {
+		ordererEndpoints = append(ordererEndpoints, yaml.ScalarNode(address))
+	}
+
 	node := yaml.MappingNode(
 		yaml.ScalarNode(NameKey),
 		yaml.ScalarNode(name),
@@ -23,6 +29,8 @@ func NewApplicationOrganization(name string, domain string, mspID string) *Organ
 		yaml.ScalarNode(mspID),
 		yaml.ScalarNode(MSPDirKey),
 		yaml.ScalarNode(fmt.Sprintf("./%s/peerOrganizations/%s/msp", domain, domain)),
+		yaml.ScalarNode("OrdererEndpoints"),
+		yaml.SequenceNode(ordererEndpoints...),
 	).WithAnchor(name).WithTag("!!map")
 
 	return &OrganizationNode{node}
