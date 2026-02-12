@@ -3,6 +3,7 @@ package docker
 import (
 	"fmt"
 
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
 )
 
@@ -12,16 +13,26 @@ type PeerNode struct {
 
 func NewPeer(
 	mspID string,
-	host string,
+	peerDomain string,
 	domain string,
 	corePeerGossipBootstrap string,
 	network string,
+	organizations []pkg.Organization,
 ) *PeerNode {
+
+	peerHostDir := fmt.Sprintf("./%[1]s/certificates/organizations/peerOrganizations/%[1]s/peers/%[2]s", domain, peerDomain)
+	peerContainerDir := "/etc/hyperledger/fabric"
+
+	volumes := []*yaml.Node{
+		yaml.ScalarNode(fmt.Sprintf("%s/msp:%s/msp", peerHostDir, peerContainerDir)),
+		yaml.ScalarNode(fmt.Sprintf("%s/tls:%s/tls", peerHostDir, peerContainerDir)),
+	}
+
 	node := yaml.MappingNode(
-		yaml.ScalarNode(host),
+		yaml.ScalarNode(peerDomain),
 		yaml.MappingNode(
 			yaml.ScalarNode("container_name"),
-			yaml.ScalarNode(host),
+			yaml.ScalarNode(peerDomain),
 			yaml.ScalarNode("extends"),
 			yaml.MappingNode(
 				yaml.ScalarNode("file"),
@@ -32,25 +43,22 @@ func NewPeer(
 			yaml.ScalarNode("environment"),
 			yaml.SequenceNode(
 				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_LOCALMSPID=%s", mspID)),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_ID=%s", host)),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_ADDRESS=%s:7051", host)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_ID=%s", peerDomain)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_ADDRESS=%s:7051", peerDomain)),
 				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_GOSSIP_BOOTSTRAP=%s", corePeerGossipBootstrap)),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_GOSSIP_EXTERNALENDPOINT=%s:7051", host)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_GOSSIP_EXTERNALENDPOINT=%s:7051", peerDomain)),
 				yaml.ScalarNode("CORE_LEDGER_STATE_STATEDATABASE=CouchDB"),
-				yaml.ScalarNode(fmt.Sprintf("CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb.%s:5984", host)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb.%s:5984", peerDomain)),
 				yaml.ScalarNode("CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin"),
 				yaml.ScalarNode("CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=adminpw"),
 			),
 			yaml.ScalarNode("volumes"),
-			yaml.SequenceNode(
-				yaml.ScalarNode(fmt.Sprintf("./%s/certificates/organizations/peerOrganizations/%s/peers/%s/msp:/etc/hyperledger/fabric/msp", domain, domain, host)),
-				yaml.ScalarNode(fmt.Sprintf("./%s/certificates/organizations/peerOrganizations/%s/peers/%s/tls:/etc/hyperledger/fabric/tls", domain, domain, host)),
-			),
+			yaml.SequenceNode(volumes...),
 		),
-		yaml.ScalarNode(fmt.Sprintf("couchdb.%s", host)),
+		yaml.ScalarNode(fmt.Sprintf("couchdb.%s", peerDomain)),
 		yaml.MappingNode(
 			yaml.ScalarNode("container_name"),
-			yaml.ScalarNode(fmt.Sprintf("couchdb.%s", host)),
+			yaml.ScalarNode(fmt.Sprintf("couchdb.%s", peerDomain)),
 			yaml.ScalarNode("image"),
 			yaml.ScalarNode("couchdb:latest"),
 			yaml.ScalarNode("environment"),

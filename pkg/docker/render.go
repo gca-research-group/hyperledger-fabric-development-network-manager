@@ -30,7 +30,7 @@ func (r *Renderer) RenderNetwork(networkName string, path string) error {
 
 func (r *Renderer) RenderOrderers(organization pkg.Organization) error {
 	for _, orderer := range organization.Orderers {
-		node := NewOrderer(orderer.Hostname, organization.Domain).
+		node := NewOrderer(orderer.Hostname, organization.Domain, r.config.Organizations).
 			WithNetworks([]*yaml.Node{yaml.ScalarNode(r.config.Network)})
 
 		err := yaml.MappingNode(
@@ -79,6 +79,7 @@ func (r *Renderer) RenderPeer(organization pkg.Organization, corePeerGossipBoots
 		organization.Domain,
 		corePeerGossipBootstrap,
 		r.config.Network,
+		r.config.Organizations,
 	).Build()
 
 	return yaml.MappingNode(

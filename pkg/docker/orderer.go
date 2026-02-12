@@ -3,6 +3,7 @@ package docker
 import (
 	"fmt"
 
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
 )
 
@@ -11,8 +12,18 @@ type OrdererNode struct {
 	*yaml.Node
 }
 
-func NewOrderer(hostname string, domain string) *OrdererNode {
+func NewOrderer(hostname string, domain string, organizations []pkg.Organization) *OrdererNode {
 	ordererDomain := fmt.Sprintf("%s.%s", hostname, domain)
+
+	ordererHostDir := fmt.Sprintf("./%[1]s/certificates/organizations/ordererOrganizations/%[1]s/orderers/%[2]s", domain, ordererDomain)
+	ordererContainerDir := "/var/hyperledger/orderer"
+
+	volumes := []*yaml.Node{
+		yaml.ScalarNode(fmt.Sprintf("%s/msp:%s/msp", ordererHostDir, ordererContainerDir)),
+		yaml.ScalarNode(fmt.Sprintf("%s/tls:%s/tls", ordererHostDir, ordererContainerDir)),
+	}
+
+	cas := "/var/hyperledger/orderer/tls/ca.crt"
 
 	node := yaml.MappingNode(
 		yaml.ScalarNode(ordererDomain),
@@ -33,19 +44,16 @@ func NewOrderer(hostname string, domain string) *OrdererNode {
 				yaml.ScalarNode("ORDERER_GENERAL_TLS_ENABLED=true"),
 				yaml.ScalarNode("ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key"),
 				yaml.ScalarNode("ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt"),
-				yaml.ScalarNode("ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]"),
+				yaml.ScalarNode(fmt.Sprintf("ORDERER_GENERAL_TLS_ROOTCAS=[%s]", cas)),
 				yaml.ScalarNode("ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053"),
 				yaml.ScalarNode("ORDERER_ADMIN_TLS_ENABLED=true"),
 				yaml.ScalarNode("ORDERER_ADMIN_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key"),
 				yaml.ScalarNode("ORDERER_ADMIN_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt"),
-				yaml.ScalarNode("ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]"),
+				yaml.ScalarNode(fmt.Sprintf("ORDERER_ADMIN_TLS_CLIENTROOTCAS=[%s]", cas)),
 				yaml.ScalarNode("ORDERER_CHANNELPARTICIPATION_ENABLED=true"),
 			),
 			yaml.ScalarNode("volumes"),
-			yaml.SequenceNode(
-				yaml.ScalarNode(fmt.Sprintf("./%s/certificates/organizations/ordererOrganizations/%s/orderers/%s/msp:/var/hyperledger/orderer/msp", domain, domain, ordererDomain)),
-				yaml.ScalarNode(fmt.Sprintf("./%s/certificates/organizations/ordererOrganizations/%s/orderers/%s/tls:/var/hyperledger/orderer/tls", domain, domain, ordererDomain)),
-			),
+			yaml.SequenceNode(volumes...),
 		),
 	)
 
