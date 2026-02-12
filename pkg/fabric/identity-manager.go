@@ -6,6 +6,7 @@ import (
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/command"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/file"
 )
 
 const (
@@ -51,6 +52,8 @@ func (im *IdentityManager) GenerateAll() error {
 
 			{"Generate Peer TLS Certs", im.generatePeerTlsCertificates},
 			{"Generate Orderer TLS Certs", im.generateOrdererTlsCertificates},
+
+			//{"Share TLS Certs", im.shareTlsCertificates},
 		}
 
 		for _, step := range steps {
@@ -59,6 +62,10 @@ func (im *IdentityManager) GenerateAll() error {
 				return fmt.Errorf("failed at step %s: %w", step.name, err)
 			}
 		}
+	}
+
+	if err := im.shareTlsCertificates(); err != nil {
+		return err
 	}
 
 	return nil
@@ -130,7 +137,7 @@ NodeOUs:
 func (im *IdentityManager) copyCACertificates(organization pkg.Organization, orgType string) error {
 	basePath := getOrgBaseDir(organization.Domain, orgType)
 	scripts := []string{
-		fmt.Sprintf("mkdir -p '%[1]s/msp/tlscacerts' && cp '%[2]s' '%[1]s/msp/tlscacerts/ca.crt'", basePath, caTlsCertPath),
+		fmt.Sprintf("mkdir -p '%[1]s/msp/tlscacerts' && cp '%[2]s' '%[1]s/msp/tlscacerts/%[3]s-ca.crt'", basePath, caTlsCertPath, organization.Domain),
 		fmt.Sprintf("mkdir -p '%[1]s/tlsca' && cp '%[2]s' '%[1]s/tlsca/tlsca.%[3]s-cert.pem'", basePath, caTlsCertPath, organization.Domain),
 		fmt.Sprintf("mkdir -p '%[1]s/ca' && cp '%[2]s' '%[1]s/ca/ca.%[3]s-cert.pem'", basePath, caTlsCertPath, organization.Domain),
 		fmt.Sprintf("mkdir -p '%[1]s/msp/cacerts' && cp '%[2]s' '%[1]s/msp/cacerts/ca.%[3]s-cert.pem'", basePath, caTlsCertPath, organization.Domain),
@@ -239,7 +246,7 @@ func (im *IdentityManager) registerOrgAdmin(organization pkg.Organization) error
 	return nil
 }
 
-func (im *IdentityManager) generateMSP(organization pkg.Organization, mspPath string, id string) error {
+func (im *IdentityManager) generateMSP(organization pkg.Organization, origin, destination string, id string) error {
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
 	u := fmt.Sprintf("https://%[1]s:%[1]spw@localhost:7054", id)
 
@@ -249,7 +256,7 @@ func (im *IdentityManager) generateMSP(organization pkg.Organization, mspPath st
 		"-u", u,
 		"--caname", caName,
 		"--tls.certfiles", caTlsCertPath,
-		"-M", mspPath,
+		"-M", origin,
 	}
 
 	if err := im.executor.ExecCommand("docker", args...); err != nil {
@@ -257,9 +264,17 @@ func (im *IdentityManager) generateMSP(organization pkg.Organization, mspPath st
 	}
 
 	scripts := []string{
-		fmt.Sprintf("mv '%s'* '%s'", fmt.Sprintf("%s/cacerts/", mspPath), fmt.Sprintf("%s/cacerts/ca.%s-cert.pem", mspPath, organization.Domain)),
-		fmt.Sprintf("mv '%s'* '%s'", fmt.Sprintf("%s/keystore/", mspPath), fmt.Sprintf("%s/keystore/priv_sk", mspPath)),
-		fmt.Sprintf("cp '%s' '%s'", fmt.Sprintf("%s/%s/msp/config.yaml", peerOrgPath, organization.Domain), fmt.Sprintf("%s/config.yaml", mspPath)),
+		fmt.Sprintf("mkdir -p '%s/cacerts'", destination),
+		fmt.Sprintf("mkdir -p '%s/keystore'", destination),
+		fmt.Sprintf("mkdir -p '%s/signcerts'", destination),
+		fmt.Sprintf("mkdir -p '%s/tlscacerts'", destination),
+
+		fmt.Sprintf("cp '%s'* '%s'", fmt.Sprintf("%s/cacerts/", origin), fmt.Sprintf("%s/cacerts/ca.%s-cert.pem", destination, organization.Domain)),
+		fmt.Sprintf("cp '%s'* '%s'", fmt.Sprintf("%s/keystore/", origin), fmt.Sprintf("%s/keystore/priv_sk", destination)),
+		fmt.Sprintf("cp '%s'* '%s'", fmt.Sprintf("%s/signcerts/", origin), fmt.Sprintf("%s/signcerts/cert.pem", destination)),
+		fmt.Sprintf("cp '%s' '%s/tlscacerts/%s-ca.crt'", caTlsCertPath, destination, organization.Domain),
+
+		fmt.Sprintf("cp '%s' '%s'", fmt.Sprintf("%s/%s/msp/config.yaml", peerOrgPath, organization.Domain), fmt.Sprintf("%s/config.yaml", destination)),
 	}
 
 	for _, script := range scripts {
@@ -274,9 +289,10 @@ func (im *IdentityManager) generateMSP(organization pkg.Organization, mspPath st
 func (im *IdentityManager) generatePeersMSP(organization pkg.Organization) error {
 	for i := range organization.Peers {
 		id := fmt.Sprintf("peer%d", i)
-		mspPath := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s.%[2]s/msp", peerOrgPath, organization.Domain, id)
+		origin := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s.%[2]s/msp", "/var/hyperledger", organization.Domain, id)
+		destination := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s.%[2]s/msp", peerOrgPath, organization.Domain, id)
 
-		if err := im.generateMSP(organization, mspPath, id); err != nil {
+		if err := im.generateMSP(organization, origin, destination, id); err != nil {
 			return err
 		}
 	}
@@ -286,9 +302,10 @@ func (im *IdentityManager) generatePeersMSP(organization pkg.Organization) error
 
 func (im *IdentityManager) generatePeerUserMSP(organization pkg.Organization) error {
 	id := "user1"
-	mspPath := fmt.Sprintf("%[1]s/%[2]s/users/User1@%[2]s/msp", peerOrgPath, organization.Domain)
+	origin := fmt.Sprintf("%[1]s/%[2]s/peers/users/User1@%[2]s/msp", "/var/hyperledger", organization.Domain)
+	destination := fmt.Sprintf("%[1]s/%[2]s/users/User1@%[2]s/msp", peerOrgPath, organization.Domain)
 
-	if err := im.generateMSP(organization, mspPath, id); err != nil {
+	if err := im.generateMSP(organization, origin, destination, id); err != nil {
 		return err
 	}
 
@@ -297,9 +314,10 @@ func (im *IdentityManager) generatePeerUserMSP(organization pkg.Organization) er
 
 func (im *IdentityManager) generatePeerOrgAdminMSP(organization pkg.Organization) error {
 	id := "orgadmin"
-	mspPath := fmt.Sprintf("%[1]s/%[2]s/users/Admin@%[2]s/msp", peerOrgPath, organization.Domain)
+	origin := fmt.Sprintf("%[1]s/%[2]s/peers/users/Admin@%[2]s/msp", "/var/hyperledger", organization.Domain)
+	destination := fmt.Sprintf("%[1]s/%[2]s/users/Admin@%[2]s/msp", peerOrgPath, organization.Domain)
 
-	if err := im.generateMSP(organization, mspPath, id); err != nil {
+	if err := im.generateMSP(organization, origin, destination, id); err != nil {
 		return err
 	}
 
@@ -309,9 +327,10 @@ func (im *IdentityManager) generatePeerOrgAdminMSP(organization pkg.Organization
 func (im *IdentityManager) generateOrderersMSP(organization pkg.Organization) error {
 	for _, orderer := range organization.Orderers {
 		id := strings.ToLower(orderer.Hostname)
-		mspPath := fmt.Sprintf("%[1]s/%[2]s/orderers/%[3]s.%[2]s/msp", ordererOrgPath, organization.Domain, id)
+		origin := fmt.Sprintf("%[1]s/%[2]s/orderers/%[3]s.%[2]s/msp", "/var/hyperledger", organization.Domain, id)
+		destination := fmt.Sprintf("%[1]s/%[2]s/orderers/%[3]s.%[2]s/msp", ordererOrgPath, organization.Domain, id)
 
-		if err := im.generateMSP(organization, mspPath, id); err != nil {
+		if err := im.generateMSP(organization, origin, destination, id); err != nil {
 			return err
 		}
 	}
@@ -321,9 +340,10 @@ func (im *IdentityManager) generateOrderersMSP(organization pkg.Organization) er
 
 func (im *IdentityManager) generateOrdererUserMSP(organization pkg.Organization) error {
 	id := "user1"
-	mspPath := fmt.Sprintf("%[1]s/%[2]s/users/User1@%[2]s/msp", ordererOrgPath, organization.Domain)
+	origin := fmt.Sprintf("%[1]s/%[2]s/orderers/users/User1@%[2]s/msp", "/var/hyperledger", organization.Domain)
+	destination := fmt.Sprintf("%[1]s/%[2]s/users/User1@%[2]s/msp", ordererOrgPath, organization.Domain)
 
-	if err := im.generateMSP(organization, mspPath, id); err != nil {
+	if err := im.generateMSP(organization, origin, destination, id); err != nil {
 		return err
 	}
 
@@ -332,16 +352,17 @@ func (im *IdentityManager) generateOrdererUserMSP(organization pkg.Organization)
 
 func (im *IdentityManager) generateOrdererOrgAdminMSP(organization pkg.Organization) error {
 	id := "orgadmin"
-	mspPath := fmt.Sprintf("%[1]s/%[2]s/users/Admin@%[2]s/msp", ordererOrgPath, organization.Domain)
+	origin := fmt.Sprintf("%[1]s/%[2]s/orderers/users/Admin@%[2]s/msp", "/var/hyperledger", organization.Domain)
+	destination := fmt.Sprintf("%[1]s/%[2]s/users/Admin@%[2]s/msp", ordererOrgPath, organization.Domain)
 
-	if err := im.generateMSP(organization, mspPath, id); err != nil {
+	if err := im.generateMSP(organization, origin, destination, id); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (im *IdentityManager) generateTLS(organization pkg.Organization, tlsPath string, id string) error {
+func (im *IdentityManager) generateTLS(organization pkg.Organization, origin string, destination string, id string) error {
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
 	u := fmt.Sprintf("https://%[1]s:%[1]spw@localhost:7054", id)
 
@@ -350,9 +371,10 @@ func (im *IdentityManager) generateTLS(organization pkg.Organization, tlsPath st
 		"fabric-ca-client", "enroll",
 		"--caname", caName,
 		"-u", u,
-		"-M", tlsPath,
+		"-M", origin,
 		"--enrollment.profile", "tls",
-		"--csr.hosts", fmt.Sprintf("%s.%s", id, organization.Domain), "--csr.hosts", "localhost",
+		"--csr.hosts", fmt.Sprintf("%s.%s", id, organization.Domain),
+		"--csr.hosts", "localhost",
 		"--tls.certfiles", caTlsCertPath,
 	}
 
@@ -361,9 +383,10 @@ func (im *IdentityManager) generateTLS(organization pkg.Organization, tlsPath st
 	}
 
 	scripts := []string{
-		fmt.Sprintf("cp '%[1]s/tlscacerts/'* '%[1]s/ca.crt'", tlsPath),
-		fmt.Sprintf("cp '%[1]s/signcerts/'* '%[1]s/server.crt'", tlsPath),
-		fmt.Sprintf("cp '%[1]s/keystore/'* '%[1]s/server.key'", tlsPath),
+		fmt.Sprintf("mkdir -p '%s'", destination),
+		fmt.Sprintf("cp '%s/tlscacerts/'* '%s/ca.crt'", origin, destination),
+		fmt.Sprintf("cp '%s/signcerts/'* '%s/server.crt'", origin, destination),
+		fmt.Sprintf("cp '%s/keystore/'* '%s/server.key'", origin, destination),
 	}
 
 	for _, script := range scripts {
@@ -378,9 +401,10 @@ func (im *IdentityManager) generateTLS(organization pkg.Organization, tlsPath st
 func (im *IdentityManager) generatePeerTlsCertificates(organization pkg.Organization) error {
 	for i := range organization.Peers {
 		id := fmt.Sprintf("peer%d", i)
-		tlsPath := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s.%[2]s/tls", peerOrgPath, organization.Domain, id)
+		origin := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s.%[2]s/tls", "/var/hyperledger", organization.Domain, id)
+		destination := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s.%[2]s/tls", peerOrgPath, organization.Domain, id)
 
-		if err := im.generateTLS(organization, tlsPath, id); err != nil {
+		if err := im.generateTLS(organization, origin, destination, id); err != nil {
 			return err
 		}
 	}
@@ -391,10 +415,42 @@ func (im *IdentityManager) generatePeerTlsCertificates(organization pkg.Organiza
 func (im *IdentityManager) generateOrdererTlsCertificates(organization pkg.Organization) error {
 	for _, orderer := range organization.Orderers {
 		id := strings.ToLower(orderer.Hostname)
-		tlsPath := fmt.Sprintf("%[1]s/%[2]s/orderers/%[3]s.%[2]s/tls", ordererOrgPath, organization.Domain, id)
 
-		if err := im.generateTLS(organization, tlsPath, id); err != nil {
+		origin := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s.%[2]s/tls", "/var/hyperledger", organization.Domain, id)
+		destination := fmt.Sprintf("%[1]s/%[2]s/orderers/%[3]s.%[2]s/tls", ordererOrgPath, organization.Domain, id)
+
+		if err := im.generateTLS(organization, origin, destination, id); err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+func (im *IdentityManager) shareTlsCertificates() error {
+
+	for _, sourceOrganization := range im.config.Organizations {
+		folder := "%[1]s/%[2]s/certificates/organizations/peerOrganizations/%[2]s"
+
+		for _, targetOrganization := range im.config.Organizations {
+			if targetOrganization.Domain == sourceOrganization.Domain {
+				continue
+			}
+
+			origin := fmt.Sprintf("%[1]s/msp/tlscacerts/%[2]s-ca.crt", fmt.Sprintf(folder, im.config.Output, sourceOrganization.Domain), sourceOrganization.Domain)
+			destination := fmt.Sprintf("%[1]s/msp/tlscacerts/%[2]s-ca.crt", fmt.Sprintf(folder, im.config.Output, targetOrganization.Domain), sourceOrganization.Domain)
+
+			if err := file.Copy(origin, destination); err != nil {
+				return err
+			}
+
+			for i := range targetOrganization.Peers {
+				destination := fmt.Sprintf("%[1]s/peers/peer%[2]d.%[3]s/msp/tlscacerts/%[4]s-ca.crt", fmt.Sprintf(folder, im.config.Output, targetOrganization.Domain), i, targetOrganization.Domain, sourceOrganization.Domain)
+
+				if err := file.Copy(origin, destination); err != nil {
+					return err
+				}
+			}
 		}
 	}
 
