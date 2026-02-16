@@ -17,7 +17,6 @@ type ToolsNode struct {
 func NewTools(currentOrganization pkg.Organization, organizations []pkg.Organization, network string) *ToolsNode {
 	name := currentOrganization.Name
 	domain := currentOrganization.Domain
-	corePeerHost := fmt.Sprintf("peer0.%s:7051", currentOrganization.Domain)
 	mspID := fmt.Sprintf("%sMSP", currentOrganization.Name)
 
 	volumes := []*yaml.Node{
@@ -35,8 +34,8 @@ func NewTools(currentOrganization pkg.Organization, organizations []pkg.Organiza
 		if len(organization.Orderers) > 0 {
 			for _, orderer := range organization.Orderers {
 
-				ordererHostDir := fmt.Sprintf("./%[1]s/certificates/organizations/ordererOrganizations/%[1]s/orderers/%[2]s.%[1]s", organization.Domain, orderer.Hostname)
-				ordererContainerDir := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Hostname)
+				ordererHostDir := fmt.Sprintf("./%[1]s/certificates/organizations/ordererOrganizations/%[1]s/orderers/%[2]s.%[1]s", organization.Domain, orderer.Subdomain)
+				ordererContainerDir := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Subdomain)
 
 				volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%s/msp/cacerts:%s/msp/cacerts", ordererHostDir, ordererContainerDir)))
 				volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%s/msp/signcerts:%s/msp/signcerts", ordererHostDir, ordererContainerDir)))
@@ -53,9 +52,9 @@ func NewTools(currentOrganization pkg.Organization, organizations []pkg.Organiza
 		volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%s/msp/cacerts:%s/msp/cacerts", peerHostDir, peerContainerDir)))
 		volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%s/msp/config.yaml:%s/msp/config.yaml", peerHostDir, peerContainerDir)))
 
-		for i := 0; i < organization.Peers; i++ {
-			peerHostDir := fmt.Sprintf("./%[1]s/certificates/organizations/peerOrganizations/%[1]s/peers/peer%[2]d.%[1]s", organization.Domain, i)
-			peerContainerDir := fmt.Sprintf("%[1]s/%[2]s/peerOrganizations/%[2]s/peers/peer%[3]d.%[2]s", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, i)
+		for _, peer := range organization.Peers {
+			peerHostDir := fmt.Sprintf("./%[1]s/certificates/organizations/peerOrganizations/%[1]s/peers/%[2]s.%[1]s", organization.Domain, peer.Subdomain)
+			peerContainerDir := fmt.Sprintf("%[1]s/%[2]s/peerOrganizations/%[2]s/peers/%[3]s.%[2]s", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, peer.Subdomain)
 
 			volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%s/msp/signcerts:%s/msp/signcerts", peerHostDir, peerContainerDir)))
 
@@ -63,6 +62,23 @@ func NewTools(currentOrganization pkg.Organization, organizations []pkg.Organiza
 			volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%s/tls/server.crt:%s/tls/server.crt", peerHostDir, peerContainerDir)))
 		}
 	}
+
+	corePeerHostIndex := 0
+
+	for i, peer := range currentOrganization.Peers {
+		if peer.IsAnchor {
+			corePeerHostIndex = i
+		}
+	}
+
+	corePeerPort := currentOrganization.Peers[corePeerHostIndex].Port
+	corePeerSubdomain := currentOrganization.Peers[corePeerHostIndex].Subdomain
+
+	if corePeerPort == 0 {
+		corePeerPort = constants.DEFAULT_PEER_PORT
+	}
+
+	corePeerHost := fmt.Sprintf("%s.%s:%d", corePeerSubdomain, currentOrganization.Domain, corePeerPort)
 
 	node := yaml.MappingNode(
 		yaml.ScalarNode(fmt.Sprintf("hyperledger-fabric-tools-%s", strings.ToLower(name))),
@@ -84,9 +100,9 @@ func NewTools(currentOrganization pkg.Organization, organizations []pkg.Organiza
 				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_ADDRESS=%s", corePeerHost)),
 				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_LOCALMSPID=%s", mspID)),
 				yaml.ScalarNode("CORE_PEER_TLS_ENABLED=true"),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_CERT_FILE=%[1]s/%[2]s/peerOrganizations/%[2]s/peers/peer0.%[2]s/tls/server.crt", constants.DEFAULT_FABRIC_DIRECTORY, domain)),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_KEY_FILE=%[1]s/%[2]s/peerOrganizations/%[2]s/peers/peer0.%[2]s/tls/server.key", constants.DEFAULT_FABRIC_DIRECTORY, domain)),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_ROOTCERT_FILE=%[1]s/%[2]s/peerOrganizations/%[2]s/peers/peer0.%[2]s/tls/ca.crt", constants.DEFAULT_FABRIC_DIRECTORY, domain)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_CERT_FILE=%[1]s/%[2]s/peerOrganizations/%[2]s/peers/%[3]s.%[2]s/tls/server.crt", constants.DEFAULT_FABRIC_DIRECTORY, domain, corePeerSubdomain)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_KEY_FILE=%[1]s/%[2]s/peerOrganizations/%[2]s/peers/%[3]s.%[2]s/tls/server.key", constants.DEFAULT_FABRIC_DIRECTORY, domain, corePeerSubdomain)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_ROOTCERT_FILE=%[1]s/%[2]s/peerOrganizations/%[2]s/peers/%[3]s.%[2]s/tls/ca.crt", constants.DEFAULT_FABRIC_DIRECTORY, domain, corePeerSubdomain)),
 				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_MSPCONFIGPATH=%[1]s/%[2]s/peerOrganizations/%[2]s/users/Admin@%[2]s/msp", constants.DEFAULT_FABRIC_DIRECTORY, domain)),
 			),
 			yaml.ScalarNode("working_dir"),

@@ -49,8 +49,8 @@ func (f *Fabric) FetchGenesisBlock() error {
 		}
 	}
 
-	ordererAddress := fmt.Sprintf("%s.%s:%d", orderer.Hostname, ordererDomain, orderer.Port)
-	caFile := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/ca.crt", constants.DEFAULT_FABRIC_DIRECTORY, ordererDomain, orderer.Hostname)
+	ordererAddress := fmt.Sprintf("%s.%s:%d", orderer.Subdomain, ordererDomain, orderer.Port)
+	caFile := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/ca.crt", constants.DEFAULT_FABRIC_DIRECTORY, ordererDomain, orderer.Subdomain)
 
 	for _, organization := range f.config.Organizations {
 		if organization.Bootstrap {

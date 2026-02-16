@@ -1,14 +1,18 @@
 package pkg
 
 type Orderer struct {
-	Name     string `yaml:"name" json:"name" toml:"name"`
-	Hostname string `yaml:"hostname" json:"hostname" toml:"hostname"`
-	Port     int
+	Name       string `yaml:"name" json:"name" toml:"name"`
+	Subdomain  string `yaml:"subdomain" json:"subdomain" toml:"subdomain"`
+	ExposePort int    `yaml:"exposePort" json:"exposePort" toml:"exposePort"`
+	Port       int    `yaml:"port" json:"port" toml:"port"`
 }
 
-type AnchorPeer struct {
-	Host string `yaml:"host" json:"host" toml:"host"`
-	Port int    `yaml:"port" json:"port" toml:"port"`
+type Peer struct {
+	Name       string `yaml:"name" json:"name" toml:"name"`
+	Subdomain  string `yaml:"subdomain" json:"subdomain" toml:"subdomain"`
+	Port       int    `yaml:"port" json:"port" toml:"port"`
+	ExposePort int    `yaml:"exposePort" json:"exposePort" toml:"exposePort"`
+	IsAnchor   bool   `yaml:"isAnchor" json:"isAnchor" toml:"isAnchor"`
 }
 
 type CertificateAuthority struct {
@@ -18,12 +22,16 @@ type CertificateAuthority struct {
 type Organization struct {
 	Name                 string               `yaml:"name" json:"name" toml:"name"`
 	Domain               string               `yaml:"domain" json:"domain" toml:"domain"`
-	AnchorPeer           AnchorPeer           `yaml:"anchorPeer" json:"anchorPeer" toml:"anchorPeer"`
-	Peers                int                  `yaml:"peers" json:"peers" toml:"peers"`
+	Peers                []Peer               `yaml:"peers" json:"peers" toml:"peers"`
+	Orderers             []Orderer            `yaml:"orderers" json:"orderers" toml:"orderers"`
 	Users                int                  `yaml:"users" json:"users" toml:"users"`
 	CertificateAuthority CertificateAuthority `yaml:"certificateAuthority" json:"certificateAuthority" toml:"certificateAuthority"`
-	Orderers             []Orderer            `yaml:"orderers" json:"orderers" toml:"orderers"`
 	Bootstrap            bool                 `yaml:"bootstrap,omitempty" json:"bootstrap,omitempty" toml:"bootstrap,omitempty"`
+}
+
+type Channel struct {
+	Name    string  `yaml:"name" json:"name" toml:"name"`
+	Profile Profile `yaml:"profile" json:"profile" toml:"profile"`
 }
 
 type Profile struct {
@@ -36,4 +44,5 @@ type Config struct {
 	Network       string         `yaml:"network" json:"network" toml:"network"`
 	Organizations []Organization `yaml:"organizations" json:"organizations" toml:"organizations"`
 	Profiles      []Profile      `yaml:"profiles" json:"profiles" toml:"profiles"`
+	Channels      []Channel      `yaml:"channels" json:"channels" toml:"channels"`
 }

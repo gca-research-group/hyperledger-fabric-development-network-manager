@@ -3,7 +3,6 @@ package configtx
 import (
 	"fmt"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
 )
 
@@ -49,8 +48,8 @@ func NewOrdererOrganization(name string, domain string, mspID string) *Organizat
 	return &OrganizationNode{node}
 }
 
-func (on *OrganizationNode) WithAnchorPeer(anchorPeer pkg.AnchorPeer) *OrganizationNode {
-	if anchorPeer.Host == "" {
+func (on *OrganizationNode) WithAnchorPeer(host string, port int) *OrganizationNode {
+	if host == "" {
 		return on
 	}
 
@@ -58,9 +57,9 @@ func (on *OrganizationNode) WithAnchorPeer(anchorPeer pkg.AnchorPeer) *Organizat
 
 	entry, _ := yaml.MappingNode(
 		yaml.ScalarNode(HostKey),
-		yaml.ScalarNode(anchorPeer.Host),
+		yaml.ScalarNode(host),
 		yaml.ScalarNode(PortKey),
-		yaml.ScalarNode(fmt.Sprint(anchorPeer.Port)),
+		yaml.ScalarNode(fmt.Sprint(port)),
 	).MarshalYAML()
 
 	peer.Content = append(peer.Content, entry)

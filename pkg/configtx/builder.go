@@ -24,13 +24,6 @@ func NewBuilder(config pkg.Config) *Builder {
 				config.Organizations[o].Orderers[i].Port = 7050
 			}
 		}
-
-		if config.Organizations[o].AnchorPeer.Host == "" && config.Organizations[o].Peers > 0 {
-			config.Organizations[o].AnchorPeer = pkg.AnchorPeer{
-				Host: fmt.Sprintf("peer0.%s", config.Organizations[o].Domain),
-				Port: 7051,
-			}
-		}
 	}
 
 	return &Builder{config: config, appAliases: make(map[string]*yaml.Node)}
@@ -46,15 +39,35 @@ func (c *Builder) BuildOrganizations() {
 			c.ordererOrgs = append(c.ordererOrgs, org.Build())
 			c.ordererAliases = append(c.ordererAliases, yaml.AliasNode(orderer.Name, org.Build()))
 
-			ordererAddress := fmt.Sprintf("%s.%s:%d", orderer.Hostname, organization.Domain, orderer.Port)
+			ordererAddress := fmt.Sprintf("%s.%s:%d", orderer.Subdomain, organization.Domain, orderer.Port)
 			c.ordererAddresses = append(c.ordererAddresses, ordererAddress)
 		}
 	}
 
 	for _, organization := range c.config.Organizations {
 		mspID := BuildMSPID(organization.Name)
+
+		var anchorPeerHost string
+		var anchorPeerPort int
+		defaultAnchorPeerPort := 7051
+		for i, peer := range organization.Peers {
+			if peer.IsAnchor {
+				anchorPeerHost = fmt.Sprintf("%s.%s", peer.Subdomain, organization.Domain)
+				anchorPeerPort = peer.Port
+			}
+
+			if anchorPeerHost == "" && i == 0 {
+				anchorPeerHost = fmt.Sprintf("%s.%s", peer.Subdomain, organization.Domain)
+				anchorPeerPort = defaultAnchorPeerPort
+			}
+		}
+
+		if anchorPeerPort == 0 {
+			anchorPeerPort = defaultAnchorPeerPort
+		}
+
 		org := NewApplicationOrganization(organization.Name, organization.Domain, mspID, c.ordererAddresses).
-			WithAnchorPeer(organization.AnchorPeer).
+			WithAnchorPeer(anchorPeerHost, anchorPeerPort).
 			WithDefaultApplicationPolicies(mspID)
 
 		c.appOrgs = append(c.appOrgs, org.Build())

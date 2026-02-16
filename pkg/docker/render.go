@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/constants"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
 )
 
@@ -30,13 +31,13 @@ func (r *Renderer) RenderNetwork(networkName string, path string) error {
 
 func (r *Renderer) RenderOrderers(organization pkg.Organization) error {
 	for _, orderer := range organization.Orderers {
-		node := NewOrderer(orderer.Hostname, organization.Domain, r.config.Organizations).
+		node := NewOrderer(orderer.Subdomain, organization.Domain, r.config.Organizations).
 			WithNetworks([]*yaml.Node{yaml.ScalarNode(r.config.Network)})
 
 		err := yaml.MappingNode(
 			yaml.ScalarNode("services"),
 			node.Build(),
-		).ToFile(fmt.Sprintf("%s/%s/%s.yml", r.config.Output, organization.Domain, orderer.Hostname))
+		).ToFile(fmt.Sprintf("%s/%s/%s.yml", r.config.Output, organization.Domain, orderer.Subdomain))
 
 		return err
 	}
@@ -72,10 +73,10 @@ func (r *Renderer) RenderCertificateAuthority(organization pkg.Organization) err
 	).ToFile(fmt.Sprintf("%s/%s/ca.yml", r.config.Output, organization.Domain))
 }
 
-func (r *Renderer) RenderPeer(organization pkg.Organization, corePeerGossipBootstrap string, index int) error {
+func (r *Renderer) RenderPeer(organization pkg.Organization, corePeerGossipBootstrap string, peer pkg.Peer) error {
 	node := NewPeer(
 		fmt.Sprintf("%sMSP", organization.Name),
-		fmt.Sprintf("peer%d.%s", index, organization.Domain),
+		fmt.Sprintf("%s.%s", peer.Subdomain, organization.Domain),
 		organization.Domain,
 		corePeerGossipBootstrap,
 		r.config.Network,
@@ -85,21 +86,29 @@ func (r *Renderer) RenderPeer(organization pkg.Organization, corePeerGossipBoots
 	return yaml.MappingNode(
 		yaml.ScalarNode("services"),
 		node,
-	).ToFile(fmt.Sprintf("%s/%s/peer%d.yml", r.config.Output, organization.Domain, index))
+	).ToFile(fmt.Sprintf("%s/%s/%s.yml", r.config.Output, organization.Domain, peer.Subdomain))
 }
 
 func (r *Renderer) RenderPeers(organization pkg.Organization) error {
 
-	for i := range organization.Peers {
-		corePeerGossipBootstrap := fmt.Sprintf("peer0.%s:7051", organization.Domain)
+	for i, peer := range organization.Peers {
+		gossipPeerIndex := 0
 
-		if organization.Peers != 1 && i == 0 {
-			corePeerGossipBootstrap = fmt.Sprintf("peer1.%s:7051", organization.Domain)
-		} else {
-			corePeerGossipBootstrap = fmt.Sprintf("peer0.%s:7051", organization.Domain)
+		if len(organization.Peers) != 1 && i == 0 {
+			gossipPeerIndex = 1
 		}
 
-		if err := r.RenderPeer(organization, corePeerGossipBootstrap, i); err != nil {
+		gossipPeer := organization.Peers[gossipPeerIndex]
+
+		gossipPeerport := gossipPeer.Port
+
+		if gossipPeerport == 0 {
+			gossipPeerport = constants.DEFAULT_PEER_PORT
+		}
+
+		corePeerGossipBootstrap := fmt.Sprintf("%s.%s:%d", gossipPeer.Subdomain, organization.Domain, gossipPeerport)
+
+		if err := r.RenderPeer(organization, corePeerGossipBootstrap, peer); err != nil {
 			return fmt.Errorf("Error when rendering the peer %d for the organization %s: %w", i, organization.Name, err)
 		}
 	}

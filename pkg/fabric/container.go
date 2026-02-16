@@ -43,7 +43,7 @@ func (f *Fabric) RemoveContainers() error {
 	fmt.Print("\n=========== Removing orderer containers ===========\n")
 	for _, organization := range f.config.Organizations {
 		for _, orderer := range organization.Orderers {
-			config := fmt.Sprintf("%s/%s/%s.yml", f.config.Output, organization.Domain, orderer.Hostname)
+			config := fmt.Sprintf("%s/%s/%s.yml", f.config.Output, organization.Domain, orderer.Subdomain)
 
 			if file.FileExists(config) {
 				args := []string{"compose", "-f", f.network, "-f", config, "down", "-v"}
@@ -70,7 +70,7 @@ func (f *Fabric) RunOrdererContainers() error {
 	fmt.Print("\n=========== Executing orderer containeres ===========\n")
 	for _, organization := range f.config.Organizations {
 		for _, orderer := range organization.Orderers {
-			config := fmt.Sprintf("%s/%s/%s.yml", f.config.Output, organization.Domain, orderer.Hostname)
+			config := fmt.Sprintf("%s/%s/%s.yml", f.config.Output, organization.Domain, orderer.Subdomain)
 
 			if file.FileExists(config) {
 				args := []string{"compose", "-f", f.network, "-f", config, "up", "--build", "-d"}

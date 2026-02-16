@@ -52,8 +52,6 @@ func (im *IdentityManager) GenerateAll() error {
 
 			{"Generate Peer TLS Certs", im.generatePeerTlsCertificates},
 			{"Generate Orderer TLS Certs", im.generateOrdererTlsCertificates},
-
-			//{"Share TLS Certs", im.shareTlsCertificates},
 		}
 
 		for _, step := range steps {
@@ -162,8 +160,8 @@ func (im *IdentityManager) copyOrderersCACertificates(organization pkg.Organizat
 func (im *IdentityManager) registerPeers(organization pkg.Organization) error {
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
 
-	for i := range organization.Peers {
-		id := fmt.Sprintf("peer%d", i)
+	for _, peer := range organization.Peers {
+		id := peer.Subdomain
 
 		args := []string{
 			"exec", caName,
@@ -176,7 +174,7 @@ func (im *IdentityManager) registerPeers(organization pkg.Organization) error {
 		}
 
 		if err := im.executor.ExecCommand("docker", args...); err != nil {
-			return fmt.Errorf("Error when registering the peer %d for organization %s: %v", i, organization.Name, err)
+			return fmt.Errorf("Error when registering the peer %s for organization %s: %v", peer.Subdomain, organization.Name, err)
 		}
 	}
 
@@ -187,7 +185,7 @@ func (im *IdentityManager) registerOrderes(organization pkg.Organization) error 
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
 
 	for _, orderer := range organization.Orderers {
-		id := strings.ToLower(orderer.Hostname)
+		id := strings.ToLower(orderer.Subdomain)
 		args := []string{
 			"exec", caName,
 			"fabric-ca-client", "register",
@@ -199,7 +197,7 @@ func (im *IdentityManager) registerOrderes(organization pkg.Organization) error 
 		}
 
 		if err := im.executor.ExecCommand("docker", args...); err != nil {
-			return fmt.Errorf("Error when registering the orderer %s for organization %s: %v", orderer.Hostname, organization.Name, err)
+			return fmt.Errorf("Error when registering the orderer %s for organization %s: %v", orderer.Subdomain, organization.Name, err)
 		}
 	}
 
@@ -287,8 +285,8 @@ func (im *IdentityManager) generateMSP(organization pkg.Organization, origin, de
 }
 
 func (im *IdentityManager) generatePeersMSP(organization pkg.Organization) error {
-	for i := range organization.Peers {
-		id := fmt.Sprintf("peer%d", i)
+	for _, peer := range organization.Peers {
+		id := peer.Subdomain
 		origin := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s.%[2]s/msp", "/var/hyperledger", organization.Domain, id)
 		destination := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s.%[2]s/msp", peerOrgPath, organization.Domain, id)
 
@@ -326,7 +324,7 @@ func (im *IdentityManager) generatePeerOrgAdminMSP(organization pkg.Organization
 
 func (im *IdentityManager) generateOrderersMSP(organization pkg.Organization) error {
 	for _, orderer := range organization.Orderers {
-		id := strings.ToLower(orderer.Hostname)
+		id := strings.ToLower(orderer.Subdomain)
 		origin := fmt.Sprintf("%[1]s/%[2]s/orderers/%[3]s.%[2]s/msp", "/var/hyperledger", organization.Domain, id)
 		destination := fmt.Sprintf("%[1]s/%[2]s/orderers/%[3]s.%[2]s/msp", ordererOrgPath, organization.Domain, id)
 
@@ -399,8 +397,8 @@ func (im *IdentityManager) generateTLS(organization pkg.Organization, origin str
 }
 
 func (im *IdentityManager) generatePeerTlsCertificates(organization pkg.Organization) error {
-	for i := range organization.Peers {
-		id := fmt.Sprintf("peer%d", i)
+	for _, peer := range organization.Peers {
+		id := peer.Subdomain
 		origin := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s.%[2]s/tls", "/var/hyperledger", organization.Domain, id)
 		destination := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s.%[2]s/tls", peerOrgPath, organization.Domain, id)
 
@@ -414,7 +412,7 @@ func (im *IdentityManager) generatePeerTlsCertificates(organization pkg.Organiza
 
 func (im *IdentityManager) generateOrdererTlsCertificates(organization pkg.Organization) error {
 	for _, orderer := range organization.Orderers {
-		id := strings.ToLower(orderer.Hostname)
+		id := strings.ToLower(orderer.Subdomain)
 
 		origin := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s.%[2]s/tls", "/var/hyperledger", organization.Domain, id)
 		destination := fmt.Sprintf("%[1]s/%[2]s/orderers/%[3]s.%[2]s/tls", ordererOrgPath, organization.Domain, id)
@@ -444,8 +442,8 @@ func (im *IdentityManager) shareTlsCertificates() error {
 				return err
 			}
 
-			for i := range targetOrganization.Peers {
-				destination := fmt.Sprintf("%[1]s/peers/peer%[2]d.%[3]s/msp/tlscacerts/%[4]s-ca.crt", fmt.Sprintf(folder, im.config.Output, targetOrganization.Domain), i, targetOrganization.Domain, sourceOrganization.Domain)
+			for _, peer := range targetOrganization.Peers {
+				destination := fmt.Sprintf("%[1]s/peers/%[2]s.%[3]s/msp/tlscacerts/%[4]s-ca.crt", fmt.Sprintf(folder, im.config.Output, targetOrganization.Domain), peer.Subdomain, targetOrganization.Domain, sourceOrganization.Domain)
 
 				if err := file.Copy(origin, destination); err != nil {
 					return err

@@ -14,16 +14,16 @@ func (f *Fabric) JoinOrdererToTheChannel() error {
 		for _, orderer := range organization.Orderers {
 			for _, profile := range f.config.Profiles {
 				containerName := buildToolsContainerName(organization)
-				caFile := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/ca.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Hostname)
-				clientCert := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/server.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Hostname)
-				clientKey := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/server.key", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Hostname)
+				caFile := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/ca.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Subdomain)
+				clientCert := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/server.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Subdomain)
+				clientKey := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/server.key", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Subdomain)
 
 				args := []string{
 					"compose", "-f", f.network, "-f", tools, "run", "--rm", "-T", containerName,
 					"osnadmin", "channel", "join",
 					"--channelID", strings.ToLower(profile.Name),
 					"--config-block", fmt.Sprintf("%s/channel/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(profile.Name)),
-					"-o", fmt.Sprintf("%s.%s:7053", orderer.Hostname, organization.Domain),
+					"-o", fmt.Sprintf("%s.%s:7053", orderer.Subdomain, organization.Domain),
 					"--ca-file", caFile,
 					"--client-cert", clientCert,
 					"--client-key", clientKey,
@@ -44,19 +44,25 @@ func (f *Fabric) JoinPeersToTheChannels() error {
 
 		tools := fmt.Sprintf("%s/%s/tools.yml", f.config.Output, organization.Domain)
 
-		for i := range organization.Peers {
+		for _, peer := range organization.Peers {
+			peerPort := peer.Port
+
+			if peerPort == 0 {
+				peerPort = constants.DEFAULT_PEER_PORT
+			}
+
 			for _, profile := range f.config.Profiles {
 				containerName := buildToolsContainerName(organization)
 
 				block := fmt.Sprintf("%s/channel/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(profile.Name))
 
-				tlsCertFile := fmt.Sprintf("%[1]s/%[2]s/peerOrganizations/peers/peer%[3]d.%[2]s/tls/server.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, i)
-				tlsKeyFile := fmt.Sprintf("%[1]s/%[2]s/peerOrganizations/peers/peer%[3]d.%[2]s/tls/server.key", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, i)
+				tlsCertFile := fmt.Sprintf("%[1]s/%[2]s/peerOrganizations/peers/%[3]s.%[2]s/tls/server.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, peer.Subdomain)
+				tlsKeyFile := fmt.Sprintf("%[1]s/%[2]s/peerOrganizations/peers/%[3]s.%[2]s/tls/server.key", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, peer.Subdomain)
 				mspConfigPath := fmt.Sprintf("%[1]s/%[2]s/peerOrganizations/%[2]s/users/Admin@%[2]s/msp", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain)
 
 				args := []string{
 					"compose", "-f", f.network, "-f", tools, "run", "--rm", "-T",
-					"-e", fmt.Sprintf("CORE_PEER_ADDRESS=peer%d.%s:7051", i, organization.Domain),
+					"-e", fmt.Sprintf("CORE_PEER_ADDRESS=%s.%s:%d", peer.Subdomain, organization.Domain, peerPort),
 					"-e", fmt.Sprintf("CORE_PEER_TLS_CERT_FILE=%s", tlsCertFile),
 					"-e", fmt.Sprintf("CORE_PEER_TLS_KEY_FILE=%s", tlsKeyFile),
 					"-e", fmt.Sprintf("CORE_PEER_MSPCONFIGPATH=%s", mspConfigPath),
@@ -64,7 +70,7 @@ func (f *Fabric) JoinPeersToTheChannels() error {
 				}
 
 				if err := f.executor.ExecCommand("docker", args...); err != nil {
-					return fmt.Errorf("Error when joining the peer %d of the organization %s to the channel %s: %v", i, organization.Name, profile.Name, err)
+					return fmt.Errorf("Error when joining the peer %s of the organization %s to the channel %s: %v", peer.Subdomain, organization.Name, profile.Name, err)
 				}
 			}
 		}

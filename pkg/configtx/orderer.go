@@ -78,13 +78,13 @@ func (on *OrdererNode) WithRaftConfig(organizations []pkg.Organization) *Orderer
 			nodes = append(nodes,
 				yaml.MappingNode(
 					yaml.ScalarNode(HostKey),
-					yaml.ScalarNode(fmt.Sprintf("%s.%s", orderer.Hostname, organization.Domain)),
+					yaml.ScalarNode(fmt.Sprintf("%s.%s", orderer.Subdomain, organization.Domain)),
 					yaml.ScalarNode(PortKey),
 					yaml.ScalarNode(fmt.Sprint(orderer.Port)),
 					yaml.ScalarNode(ClientTLSCertKey),
-					yaml.ScalarNode(fmt.Sprintf("./%[1]s/ordererOrganizations/%[1]s/orderers/%[2]s.%[1]s/tls/server.crt", organization.Domain, orderer.Hostname)),
+					yaml.ScalarNode(fmt.Sprintf("./%[1]s/ordererOrganizations/%[1]s/orderers/%[2]s.%[1]s/tls/server.crt", organization.Domain, orderer.Subdomain)),
 					yaml.ScalarNode(ServerTLSCertKey),
-					yaml.ScalarNode(fmt.Sprintf("./%[1]s/ordererOrganizations/%[1]s/orderers/%[2]s.%[1]s/tls/server.crt", organization.Domain, orderer.Hostname)),
+					yaml.ScalarNode(fmt.Sprintf("./%[1]s/ordererOrganizations/%[1]s/orderers/%[2]s.%[1]s/tls/server.crt", organization.Domain, orderer.Subdomain)),
 				),
 			)
 		}
