@@ -3,8 +3,8 @@ package docker
 import (
 	"fmt"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
 
 type PeerNode struct {
@@ -17,7 +17,7 @@ func NewPeer(
 	domain string,
 	corePeerGossipBootstrap string,
 	network string,
-	organizations []pkg.Organization,
+	organizations []config.Organization,
 ) *PeerNode {
 
 	peerHostDir := fmt.Sprintf("./%[1]s/certificates/organizations/peerOrganizations/%[1]s/peers/%[2]s", domain, peerDomain)

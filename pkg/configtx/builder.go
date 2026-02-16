@@ -3,12 +3,12 @@ package configtx
 import (
 	"fmt"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
 
 type Builder struct {
-	config *pkg.Config
+	config *config.Config
 
 	ordererOrgs      []*yaml.Node
 	appOrgs          []*yaml.Node
@@ -17,7 +17,7 @@ type Builder struct {
 	ordererAddresses []string
 }
 
-func NewBuilder(config *pkg.Config) *Builder {
+func NewBuilder(config *config.Config) *Builder {
 	for o := range config.Organizations {
 		for i := range config.Organizations[o].Orderers {
 			if config.Organizations[o].Orderers[i].Port == 0 {

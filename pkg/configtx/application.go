@@ -1,6 +1,6 @@
 package configtx
 
-import "github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
+import "github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
 
 type ApplicationNode struct {
 	*yaml.Node

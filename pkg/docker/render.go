@@ -3,16 +3,16 @@ package docker
 import (
 	"fmt"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/constants"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
 
 type Renderer struct {
-	config *pkg.Config
+	config *config.Config
 }
 
-func NewRenderer(config *pkg.Config) *Renderer {
+func NewRenderer(config *config.Config) *Renderer {
 	if config.Network == "" {
 		config.Network = constants.DEFAULT_NETORK
 	}
@@ -29,7 +29,7 @@ func (r *Renderer) RenderNetwork(networkName string, path string) error {
 	).ToFile(fmt.Sprintf("%s/network.yml", path))
 }
 
-func (r *Renderer) RenderOrderers(organization pkg.Organization) error {
+func (r *Renderer) RenderOrderers(organization config.Organization) error {
 	for _, orderer := range organization.Orderers {
 		node := NewOrderer(orderer.Subdomain, organization.Domain, r.config.Organizations).
 			WithNetworks([]*yaml.Node{yaml.ScalarNode(r.config.Network)})
@@ -53,7 +53,7 @@ func (r *Renderer) RenderPeerBase() error {
 	).ToFile(fmt.Sprintf("%s/peer.base.yml", r.config.Output))
 }
 
-func (r *Renderer) RenderCertificateAuthority(organization pkg.Organization) error {
+func (r *Renderer) RenderCertificateAuthority(organization config.Organization) error {
 	var nodes []*yaml.Node
 
 	node := NewCertificateAuthority(organization).
@@ -73,7 +73,7 @@ func (r *Renderer) RenderCertificateAuthority(organization pkg.Organization) err
 	).ToFile(fmt.Sprintf("%s/%s/ca.yml", r.config.Output, organization.Domain))
 }
 
-func (r *Renderer) RenderPeer(organization pkg.Organization, corePeerGossipBootstrap string, peer pkg.Peer) error {
+func (r *Renderer) RenderPeer(organization config.Organization, corePeerGossipBootstrap string, peer config.Peer) error {
 	node := NewPeer(
 		fmt.Sprintf("%sMSP", organization.Name),
 		fmt.Sprintf("%s.%s", peer.Subdomain, organization.Domain),
@@ -89,7 +89,7 @@ func (r *Renderer) RenderPeer(organization pkg.Organization, corePeerGossipBoots
 	).ToFile(fmt.Sprintf("%s/%s/%s.yml", r.config.Output, organization.Domain, peer.Subdomain))
 }
 
-func (r *Renderer) RenderPeers(organization pkg.Organization) error {
+func (r *Renderer) RenderPeers(organization config.Organization) error {
 
 	for i, peer := range organization.Peers {
 		gossipPeerIndex := 0
@@ -148,7 +148,7 @@ func (r *Renderer) RenderOrganizations() error {
 	return nil
 }
 
-func (r *Renderer) RenderTools(organization pkg.Organization, domains []string) error {
+func (r *Renderer) RenderTools(organization config.Organization, domains []string) error {
 	return yaml.MappingNode(
 		yaml.ScalarNode("services"),
 		NewTools(

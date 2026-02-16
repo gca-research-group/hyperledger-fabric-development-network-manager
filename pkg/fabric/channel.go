@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/constants"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
 )
 
 func (f *Fabric) JoinOrdererToTheChannel() error {

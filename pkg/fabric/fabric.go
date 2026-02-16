@@ -3,12 +3,12 @@ package fabric
 import (
 	"fmt"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/directory"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/directory"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
 
 type Fabric struct {
-	config  pkg.Config
+	config  config.Config
 	network string
 
 	executor Executor
@@ -21,7 +21,7 @@ func (f *Fabric) CleanUp() error {
 	return directory.RemoveFolderIfExists(f.config.Output)
 }
 
-func NewFabric(config pkg.Config, executor Executor) (*Fabric, error) {
+func NewFabric(config config.Config, executor Executor) (*Fabric, error) {
 	if len(config.Organizations) == 0 {
 		return nil, fmt.Errorf("configuration must contain at least one organization")
 	}

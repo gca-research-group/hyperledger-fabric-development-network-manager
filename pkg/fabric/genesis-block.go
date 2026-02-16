@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/constants"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
 
 func (f *Fabric) GenerateGenesisBlock() error {
@@ -38,7 +38,7 @@ func (f *Fabric) GenerateGenesisBlock() error {
 }
 
 func (f *Fabric) FetchGenesisBlock() error {
-	var orderer pkg.Orderer
+	var orderer config.Orderer
 	var ordererDomain string
 	var ordererPort int
 

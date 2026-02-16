@@ -3,14 +3,14 @@ package configtx
 import (
 	"fmt"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
 
 type Renderer struct {
-	config *pkg.Config
+	config *config.Config
 }
 
-func NewRenderer(config *pkg.Config) *Renderer {
+func NewRenderer(config *config.Config) *Renderer {
 	return &Renderer{config}
 }
 

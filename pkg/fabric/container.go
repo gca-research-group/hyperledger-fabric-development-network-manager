@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/file"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/docker"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/file"
 )
 
 func (f *Fabric) IsDockerRunning() error {

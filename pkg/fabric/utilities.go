@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
 
-func buildToolsContainerName(organization pkg.Organization) string {
+func buildToolsContainerName(organization config.Organization) string {
 	return fmt.Sprintf("hyperledger-fabric-tools-%s", strings.ToLower(organization.Name))
 }

@@ -1,4 +1,4 @@
-package pkg
+package config
 
 type Orderer struct {
 	Name       string `yaml:"name" json:"name" toml:"name"`

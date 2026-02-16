@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/constants"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
 
 type ToolsNode struct {
@@ -14,7 +14,7 @@ type ToolsNode struct {
 	name string
 }
 
-func NewTools(currentOrganization pkg.Organization, organizations []pkg.Organization, network string) *ToolsNode {
+func NewTools(currentOrganization config.Organization, organizations []config.Organization, network string) *ToolsNode {
 	name := currentOrganization.Name
 	domain := currentOrganization.Domain
 	mspID := fmt.Sprintf("%sMSP", currentOrganization.Name)
@@ -86,7 +86,7 @@ func NewTools(currentOrganization pkg.Organization, organizations []pkg.Organiza
 			yaml.ScalarNode("container_name"),
 			yaml.ScalarNode(fmt.Sprintf("hyperledger-fabric-tools-%s", strings.ToLower(name))),
 			yaml.ScalarNode("image"),
-			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-tools:%s", FABRIC_VERSION)),
+			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-tools:%s", constants.DEFAULT_FABRIC_VERSION)),
 			yaml.ScalarNode("tty"),
 			yaml.ScalarNode("true"),
 			yaml.ScalarNode("stdin_open"),

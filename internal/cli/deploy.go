@@ -1,9 +1,9 @@
-package cmd
+package cli
 
 import (
 	"fmt"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/fabric"
 	"github.com/spf13/cobra"
 )
@@ -14,7 +14,7 @@ var deployCmd = &cobra.Command{
 	Long:  `Deploy the network starting the containers, generating the identities, generating the genesis block, creating the channels, and joining orderers and peers.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 
-		var config *pkg.Config
+		var config *config.Config
 		var err error
 
 		if config, err = LoadConfig(); err != nil {

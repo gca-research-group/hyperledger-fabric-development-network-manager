@@ -3,7 +3,8 @@ package docker
 import (
 	"fmt"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
 )
 
 type PeerBaseNode struct {
@@ -15,7 +16,7 @@ func NewPeerBase(network string) *PeerBaseNode {
 		yaml.ScalarNode("peer.base"),
 		yaml.MappingNode(
 			yaml.ScalarNode("image"),
-			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-peer:%s", FABRIC_VERSION)),
+			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-peer:%s", constants.DEFAULT_FABRIC_VERSION)),
 			yaml.ScalarNode("environment"),
 			yaml.SequenceNode(
 				yaml.ScalarNode("CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock"),

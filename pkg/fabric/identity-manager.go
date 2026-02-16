@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/file"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/file"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
 
 const (
@@ -15,11 +15,11 @@ const (
 )
 
 type IdentityManager struct {
-	config   pkg.Config
+	config   config.Config
 	executor Executor
 }
 
-func NewIdentityManager(config pkg.Config, executor Executor) *IdentityManager {
+func NewIdentityManager(config config.Config, executor Executor) *IdentityManager {
 	return &IdentityManager{
 		config:   config,
 		executor: executor,
@@ -30,7 +30,7 @@ func (im *IdentityManager) GenerateAll() error {
 	for _, organization := range im.config.Organizations {
 		steps := []struct {
 			name string
-			fn   func(organization pkg.Organization) error
+			fn   func(organization config.Organization) error
 		}{
 			{"Enroll CA Admin", im.enrollCAadmin},
 			{"Generate Config YAML", im.generateConfigYaml},
@@ -81,7 +81,7 @@ func getOrgBaseDir(domain string, orgType string) string {
 	return fmt.Sprintf("%s/%s", ordererOrgPath, domain)
 }
 
-func (im *IdentityManager) enrollCAadmin(organization pkg.Organization) error {
+func (im *IdentityManager) enrollCAadmin(organization config.Organization) error {
 	tls := "/etc/hyperledger/fabric-ca-server/ca-cert.pem"
 	u := "https://admin:adminpw@localhost:7054"
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
@@ -101,7 +101,7 @@ func (im *IdentityManager) enrollCAadmin(organization pkg.Organization) error {
 	return nil
 }
 
-func (im *IdentityManager) generateConfigYaml(organization pkg.Organization) error {
+func (im *IdentityManager) generateConfigYaml(organization config.Organization) error {
 	template := `
 NodeOUs:
   Enable: true
@@ -131,7 +131,7 @@ NodeOUs:
 	return nil
 }
 
-func (im *IdentityManager) copyCACertificates(organization pkg.Organization, orgType string) error {
+func (im *IdentityManager) copyCACertificates(organization config.Organization, orgType string) error {
 	basePath := getOrgBaseDir(organization.Domain, orgType)
 	scripts := []string{
 		fmt.Sprintf("mkdir -p '%[1]s/msp/tlscacerts' && cp '%[2]s' '%[1]s/msp/tlscacerts/%[3]s-ca.crt'", basePath, caTlsCertPath, organization.Domain),
@@ -148,15 +148,15 @@ func (im *IdentityManager) copyCACertificates(organization pkg.Organization, org
 	return nil
 }
 
-func (im *IdentityManager) copyPeersCACertificates(organization pkg.Organization) error {
+func (im *IdentityManager) copyPeersCACertificates(organization config.Organization) error {
 	return im.copyCACertificates(organization, "peer")
 }
 
-func (im *IdentityManager) copyOrderersCACertificates(organization pkg.Organization) error {
+func (im *IdentityManager) copyOrderersCACertificates(organization config.Organization) error {
 	return im.copyCACertificates(organization, "orderer")
 }
 
-func (im *IdentityManager) registerPeers(organization pkg.Organization) error {
+func (im *IdentityManager) registerPeers(organization config.Organization) error {
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
 
 	for _, peer := range organization.Peers {
@@ -180,7 +180,7 @@ func (im *IdentityManager) registerPeers(organization pkg.Organization) error {
 	return nil
 }
 
-func (im *IdentityManager) registerOrderes(organization pkg.Organization) error {
+func (im *IdentityManager) registerOrderes(organization config.Organization) error {
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
 
 	for _, orderer := range organization.Orderers {
@@ -203,7 +203,7 @@ func (im *IdentityManager) registerOrderes(organization pkg.Organization) error 
 	return nil
 }
 
-func (im *IdentityManager) registerUser(organization pkg.Organization) error {
+func (im *IdentityManager) registerUser(organization config.Organization) error {
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
 
 	args := []string{
@@ -223,7 +223,7 @@ func (im *IdentityManager) registerUser(organization pkg.Organization) error {
 	return nil
 }
 
-func (im *IdentityManager) registerOrgAdmin(organization pkg.Organization) error {
+func (im *IdentityManager) registerOrgAdmin(organization config.Organization) error {
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
 
 	args := []string{
@@ -243,7 +243,7 @@ func (im *IdentityManager) registerOrgAdmin(organization pkg.Organization) error
 	return nil
 }
 
-func (im *IdentityManager) generateMSP(organization pkg.Organization, origin, destination string, id string) error {
+func (im *IdentityManager) generateMSP(organization config.Organization, origin, destination string, id string) error {
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
 	u := fmt.Sprintf("https://%[1]s:%[1]spw@localhost:7054", id)
 
@@ -283,7 +283,7 @@ func (im *IdentityManager) generateMSP(organization pkg.Organization, origin, de
 	return nil
 }
 
-func (im *IdentityManager) generatePeersMSP(organization pkg.Organization) error {
+func (im *IdentityManager) generatePeersMSP(organization config.Organization) error {
 	for _, peer := range organization.Peers {
 		id := peer.Subdomain
 		origin := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s.%[2]s/msp", "/var/hyperledger", organization.Domain, id)
@@ -297,7 +297,7 @@ func (im *IdentityManager) generatePeersMSP(organization pkg.Organization) error
 	return nil
 }
 
-func (im *IdentityManager) generatePeerUserMSP(organization pkg.Organization) error {
+func (im *IdentityManager) generatePeerUserMSP(organization config.Organization) error {
 	id := "user1"
 	origin := fmt.Sprintf("%[1]s/%[2]s/peers/users/User1@%[2]s/msp", "/var/hyperledger", organization.Domain)
 	destination := fmt.Sprintf("%[1]s/%[2]s/users/User1@%[2]s/msp", peerOrgPath, organization.Domain)
@@ -309,7 +309,7 @@ func (im *IdentityManager) generatePeerUserMSP(organization pkg.Organization) er
 	return nil
 }
 
-func (im *IdentityManager) generatePeerOrgAdminMSP(organization pkg.Organization) error {
+func (im *IdentityManager) generatePeerOrgAdminMSP(organization config.Organization) error {
 	id := "orgadmin"
 	origin := fmt.Sprintf("%[1]s/%[2]s/peers/users/Admin@%[2]s/msp", "/var/hyperledger", organization.Domain)
 	destination := fmt.Sprintf("%[1]s/%[2]s/users/Admin@%[2]s/msp", peerOrgPath, organization.Domain)
@@ -321,7 +321,7 @@ func (im *IdentityManager) generatePeerOrgAdminMSP(organization pkg.Organization
 	return nil
 }
 
-func (im *IdentityManager) generateOrderersMSP(organization pkg.Organization) error {
+func (im *IdentityManager) generateOrderersMSP(organization config.Organization) error {
 	for _, orderer := range organization.Orderers {
 		id := strings.ToLower(orderer.Subdomain)
 		origin := fmt.Sprintf("%[1]s/%[2]s/orderers/%[3]s.%[2]s/msp", "/var/hyperledger", organization.Domain, id)
@@ -335,7 +335,7 @@ func (im *IdentityManager) generateOrderersMSP(organization pkg.Organization) er
 	return nil
 }
 
-func (im *IdentityManager) generateOrdererUserMSP(organization pkg.Organization) error {
+func (im *IdentityManager) generateOrdererUserMSP(organization config.Organization) error {
 	id := "user1"
 	origin := fmt.Sprintf("%[1]s/%[2]s/orderers/users/User1@%[2]s/msp", "/var/hyperledger", organization.Domain)
 	destination := fmt.Sprintf("%[1]s/%[2]s/users/User1@%[2]s/msp", ordererOrgPath, organization.Domain)
@@ -347,7 +347,7 @@ func (im *IdentityManager) generateOrdererUserMSP(organization pkg.Organization)
 	return nil
 }
 
-func (im *IdentityManager) generateOrdererOrgAdminMSP(organization pkg.Organization) error {
+func (im *IdentityManager) generateOrdererOrgAdminMSP(organization config.Organization) error {
 	id := "orgadmin"
 	origin := fmt.Sprintf("%[1]s/%[2]s/orderers/users/Admin@%[2]s/msp", "/var/hyperledger", organization.Domain)
 	destination := fmt.Sprintf("%[1]s/%[2]s/users/Admin@%[2]s/msp", ordererOrgPath, organization.Domain)
@@ -359,7 +359,7 @@ func (im *IdentityManager) generateOrdererOrgAdminMSP(organization pkg.Organizat
 	return nil
 }
 
-func (im *IdentityManager) generateTLS(organization pkg.Organization, origin string, destination string, id string) error {
+func (im *IdentityManager) generateTLS(organization config.Organization, origin string, destination string, id string) error {
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
 	u := fmt.Sprintf("https://%[1]s:%[1]spw@localhost:7054", id)
 
@@ -395,7 +395,7 @@ func (im *IdentityManager) generateTLS(organization pkg.Organization, origin str
 	return nil
 }
 
-func (im *IdentityManager) generatePeerTlsCertificates(organization pkg.Organization) error {
+func (im *IdentityManager) generatePeerTlsCertificates(organization config.Organization) error {
 	for _, peer := range organization.Peers {
 		id := peer.Subdomain
 		origin := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s.%[2]s/tls", "/var/hyperledger", organization.Domain, id)
@@ -409,7 +409,7 @@ func (im *IdentityManager) generatePeerTlsCertificates(organization pkg.Organiza
 	return nil
 }
 
-func (im *IdentityManager) generateOrdererTlsCertificates(organization pkg.Organization) error {
+func (im *IdentityManager) generateOrdererTlsCertificates(organization config.Organization) error {
 	for _, orderer := range organization.Orderers {
 		id := strings.ToLower(orderer.Subdomain)
 

@@ -3,8 +3,9 @@ package docker
 import (
 	"fmt"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
 
 type OrdererNode struct {
@@ -12,7 +13,7 @@ type OrdererNode struct {
 	*yaml.Node
 }
 
-func NewOrderer(hostname string, domain string, organizations []pkg.Organization) *OrdererNode {
+func NewOrderer(hostname string, domain string, organizations []config.Organization) *OrdererNode {
 	ordererDomain := fmt.Sprintf("%s.%s", hostname, domain)
 
 	ordererHostDir := fmt.Sprintf("./%[1]s/certificates/organizations/ordererOrganizations/%[1]s/orderers/%[2]s", domain, ordererDomain)
@@ -29,7 +30,7 @@ func NewOrderer(hostname string, domain string, organizations []pkg.Organization
 		yaml.ScalarNode(ordererDomain),
 		yaml.MappingNode(
 			yaml.ScalarNode("image"),
-			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-orderer:%s", FABRIC_VERSION)),
+			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-orderer:%s", constants.DEFAULT_FABRIC_VERSION)),
 			yaml.ScalarNode("container_name"),
 			yaml.ScalarNode(ordererDomain),
 			yaml.ScalarNode("working_dir"),

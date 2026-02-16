@@ -3,8 +3,8 @@ package configtx
 import (
 	"fmt"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
 
 type OrdererNode struct {
@@ -69,7 +69,7 @@ func (on *OrdererNode) WithBatchConfig() *OrdererNode {
 	return on
 }
 
-func (on *OrdererNode) WithRaftConfig(organizations []pkg.Organization) *OrdererNode {
+func (on *OrdererNode) WithRaftConfig(organizations []config.Organization) *OrdererNode {
 
 	var nodes []*yaml.Node
 

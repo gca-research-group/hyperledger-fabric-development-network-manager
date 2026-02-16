@@ -3,8 +3,8 @@ package docker
 import (
 	"fmt"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
 
 type CertificateAuthorityNode struct {
@@ -12,7 +12,7 @@ type CertificateAuthorityNode struct {
 	*yaml.Node
 }
 
-func NewCertificateAuthority(organization pkg.Organization) *CertificateAuthorityNode {
+func NewCertificateAuthority(organization config.Organization) *CertificateAuthorityNode {
 
 	host := fmt.Sprintf("ca.%s", organization.Domain)
 

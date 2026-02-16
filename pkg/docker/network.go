@@ -1,6 +1,6 @@
 package docker
 
-import "github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/yaml"
+import "github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
 
 func NewBridgeNetwork(name string) *yaml.Node {
 	return yaml.MappingNode(
