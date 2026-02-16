@@ -25,7 +25,7 @@ var downCmd = &cobra.Command{
 		network := config.Network
 
 		if network == "" {
-			network = constants.DEFAULT_NETORK
+			network = constants.DEFAULT_NETWORK
 		}
 
 		if err = docker.RemoveContainersInNetwork(network); err != nil {

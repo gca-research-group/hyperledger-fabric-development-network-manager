@@ -14,7 +14,7 @@ type Renderer struct {
 
 func NewRenderer(config *config.Config) *Renderer {
 	if config.Network == "" {
-		config.Network = constants.DEFAULT_NETORK
+		config.Network = constants.DEFAULT_NETWORK
 	}
 
 	return &Renderer{
