@@ -4,9 +4,6 @@ import (
 	"fmt"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/command"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/configtx"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/docker"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/directory"
 )
 
@@ -14,10 +11,7 @@ type Fabric struct {
 	config  pkg.Config
 	network string
 
-	configTxRenderer *configtx.Renderer
-	dockerRenderer   *docker.Renderer
-
-	executor command.Executor
+	executor Executor
 
 	identityManager *IdentityManager
 }
@@ -27,39 +21,22 @@ func (f *Fabric) CleanUp() error {
 	return directory.RemoveFolderIfExists(f.config.Output)
 }
 
-func (f *Fabric) RenderConfigFiles() error {
-	if err := f.configTxRenderer.Render(); err != nil {
-		return err
-	}
-
-	if err := f.dockerRenderer.Render(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func NewFabric(config pkg.Config, executor command.Executor) (*Fabric, error) {
+func NewFabric(config pkg.Config, executor Executor) (*Fabric, error) {
 	if len(config.Organizations) == 0 {
 		return nil, fmt.Errorf("configuration must contain at least one organization")
 	}
 
 	if executor == nil {
-		executor = &command.DefaultExecutor{}
+		executor = &DefaultExecutor{}
 	}
 
 	network := fmt.Sprintf("%s/network.yml", config.Output)
-
-	configTxRenderer := configtx.NewRenderer(config)
-	dockerRenderer := docker.NewRenderer(config)
 
 	identityManager := NewIdentityManager(config, executor)
 
 	return &Fabric{
 		config,
 		network,
-		configTxRenderer,
-		dockerRenderer,
 		executor,
 		identityManager,
 	}, nil
@@ -70,11 +47,6 @@ func (f *Fabric) DeployNetwork() error {
 		name string
 		fn   func() error
 	}{
-		{"Check Docker", f.IsDockerRunning},
-		{"Clean Workspace", f.CleanUp},
-		{"Render Config Files", f.RenderConfigFiles},
-		{"Remove Old Containers", f.RemoveContainers},
-
 		{"Start Certificate Authorities", f.RunCAContainers},
 		{"Generate Certificates", f.identityManager.GenerateAll},
 

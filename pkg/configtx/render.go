@@ -7,10 +7,10 @@ import (
 )
 
 type Renderer struct {
-	config pkg.Config
+	config *pkg.Config
 }
 
-func NewRenderer(config pkg.Config) *Renderer {
+func NewRenderer(config *pkg.Config) *Renderer {
 	return &Renderer{config}
 }
 

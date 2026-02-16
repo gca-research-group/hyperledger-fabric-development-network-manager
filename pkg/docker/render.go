@@ -9,12 +9,12 @@ import (
 )
 
 type Renderer struct {
-	config pkg.Config
+	config *pkg.Config
 }
 
-func NewRenderer(config pkg.Config) *Renderer {
+func NewRenderer(config *pkg.Config) *Renderer {
 	if config.Network == "" {
-		config.Network = "hyperledger_fabric_network"
+		config.Network = constants.DEFAULT_NETORK
 	}
 
 	return &Renderer{

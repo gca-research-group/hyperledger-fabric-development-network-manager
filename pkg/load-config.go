@@ -3,6 +3,7 @@ package pkg
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,7 +15,7 @@ import (
 func LoadConfigFromPath(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error when loading the config file: %v\n", err)
 	}
 
 	var config Config
@@ -35,7 +36,7 @@ func LoadConfigFromPath(path string) (*Config, error) {
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error when loading the config file: %v\n", err)
 	}
 
 	return &config, nil

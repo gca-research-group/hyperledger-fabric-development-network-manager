@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/command"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/internal/file"
 )
 
@@ -17,10 +16,10 @@ const (
 
 type IdentityManager struct {
 	config   pkg.Config
-	executor command.Executor
+	executor Executor
 }
 
-func NewIdentityManager(config pkg.Config, executor command.Executor) *IdentityManager {
+func NewIdentityManager(config pkg.Config, executor Executor) *IdentityManager {
 	return &IdentityManager{
 		config:   config,
 		executor: executor,

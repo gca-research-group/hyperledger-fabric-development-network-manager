@@ -40,16 +40,22 @@ func (f *Fabric) GenerateGenesisBlock() error {
 func (f *Fabric) FetchGenesisBlock() error {
 	var orderer pkg.Orderer
 	var ordererDomain string
+	var ordererPort int
 
 	for _, organization := range f.config.Organizations {
 		if len(organization.Orderers) > 0 {
 			orderer = organization.Orderers[0]
 			ordererDomain = organization.Domain
+			ordererPort = orderer.Port
+
+			if ordererPort == 0 {
+				ordererPort = 7050
+			}
 			break
 		}
 	}
 
-	ordererAddress := fmt.Sprintf("%s.%s:%d", orderer.Subdomain, ordererDomain, orderer.Port)
+	ordererAddress := fmt.Sprintf("%s.%s:%d", orderer.Subdomain, ordererDomain, ordererPort)
 	caFile := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/ca.crt", constants.DEFAULT_FABRIC_DIRECTORY, ordererDomain, orderer.Subdomain)
 
 	for _, organization := range f.config.Organizations {
