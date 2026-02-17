@@ -66,11 +66,22 @@ func (f *Fabric) JoinPeersToTheChannels() error {
 					"-e", fmt.Sprintf("CORE_PEER_TLS_CERT_FILE=%s", tlsCertFile),
 					"-e", fmt.Sprintf("CORE_PEER_TLS_KEY_FILE=%s", tlsKeyFile),
 					"-e", fmt.Sprintf("CORE_PEER_MSPCONFIGPATH=%s", mspConfigPath),
-					containerName, "peer", "channel", "join", "-b", block,
+					containerName,
 				}
 
-				if err := f.executor.ExecCommand("docker", args...); err != nil {
-					return fmt.Errorf("Error when joining the peer %s of the organization %s to the channel %s: %v", peer.Subdomain, organization.Name, profile.Name, err)
+				output, err := f.executor.OutputCommand("docker", append(args, "peer", "channel", "list")...)
+
+				if err != nil {
+					return fmt.Errorf("Error when listing the channels that the peer %s of the organization %s has joined to the channel %s: %v\n", peer.Subdomain, organization.Name, profile.Name, err)
+				}
+
+				if strings.Contains(string(output), strings.ToLower(profile.Name)) {
+					fmt.Printf("Skipping: the peer %s of the organization %s has already joined to the channel %s\n", peer.Subdomain, organization.Name, profile.Name)
+					continue
+				}
+
+				if err := f.executor.ExecCommand("docker", append(args, "peer", "channel", "join", "-b", block)...); err != nil {
+					return fmt.Errorf("Error when joining the peer %s of the organization %s to the channel %s: %v\n", peer.Subdomain, organization.Name, profile.Name, err)
 				}
 			}
 		}

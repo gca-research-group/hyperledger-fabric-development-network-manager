@@ -37,7 +37,7 @@ func (im *IdentityManager) GenerateAll() error {
 			{"Copy Peer CA Certs", im.copyPeersCACertificates},
 			{"Copy Orderer CA Certs", im.copyOrderersCACertificates},
 			{"Register Peers", im.registerPeers},
-			{"Register Orderers", im.registerOrderes},
+			{"Register Orderers", im.registerOrderers},
 			{"Register User", im.registerUser},
 			{"Register Org Admin", im.registerOrgAdmin},
 
@@ -133,11 +133,31 @@ NodeOUs:
 
 func (im *IdentityManager) copyCACertificates(organization config.Organization, orgType string) error {
 	basePath := getOrgBaseDir(organization.Domain, orgType)
+	caName := fmt.Sprintf("ca.%s", organization.Domain)
+
+	tlscacerts := fmt.Sprintf("%[1]s/msp/tlscacerts", basePath)
+	tlsca := fmt.Sprintf("%[1]s/tlsca", basePath)
+	ca := fmt.Sprintf("%[1]s/ca", basePath)
+	cacerts := fmt.Sprintf("%[1]s/msp/cacerts", basePath)
+
+	for _, dir := range []string{tlscacerts, tlsca, ca, cacerts} {
+		var value bool
+		var err error
+
+		if value, err = im.skipIfExists(caName, dir); err != nil {
+			return err
+		}
+
+		if value == true {
+			return nil
+		}
+	}
+
 	scripts := []string{
-		fmt.Sprintf("mkdir -p '%[1]s/msp/tlscacerts' && cp '%[2]s' '%[1]s/msp/tlscacerts/%[3]s-ca.crt'", basePath, caTlsCertPath, organization.Domain),
-		fmt.Sprintf("mkdir -p '%[1]s/tlsca' && cp '%[2]s' '%[1]s/tlsca/tlsca.%[3]s-cert.pem'", basePath, caTlsCertPath, organization.Domain),
-		fmt.Sprintf("mkdir -p '%[1]s/ca' && cp '%[2]s' '%[1]s/ca/ca.%[3]s-cert.pem'", basePath, caTlsCertPath, organization.Domain),
-		fmt.Sprintf("mkdir -p '%[1]s/msp/cacerts' && cp '%[2]s' '%[1]s/msp/cacerts/ca.%[3]s-cert.pem'", basePath, caTlsCertPath, organization.Domain),
+		fmt.Sprintf("mkdir -p '%[1]s' && cp '%[2]s' '%[1]s/%[3]s-ca.crt'", tlscacerts, caTlsCertPath, organization.Domain),
+		fmt.Sprintf("mkdir -p '%[1]s' && cp '%[2]s' '%[1]s/tlsca.%[3]s-cert.pem'", tlsca, caTlsCertPath, organization.Domain),
+		fmt.Sprintf("mkdir -p '%[1]s' && cp '%[2]s' '%[1]s/ca.%[3]s-cert.pem'", ca, caTlsCertPath, organization.Domain),
+		fmt.Sprintf("mkdir -p '%[1]s' && cp '%[2]s' '%[1]s/ca.%[3]s-cert.pem'", cacerts, caTlsCertPath, organization.Domain),
 	}
 
 	for _, script := range scripts {
@@ -156,11 +176,32 @@ func (im *IdentityManager) copyOrderersCACertificates(organization config.Organi
 	return im.copyCACertificates(organization, "orderer")
 }
 
+func (im *IdentityManager) isRegistered(caName string, id string) (bool, error) {
+	args := []string{
+		"exec", caName,
+		"fabric-ca-client", "identity", "list",
+		"--caname", caName,
+		"--tls.certfiles", caTlsCertPath,
+	}
+
+	output, err := im.executor.OutputCommand("docker", args...)
+
+	if err != nil {
+		return false, err
+	}
+
+	return strings.Contains(string(output), id), nil
+}
+
 func (im *IdentityManager) registerPeers(organization config.Organization) error {
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
 
 	for _, peer := range organization.Peers {
 		id := peer.Subdomain
+
+		if alreadyExists, _ := im.isRegistered(caName, id); alreadyExists {
+			continue
+		}
 
 		args := []string{
 			"exec", caName,
@@ -180,11 +221,16 @@ func (im *IdentityManager) registerPeers(organization config.Organization) error
 	return nil
 }
 
-func (im *IdentityManager) registerOrderes(organization config.Organization) error {
+func (im *IdentityManager) registerOrderers(organization config.Organization) error {
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
 
 	for _, orderer := range organization.Orderers {
 		id := strings.ToLower(orderer.Subdomain)
+
+		if alreadyExists, _ := im.isRegistered(caName, id); alreadyExists {
+			continue
+		}
+
 		args := []string{
 			"exec", caName,
 			"fabric-ca-client", "register",
@@ -205,13 +251,18 @@ func (im *IdentityManager) registerOrderes(organization config.Organization) err
 
 func (im *IdentityManager) registerUser(organization config.Organization) error {
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
+	id := "user1"
+
+	if alreadyExists, _ := im.isRegistered(caName, id); alreadyExists {
+		return nil
+	}
 
 	args := []string{
 		"exec", caName,
 		"fabric-ca-client", "register",
 		"--caname", caName,
-		"--id.name", "user1",
-		"--id.secret", "user1pw",
+		"--id.name", id,
+		"--id.secret", id + "pw",
 		"--id.type", "client",
 		"--tls.certfiles", caTlsCertPath,
 	}
@@ -225,13 +276,18 @@ func (im *IdentityManager) registerUser(organization config.Organization) error 
 
 func (im *IdentityManager) registerOrgAdmin(organization config.Organization) error {
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
+	id := "orgadmin"
+
+	if alreadyExists, _ := im.isRegistered(caName, id); alreadyExists {
+		return nil
+	}
 
 	args := []string{
 		"exec", caName,
 		"fabric-ca-client", "register",
 		"--caname", caName,
-		"--id.name", "orgadmin",
-		"--id.secret", "orgadminpw",
+		"--id.name", id,
+		"--id.secret", id + "pw",
 		"--id.type", "admin",
 		"--tls.certfiles", caTlsCertPath,
 	}
@@ -246,6 +302,21 @@ func (im *IdentityManager) registerOrgAdmin(organization config.Organization) er
 func (im *IdentityManager) generateMSP(organization config.Organization, origin, destination string, id string) error {
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
 	u := fmt.Sprintf("https://%[1]s:%[1]spw@localhost:7054", id)
+
+	for _, dir := range []string{origin, destination} {
+		var value bool
+		var err error
+
+		value, err = im.skipIfExists(caName, dir)
+
+		if err != nil {
+			return err
+		}
+
+		if value == true {
+			return nil
+		}
+	}
 
 	args := []string{
 		"exec", caName,
@@ -363,6 +434,19 @@ func (im *IdentityManager) generateTLS(organization config.Organization, origin 
 	caName := fmt.Sprintf("ca.%s", organization.Domain)
 	u := fmt.Sprintf("https://%[1]s:%[1]spw@localhost:7054", id)
 
+	for _, dir := range []string{origin, destination} {
+		var value bool
+		var err error
+
+		if value, err = im.skipIfExists(caName, dir); err != nil {
+			return err
+		}
+
+		if value == true {
+			return nil
+		}
+	}
+
 	args := []string{
 		"exec", caName,
 		"fabric-ca-client", "enroll",
@@ -413,7 +497,7 @@ func (im *IdentityManager) generateOrdererTlsCertificates(organization config.Or
 	for _, orderer := range organization.Orderers {
 		id := strings.ToLower(orderer.Subdomain)
 
-		origin := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s.%[2]s/tls", "/var/hyperledger", organization.Domain, id)
+		origin := fmt.Sprintf("%[1]s/%[2]s/orderers/%[3]s.%[2]s/tls", "/var/hyperledger", organization.Domain, id)
 		destination := fmt.Sprintf("%[1]s/%[2]s/orderers/%[3]s.%[2]s/tls", ordererOrgPath, organization.Domain, id)
 
 		if err := im.generateTLS(organization, origin, destination, id); err != nil {
@@ -452,4 +536,22 @@ func (im *IdentityManager) shareTlsCertificates() error {
 	}
 
 	return nil
+}
+
+func (im *IdentityManager) skipIfExists(caName string, item string) (bool, error) {
+	args := []string{
+		"exec", caName, "sh", "-c", fmt.Sprintf("test -d %s && echo 1 || echo 0", item),
+	}
+	output, err := im.executor.OutputCommand("docker", args...)
+
+	if err != nil {
+		return false, err
+	}
+
+	if strings.TrimSpace(string(output)) == "1" {
+		fmt.Printf("Skipping: Directory already exists\n")
+		return true, nil
+	}
+
+	return false, nil
 }
