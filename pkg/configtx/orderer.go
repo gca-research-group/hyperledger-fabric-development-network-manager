@@ -3,6 +3,7 @@ package configtx
 import (
 	"fmt"
 
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
@@ -59,11 +60,11 @@ func (on *OrdererNode) WithOrganizations(nodes []*yaml.Node) *OrdererNode {
 }
 
 func (on *OrdererNode) WithBatchConfig() *OrdererNode {
-	on.GetOrCreateValue(BatchTimeoutKey, yaml.ScalarNode("2s"))
+	on.GetOrCreateValue(BatchTimeoutKey, yaml.ScalarNode(constants.DEFAULT_BATCH_TIMEOUT))
 	on.GetOrCreateValue(BatchSizeKey, yaml.MappingNode(
-		yaml.ScalarNode(MaxMessageCountKey), yaml.ScalarNode("10"),
-		yaml.ScalarNode(AbsoluteMaxBytesKey), yaml.ScalarNode("99 MB"),
-		yaml.ScalarNode(PreferredMaxBytesKey), yaml.ScalarNode("512 KB"),
+		yaml.ScalarNode(MaxMessageCountKey), yaml.ScalarNode(constants.DEFAULT_BATCH_SIZE_MAX_MESSAGE_COUNT),
+		yaml.ScalarNode(AbsoluteMaxBytesKey), yaml.ScalarNode(constants.DEFAULT_BATCH_SIZE_ABSOLUTE_MAX_BYTES),
+		yaml.ScalarNode(PreferredMaxBytesKey), yaml.ScalarNode(constants.DEFAULT_BATCH_SIZE_PREFERRED_MAX_BYTES),
 	))
 
 	return on
