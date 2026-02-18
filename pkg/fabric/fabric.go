@@ -42,6 +42,26 @@ func NewFabric(config config.Config, executor Executor) (*Fabric, error) {
 	}, nil
 }
 
+func (f *Fabric) Start() error {
+	steps := []struct {
+		name string
+		fn   func() error
+	}{
+		{"Start Certificate Authorities", f.RunCAContainers},
+		{"Start Orderers", f.RunOrdererContainers},
+		{"Start Peers", f.RunPeerContainers},
+	}
+
+	for _, step := range steps {
+		fmt.Printf(">>> Step: %s\n", step.name)
+		if err := step.fn(); err != nil {
+			return fmt.Errorf("failed at step %s: %w", step.name, err)
+		}
+	}
+
+	return nil
+}
+
 func (f *Fabric) DeployNetwork() error {
 	steps := []struct {
 		name string
@@ -65,5 +85,6 @@ func (f *Fabric) DeployNetwork() error {
 			return fmt.Errorf("failed at step %s: %w", step.name, err)
 		}
 	}
+
 	return nil
 }

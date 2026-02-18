@@ -3,37 +3,28 @@ package docker
 import (
 	"fmt"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
 
 type PeerNode struct {
 	*yaml.Node
+	peer   config.Peer
+	domain string
 }
 
 func NewPeer(
 	mspID string,
-	peerDomain string,
+	peer config.Peer,
 	currentOrganization config.Organization,
 	corePeerGossipBootstrap string,
 	network string,
 	organizations []config.Organization,
 ) *PeerNode {
 
-	peerHostDir := fmt.Sprintf("./%[1]s/certificates/organizations/peerOrganizations/%[1]s/peers/%[2]s", currentOrganization.Domain, peerDomain)
-	peerContainerDir := "/etc/hyperledger/fabric"
-
-	volumes := []*yaml.Node{
-		yaml.ScalarNode(fmt.Sprintf("%s/msp:%s/msp", peerHostDir, peerContainerDir)),
-		yaml.ScalarNode(fmt.Sprintf("%s/tls:%s/tls", peerHostDir, peerContainerDir)),
-	}
-
-	version := currentOrganization.Version.Peer
-
-	if version == "" {
-		version = constants.DEFAULT_FABRIC_VERSION
-	}
+	domain := currentOrganization.Domain
+	peerDomain := resolvePeerDomain(peer.Subdomain, domain)
+	peerPort := resolvePeerPort(peer.Port)
 
 	node := yaml.MappingNode(
 		yaml.ScalarNode(peerDomain),
@@ -41,7 +32,7 @@ func NewPeer(
 			yaml.ScalarNode("container_name"),
 			yaml.ScalarNode(peerDomain),
 			yaml.ScalarNode("image"),
-			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-peer:%s", version)),
+			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-peer:%s", resolvePeerVersion(currentOrganization.Version.Peer))),
 			yaml.ScalarNode("extends"),
 			yaml.MappingNode(
 				yaml.ScalarNode("file"),
@@ -53,38 +44,54 @@ func NewPeer(
 			yaml.SequenceNode(
 				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_LOCALMSPID=%s", mspID)),
 				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_ID=%s", peerDomain)),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_ADDRESS=%s:7051", peerDomain)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_ADDRESS=%s:%d", peerDomain, peerPort)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_LISTENADDRESS=0.0.0.0:%d", peerPort)),
 				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_GOSSIP_BOOTSTRAP=%s", corePeerGossipBootstrap)),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_GOSSIP_EXTERNALENDPOINT=%s:7051", peerDomain)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_GOSSIP_EXTERNALENDPOINT=%s:%d", peerDomain, peerPort)),
 				yaml.ScalarNode("CORE_LEDGER_STATE_STATEDATABASE=CouchDB"),
 				yaml.ScalarNode(fmt.Sprintf("CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb.%s:5984", peerDomain)),
 				yaml.ScalarNode("CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin"),
 				yaml.ScalarNode("CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=adminpw"),
 			),
-			yaml.ScalarNode("volumes"),
-			yaml.SequenceNode(volumes...),
-		),
-		yaml.ScalarNode(fmt.Sprintf("couchdb.%s", peerDomain)),
-		yaml.MappingNode(
-			yaml.ScalarNode("container_name"),
-			yaml.ScalarNode(fmt.Sprintf("couchdb.%s", peerDomain)),
-			yaml.ScalarNode("image"),
-			yaml.ScalarNode("couchdb:latest"),
-			yaml.ScalarNode("environment"),
-			yaml.MappingNode(
-				yaml.ScalarNode("COUCHDB_USER"),
-				yaml.ScalarNode("admin"),
-				yaml.ScalarNode("COUCHDB_PASSWORD"),
-				yaml.ScalarNode("adminpw"),
-			),
-			yaml.ScalarNode("networks"),
-			yaml.SequenceNode(yaml.ScalarNode(network)),
 		),
 	)
 
-	return &PeerNode{node}
+	return &PeerNode{node, peer, domain}
 }
 
-func (np *PeerNode) Build() *yaml.Node {
-	return np.Node
+func (pn *PeerNode) ExposePort() *PeerNode {
+	if pn.peer.ExposePort == 0 {
+		return pn
+	}
+
+	domain := pn.domain
+	peerDomain := resolvePeerDomain(pn.peer.Subdomain, domain)
+
+	node := pn.GetValue(peerDomain)
+	node.GetOrCreateValue("ports", yaml.SequenceNode(yaml.ScalarNode(fmt.Sprintf("%d:%d", pn.peer.ExposePort, resolvePeerPort(pn.peer.Port)))))
+
+	return pn
+}
+
+func (pn *PeerNode) WithVolumes() *PeerNode {
+	domain := pn.domain
+	peerDomain := resolvePeerDomain(pn.peer.Subdomain, domain)
+
+	peerHostDir := fmt.Sprintf("./%[1]s/certificate-authority/organizations/peerOrganizations/%[1]s/peers/%[2]s", domain, peerDomain)
+	peerContainerDir := "/etc/hyperledger/fabric"
+
+	volumes := []*yaml.Node{
+		yaml.ScalarNode(fmt.Sprintf("%s/msp:%s/msp", peerHostDir, peerContainerDir)),
+		yaml.ScalarNode(fmt.Sprintf("%s/tls:%s/tls", peerHostDir, peerContainerDir)),
+		yaml.ScalarNode(fmt.Sprintf("./%s/peers/%s/peer:/var/hyperledger/production", domain, pn.peer.Subdomain)),
+	}
+
+	node := pn.GetValue(peerDomain)
+	node.GetOrCreateValue("volumes", yaml.SequenceNode(volumes...))
+
+	return pn
+}
+
+func (pn *PeerNode) Build() *yaml.Node {
+	return pn.Node
 }

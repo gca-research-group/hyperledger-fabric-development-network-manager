@@ -31,13 +31,17 @@ func (r *Renderer) RenderNetwork(networkName string, path string) error {
 
 func (r *Renderer) RenderOrderers(organization config.Organization) error {
 	for _, orderer := range organization.Orderers {
-		node := NewOrderer(orderer.Subdomain, organization, r.config.Organizations).
-			WithNetworks([]*yaml.Node{yaml.ScalarNode(r.config.Network)})
+		storage := fmt.Sprintf("%[1]s/%[2]s/orderers/%[3]s", r.config.Output, organization.Domain, orderer.Subdomain)
+
+		node := NewOrderer(orderer, organization, r.config.Organizations).
+			WithNetworks([]*yaml.Node{yaml.ScalarNode(r.config.Network)}).
+			WithVolumes().
+			ExposePort()
 
 		err := yaml.MappingNode(
 			yaml.ScalarNode("services"),
 			node.Build(),
-		).ToFile(fmt.Sprintf("%s/%s/%s.yml", r.config.Output, organization.Domain, orderer.Subdomain))
+		).ToFile(fmt.Sprintf("%s/%s.yml", storage, orderer.Subdomain))
 
 		return err
 	}
@@ -57,11 +61,8 @@ func (r *Renderer) RenderCertificateAuthority(organization config.Organization) 
 	var nodes []*yaml.Node
 
 	node := NewCertificateAuthority(organization).
+		ExposePort().
 		WithNetworks([]*yaml.Node{yaml.ScalarNode(r.config.Network)})
-
-	if organization.CertificateAuthority.ExposePort > 0 {
-		node.WithPort(organization.CertificateAuthority.ExposePort)
-	}
 
 	for _, n := range node.Content {
 		nodes = append(nodes, (*yaml.Node)(n))
@@ -70,23 +71,32 @@ func (r *Renderer) RenderCertificateAuthority(organization config.Organization) 
 	return yaml.MappingNode(
 		yaml.ScalarNode("services"),
 		yaml.MappingNode(nodes...),
-	).ToFile(fmt.Sprintf("%s/%s/certificate-authority.yml", r.config.Output, organization.Domain))
+	).ToFile(fmt.Sprintf("%s/%s/certificate-authority/certificate-authority.yml", r.config.Output, organization.Domain))
 }
 
 func (r *Renderer) RenderPeer(organization config.Organization, corePeerGossipBootstrap string, peer config.Peer) error {
+	storage := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s", r.config.Output, organization.Domain, peer.Subdomain)
+
 	node := NewPeer(
 		fmt.Sprintf("%sMSP", organization.Name),
-		fmt.Sprintf("%s.%s", peer.Subdomain, organization.Domain),
+		peer,
 		organization,
 		corePeerGossipBootstrap,
 		r.config.Network,
 		r.config.Organizations,
-	).Build()
+	).ExposePort().WithVolumes().Build()
+
+	if err := yaml.MappingNode(
+		yaml.ScalarNode("services"),
+		node,
+	).ToFile(fmt.Sprintf("%s/%s.yml", storage, peer.Subdomain)); err != nil {
+		return err
+	}
 
 	return yaml.MappingNode(
 		yaml.ScalarNode("services"),
-		node,
-	).ToFile(fmt.Sprintf("%s/%s/%s.yml", r.config.Output, organization.Domain, peer.Subdomain))
+		NewCouchDB(organization.Domain, peer.Subdomain, r.config.Network).Build(),
+	).ToFile(fmt.Sprintf("%s/couchdb.yml", storage))
 }
 
 func (r *Renderer) RenderPeers(organization config.Organization) error {
@@ -100,13 +110,13 @@ func (r *Renderer) RenderPeers(organization config.Organization) error {
 
 		gossipPeer := organization.Peers[gossipPeerIndex]
 
-		gossipPeerport := gossipPeer.Port
+		gossipPeerPort := gossipPeer.Port
 
-		if gossipPeerport == 0 {
-			gossipPeerport = constants.DEFAULT_PEER_PORT
+		if gossipPeerPort == 0 {
+			gossipPeerPort = constants.DEFAULT_PEER_PORT
 		}
 
-		corePeerGossipBootstrap := fmt.Sprintf("%s.%s:%d", gossipPeer.Subdomain, organization.Domain, gossipPeerport)
+		corePeerGossipBootstrap := fmt.Sprintf("%s.%s:%d", gossipPeer.Subdomain, organization.Domain, gossipPeerPort)
 
 		if err := r.RenderPeer(organization, corePeerGossipBootstrap, peer); err != nil {
 			return fmt.Errorf("Error when rendering the peer %d for the organization %s: %w", i, organization.Name, err)

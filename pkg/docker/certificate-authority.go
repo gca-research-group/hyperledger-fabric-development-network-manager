@@ -3,32 +3,32 @@ package docker
 import (
 	"fmt"
 
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
 
 type CertificateAuthorityNode struct {
-	host string
 	*yaml.Node
+	certificateAuthority config.CertificateAuthority
+	domain               string
 }
 
 func NewCertificateAuthority(organization config.Organization) *CertificateAuthorityNode {
 
-	host := fmt.Sprintf("ca.%s", organization.Domain)
+	domain := organization.Domain
+	certificateAuthority := organization.CertificateAuthority
+	certificateAuthorityDomain := resolveCertificateAuthorityDomain(domain)
 
-	version := organization.Version.CertificateAuthority
-
-	if version == "" {
-		version = "latest"
-	}
+	version := resolveCertificateAuthorityVersion(organization.Version.CertificateAuthority)
 
 	node := yaml.MappingNode(
-		yaml.ScalarNode(host),
+		yaml.ScalarNode(certificateAuthorityDomain),
 		yaml.MappingNode(
 			yaml.ScalarNode("image"),
 			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-ca:%s", version)),
 			yaml.ScalarNode("container_name"),
-			yaml.ScalarNode(host),
+			yaml.ScalarNode(certificateAuthorityDomain),
 			yaml.ScalarNode("tty"),
 			yaml.ScalarNode("true"),
 			yaml.ScalarNode("stdin_open"),
@@ -36,34 +36,41 @@ func NewCertificateAuthority(organization config.Organization) *CertificateAutho
 			yaml.ScalarNode("environment"),
 			yaml.SequenceNode(
 				yaml.ScalarNode("FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server"),
-				yaml.ScalarNode(fmt.Sprintf("FABRIC_CA_SERVER_CA_NAME=%s", host)),
+				yaml.ScalarNode(fmt.Sprintf("FABRIC_CA_SERVER_CA_NAME=%s", certificateAuthorityDomain)),
 				yaml.ScalarNode("FABRIC_CA_SERVER_TLS_ENABLED=true"),
 				yaml.ScalarNode("FABRIC_CA_SERVER_PORT=7054"),
-				yaml.ScalarNode(fmt.Sprintf("FABRIC_CA_SERVER_CSR_CN=%s", host)),
-				yaml.ScalarNode(fmt.Sprintf("FABRIC_CA_SERVER_CSR_HOSTS=localhost,%s", host)),
+				yaml.ScalarNode(fmt.Sprintf("FABRIC_CA_SERVER_CSR_CN=%s", certificateAuthorityDomain)),
+				yaml.ScalarNode(fmt.Sprintf("FABRIC_CA_SERVER_CSR_HOSTS=localhost,%s", certificateAuthorityDomain)),
 			),
 			yaml.ScalarNode("command"),
 			yaml.ScalarNode("sh -c 'fabric-ca-server start -b admin:adminpw'"),
 			yaml.ScalarNode("volumes"),
 			yaml.SequenceNode(
-				yaml.ScalarNode(fmt.Sprintf("./%s/certificates/fabric-ca-server:/etc/hyperledger/fabric-ca-server", organization.Domain)),
-				yaml.ScalarNode(fmt.Sprintf("./%s/certificates/organizations:/etc/hyperledger/organizations", organization.Domain)),
+				yaml.ScalarNode(fmt.Sprintf("./%s/certificate-authority/fabric-ca-server:/etc/hyperledger/fabric-ca-server", domain)),
+				yaml.ScalarNode(fmt.Sprintf("./%s/certificate-authority/organizations:/etc/hyperledger/organizations", domain)),
 			),
 		),
 	)
 
-	return &CertificateAuthorityNode{host, node}
+	return &CertificateAuthorityNode{node, certificateAuthority, domain}
 }
 
 func (ca *CertificateAuthorityNode) WithNetworks(nodes []*yaml.Node) *CertificateAuthorityNode {
-	node := ca.GetValue(ca.host)
+	node := ca.GetValue(resolveCertificateAuthorityDomain(ca.domain))
 	node.GetOrCreateValue("networks", yaml.SequenceNode(nodes...))
 	return ca
 }
 
-func (ca *CertificateAuthorityNode) WithPort(port int) *CertificateAuthorityNode {
-	node := ca.GetValue(ca.host)
-	node.GetOrCreateValue("ports", yaml.SequenceNode(yaml.ScalarNode(fmt.Sprintf("%d:7050", port))))
+func (ca *CertificateAuthorityNode) ExposePort() *CertificateAuthorityNode {
+	if ca.certificateAuthority.ExposePort == 0 {
+		return ca
+	}
+
+	certificateAuthorityDomain := resolveCertificateAuthorityDomain(ca.domain)
+
+	node := ca.GetValue(certificateAuthorityDomain)
+	node.GetOrCreateValue("ports", yaml.SequenceNode(yaml.ScalarNode(fmt.Sprintf("%d:%d", ca.certificateAuthority.ExposePort, constants.DEFAULT_CERTIFICATE_AUTHORITY_PORT))))
+
 	return ca
 }
 

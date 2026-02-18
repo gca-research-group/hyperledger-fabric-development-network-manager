@@ -23,7 +23,7 @@ func NewTools(currentOrganization config.Organization, organizations []config.Or
 		yaml.ScalarNode(fmt.Sprintf("./configtx.yml:%s/configtx.yml", constants.DEFAULT_FABRIC_DIRECTORY)),
 		yaml.ScalarNode(fmt.Sprintf("./%s/channel:%s/channel", domain, constants.DEFAULT_FABRIC_DIRECTORY)),
 
-		yaml.ScalarNode(fmt.Sprintf("./%[1]s/certificates/organizations:%[2]s/%[1]s", domain, constants.DEFAULT_FABRIC_DIRECTORY)),
+		yaml.ScalarNode(fmt.Sprintf("./%[1]s/certificate-authority/organizations:%[2]s/%[1]s", domain, constants.DEFAULT_FABRIC_DIRECTORY)),
 	}
 
 	for _, organization := range organizations {
@@ -34,7 +34,7 @@ func NewTools(currentOrganization config.Organization, organizations []config.Or
 		if len(organization.Orderers) > 0 {
 			for _, orderer := range organization.Orderers {
 
-				ordererHostDir := fmt.Sprintf("./%[1]s/certificates/organizations/ordererOrganizations/%[1]s/orderers/%[2]s.%[1]s", organization.Domain, orderer.Subdomain)
+				ordererHostDir := fmt.Sprintf("./%[1]s/certificate-authority/organizations/ordererOrganizations/%[1]s/orderers/%[2]s.%[1]s", organization.Domain, orderer.Subdomain)
 				ordererContainerDir := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Subdomain)
 
 				volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%s/msp/cacerts:%s/msp/cacerts", ordererHostDir, ordererContainerDir)))
@@ -46,14 +46,14 @@ func NewTools(currentOrganization config.Organization, organizations []config.Or
 			}
 		}
 
-		peerHostDir := fmt.Sprintf("./%[1]s/certificates/organizations/peerOrganizations/%[1]s", organization.Domain)
+		peerHostDir := fmt.Sprintf("./%[1]s/certificate-authority/organizations/peerOrganizations/%[1]s", organization.Domain)
 		peerContainerDir := fmt.Sprintf("%[1]s/%[2]s/peerOrganizations/%[2]s", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain)
 
 		volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%s/msp/cacerts:%s/msp/cacerts", peerHostDir, peerContainerDir)))
 		volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%s/msp/config.yaml:%s/msp/config.yaml", peerHostDir, peerContainerDir)))
 
 		for _, peer := range organization.Peers {
-			peerHostDir := fmt.Sprintf("./%[1]s/certificates/organizations/peerOrganizations/%[1]s/peers/%[2]s.%[1]s", organization.Domain, peer.Subdomain)
+			peerHostDir := fmt.Sprintf("./%[1]s/certificate-authority/organizations/peerOrganizations/%[1]s/peers/%[2]s.%[1]s", organization.Domain, peer.Subdomain)
 			peerContainerDir := fmt.Sprintf("%[1]s/%[2]s/peerOrganizations/%[2]s/peers/%[3]s.%[2]s", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, peer.Subdomain)
 
 			volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%s/msp/signcerts:%s/msp/signcerts", peerHostDir, peerContainerDir)))

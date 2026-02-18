@@ -3,6 +3,7 @@ package configtx
 import (
 	"fmt"
 
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
@@ -49,7 +50,7 @@ func (c *Builder) BuildOrganizations() {
 
 		var anchorPeerHost string
 		var anchorPeerPort int
-		defaultAnchorPeerPort := 7051
+
 		for i, peer := range organization.Peers {
 			if peer.IsAnchor {
 				anchorPeerHost = fmt.Sprintf("%s.%s", peer.Subdomain, organization.Domain)
@@ -58,12 +59,12 @@ func (c *Builder) BuildOrganizations() {
 
 			if anchorPeerHost == "" && i == 0 {
 				anchorPeerHost = fmt.Sprintf("%s.%s", peer.Subdomain, organization.Domain)
-				anchorPeerPort = defaultAnchorPeerPort
+				anchorPeerPort = constants.DEFAULT_PEER_PORT
 			}
 		}
 
 		if anchorPeerPort == 0 {
-			anchorPeerPort = defaultAnchorPeerPort
+			anchorPeerPort = constants.DEFAULT_PEER_PORT
 		}
 
 		org := NewApplicationOrganization(organization.Name, organization.Domain, mspID, c.ordererAddresses).

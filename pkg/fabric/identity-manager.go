@@ -511,7 +511,7 @@ func (im *IdentityManager) generateOrdererTlsCertificates(organization config.Or
 func (im *IdentityManager) shareTlsCertificates() error {
 
 	for _, sourceOrganization := range im.config.Organizations {
-		folder := "%[1]s/%[2]s/certificates/organizations/peerOrganizations/%[2]s"
+		folder := "%[1]s/%[2]s/certificate-authority/organizations/peerOrganizations/%[2]s"
 
 		for _, targetOrganization := range im.config.Organizations {
 			if targetOrganization.Domain == sourceOrganization.Domain {

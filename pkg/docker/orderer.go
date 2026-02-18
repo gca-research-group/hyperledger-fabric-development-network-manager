@@ -3,34 +3,23 @@ package docker
 import (
 	"fmt"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
 
 type OrdererNode struct {
-	name string
 	*yaml.Node
+	orderer config.Orderer
+	domain  string
 }
 
-func NewOrderer(hostname string, currentOrganization config.Organization, organizations []config.Organization) *OrdererNode {
-	ordererDomain := fmt.Sprintf("%s.%s", hostname, currentOrganization.Domain)
-
-	ordererHostDir := fmt.Sprintf("./%[1]s/certificates/organizations/ordererOrganizations/%[1]s/orderers/%[2]s", currentOrganization.Domain, ordererDomain)
-	ordererContainerDir := "/var/hyperledger/orderer"
-
-	volumes := []*yaml.Node{
-		yaml.ScalarNode(fmt.Sprintf("%s/msp:%s/msp", ordererHostDir, ordererContainerDir)),
-		yaml.ScalarNode(fmt.Sprintf("%s/tls:%s/tls", ordererHostDir, ordererContainerDir)),
-	}
+func NewOrderer(orderer config.Orderer, currentOrganization config.Organization, organizations []config.Organization) *OrdererNode {
+	domain := currentOrganization.Domain
+	ordererDomain := resolveOrdererDomain(orderer.Subdomain, domain)
 
 	cas := "/var/hyperledger/orderer/tls/ca.crt"
 
-	version := currentOrganization.Version.Orderer
-
-	if version == "" {
-		version = constants.DEFAULT_FABRIC_VERSION
-	}
+	version := resolveOrdererVersion(currentOrganization.Version.Orderer)
 
 	node := yaml.MappingNode(
 		yaml.ScalarNode(ordererDomain),
@@ -59,26 +48,49 @@ func NewOrderer(hostname string, currentOrganization config.Organization, organi
 				yaml.ScalarNode(fmt.Sprintf("ORDERER_ADMIN_TLS_CLIENTROOTCAS=[%s]", cas)),
 				yaml.ScalarNode("ORDERER_CHANNELPARTICIPATION_ENABLED=true"),
 			),
-			yaml.ScalarNode("volumes"),
-			yaml.SequenceNode(volumes...),
 		),
 	)
 
-	return &OrdererNode{ordererDomain, node}
+	return &OrdererNode{node, orderer, domain}
 }
 
 func (o *OrdererNode) WithNetworks(nodes []*yaml.Node) *OrdererNode {
-	node := o.GetValue(o.name)
+	node := o.GetValue(resolveOrdererDomain(o.orderer.Subdomain, o.domain))
 	node.GetOrCreateValue("networks", yaml.SequenceNode(nodes...))
 	return o
 }
 
-// TODO:
-/* func (o *OrdererNode) WithPort(port int) *OrdererNode {
-	node := o.GetValue(o.name)
-	node.GetOrCreateValue("ports", yaml.SequenceNode(yaml.ScalarNode(fmt.Sprintf("%d:7050", port))))
+func (o *OrdererNode) WithVolumes() *OrdererNode {
+	domain := o.domain
+	ordererDomain := resolveOrdererDomain(o.orderer.Subdomain, domain)
+
+	ordererHostDir := fmt.Sprintf("./%[1]s/certificate-authority/organizations/ordererOrganizations/%[1]s/orderers/%[2]s", o.domain, ordererDomain)
+	ordererContainerDir := "/var/hyperledger/orderer"
+
+	volumes := []*yaml.Node{
+		yaml.ScalarNode(fmt.Sprintf("%s/msp:%s/msp", ordererHostDir, ordererContainerDir)),
+		yaml.ScalarNode(fmt.Sprintf("%s/tls:%s/tls", ordererHostDir, ordererContainerDir)),
+		yaml.ScalarNode(fmt.Sprintf("./%s/orderers/%s/orderer:/var/hyperledger/production/orderer", domain, o.orderer.Subdomain)),
+	}
+
+	node := o.GetValue(ordererDomain)
+	node.GetOrCreateValue("volumes", yaml.SequenceNode(volumes...))
+
 	return o
-} */
+}
+
+func (o *OrdererNode) ExposePort() *OrdererNode {
+	if o.orderer.ExposePort == 0 {
+		return o
+	}
+
+	ordererDomain := resolveOrdererDomain(o.orderer.Subdomain, o.domain)
+
+	node := o.GetValue(ordererDomain)
+	node.GetOrCreateValue("ports", yaml.SequenceNode(yaml.ScalarNode(fmt.Sprintf("%d:%d", o.orderer.ExposePort, resolveOrdererPort(o.orderer.Port)))))
+
+	return o
+}
 
 func (o *OrdererNode) Build() *yaml.Node {
 	return o.Node

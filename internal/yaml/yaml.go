@@ -63,9 +63,13 @@ func (n *Node) GetValue(keyName string) *Node {
 }
 
 func (n *Node) GetOrCreateValue(keyName string, defaultNode *Node) *Node {
-	if node := n.GetValue(keyName); node == nil {
-		n.Content = append(n.Content, (*yaml.Node)(ScalarNode(keyName)), (*yaml.Node)(defaultNode))
+	node := n.GetValue(keyName)
+
+	if node != nil {
+		return node
 	}
+
+	n.Content = append(n.Content, (*yaml.Node)(ScalarNode(keyName)), (*yaml.Node)(defaultNode))
 
 	return defaultNode
 }
@@ -77,6 +81,11 @@ func (n *Node) WithStyle(style yaml.Style) *Node {
 
 func (n *Node) WithDoubleQuotedStyle() *Node {
 	n.WithStyle(yaml.DoubleQuotedStyle)
+	return n
+}
+
+func (n *Node) WithLiteralStyle() *Node {
+	n.WithStyle(yaml.LiteralStyle)
 	return n
 }
 

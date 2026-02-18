@@ -70,7 +70,7 @@ func (f *Fabric) RunOrdererContainers() error {
 	fmt.Print("\n=========== Executing orderer containeres ===========\n")
 	for _, organization := range f.config.Organizations {
 		for _, orderer := range organization.Orderers {
-			config := fmt.Sprintf("%s/%s/%s.yml", f.config.Output, organization.Domain, orderer.Subdomain)
+			config := fmt.Sprintf("%[1]s/%[2]s/orderers/%[3]s/%[3]s.yml", f.config.Output, organization.Domain, orderer.Subdomain)
 
 			if file.FileExists(config) {
 				args := []string{"compose", "-f", f.network, "-f", config, "up", "--build", "-d"}
@@ -87,20 +87,15 @@ func (f *Fabric) RunOrdererContainers() error {
 func (f *Fabric) RunPeerContainers() error {
 	fmt.Print("\n=========== Executing peer containeres ===========\n")
 	for _, organization := range f.config.Organizations {
-		entries, err := os.ReadDir(fmt.Sprintf("%s/%s", f.config.Output, organization.Domain))
+		for _, peer := range organization.Peers {
+			peerFile := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s/%[3]s.yml", f.config.Output, organization.Domain, peer.Subdomain)
+			couchDBFile := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s/couchdb.yml", f.config.Output, organization.Domain, peer.Subdomain)
 
-		if err != nil {
-			return fmt.Errorf("Error when reading the directory to the org %s: %v\n", organization.Name, err)
-		}
-
-		for _, entry := range entries {
-			if !entry.IsDir() && strings.Contains(entry.Name(), "peer") {
-				file := fmt.Sprintf("%s/%s/%s", f.config.Output, organization.Domain, entry.Name())
-
+			for _, file := range []string{peerFile, couchDBFile} {
 				args := []string{"compose", "-f", f.network, "-f", file, "up", "--build", "-d"}
 
 				if err := f.executor.ExecCommand("docker", args...); err != nil {
-					return fmt.Errorf("Error when executing the container for the organization %s, peer %s: %v\n", organization.Name, entry.Name(), err)
+					return fmt.Errorf("Error when executing the container for the organization %s, peer %s: %v\n", organization.Name, peer.Name, err)
 				}
 			}
 		}
@@ -112,7 +107,7 @@ func (f *Fabric) RunPeerContainers() error {
 func (f *Fabric) RunCAContainers() error {
 	fmt.Print("\n=========== Executing certificate authority containers ===========\n")
 	for _, organization := range f.config.Organizations {
-		file := fmt.Sprintf("%s/%s/certificate-authority.yml", f.config.Output, organization.Domain)
+		file := fmt.Sprintf("%s/%s/certificate-authority/certificate-authority.yml", f.config.Output, organization.Domain)
 
 		args := []string{"compose", "-f", f.network, "-f", file, "up", "--build", "-d"}
 
