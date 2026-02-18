@@ -12,7 +12,7 @@ func (f *Fabric) JoinOrdererToTheChannel() error {
 	for _, organization := range f.config.Organizations {
 		tools := fmt.Sprintf("%s/%s/tools.yml", f.config.Output, organization.Domain)
 		for _, orderer := range organization.Orderers {
-			for _, profile := range f.config.Profiles {
+			for _, channel := range f.config.Channels {
 				containerName := buildToolsContainerName(organization)
 				caFile := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/ca.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Subdomain)
 				clientCert := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/server.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Subdomain)
@@ -21,8 +21,8 @@ func (f *Fabric) JoinOrdererToTheChannel() error {
 				args := []string{
 					"compose", "-f", f.network, "-f", tools, "run", "--rm", "-T", containerName,
 					"osnadmin", "channel", "join",
-					"--channelID", strings.ToLower(profile.Name),
-					"--config-block", fmt.Sprintf("%s/channel/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(profile.Name)),
+					"--channelID", strings.ToLower(channel.Name),
+					"--config-block", fmt.Sprintf("%s/channel/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(channel.Name)),
 					"-o", fmt.Sprintf("%s.%s:7053", orderer.Subdomain, organization.Domain),
 					"--ca-file", caFile,
 					"--client-cert", clientCert,
@@ -30,7 +30,7 @@ func (f *Fabric) JoinOrdererToTheChannel() error {
 				}
 
 				if err := f.executor.ExecCommand("docker", args...); err != nil {
-					return fmt.Errorf("Error when joining the orderer %s of the organization %s to the channel %s: %v", orderer.Name, organization.Name, profile.Name, err)
+					return fmt.Errorf("Error when joining the orderer %s of the organization %s to the channel %s: %v", orderer.Name, organization.Name, channel.Name, err)
 				}
 			}
 		}
@@ -51,10 +51,10 @@ func (f *Fabric) JoinPeersToTheChannels() error {
 				peerPort = constants.DEFAULT_PEER_PORT
 			}
 
-			for _, profile := range f.config.Profiles {
+			for _, channel := range f.config.Channels {
 				containerName := buildToolsContainerName(organization)
 
-				block := fmt.Sprintf("%s/channel/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(profile.Name))
+				block := fmt.Sprintf("%s/channel/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(channel.Name))
 
 				tlsCertFile := fmt.Sprintf("%[1]s/%[2]s/peerOrganizations/peers/%[3]s.%[2]s/tls/server.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, peer.Subdomain)
 				tlsKeyFile := fmt.Sprintf("%[1]s/%[2]s/peerOrganizations/peers/%[3]s.%[2]s/tls/server.key", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, peer.Subdomain)
@@ -72,16 +72,16 @@ func (f *Fabric) JoinPeersToTheChannels() error {
 				output, err := f.executor.OutputCommand("docker", append(args, "peer", "channel", "list")...)
 
 				if err != nil {
-					return fmt.Errorf("Error when listing the channels that the peer %s of the organization %s has joined to the channel %s: %v\n", peer.Subdomain, organization.Name, profile.Name, err)
+					return fmt.Errorf("Error when listing the channels that the peer %s of the organization %s has joined to the channel %s: %v\n", peer.Subdomain, organization.Name, channel.Name, err)
 				}
 
-				if strings.Contains(string(output), strings.ToLower(profile.Name)) {
-					fmt.Printf("Skipping: the peer %s of the organization %s has already joined to the channel %s\n", peer.Subdomain, organization.Name, profile.Name)
+				if strings.Contains(string(output), strings.ToLower(channel.Name)) {
+					fmt.Printf("Skipping: the peer %s of the organization %s has already joined to the channel %s\n", peer.Subdomain, organization.Name, channel.Name)
 					continue
 				}
 
 				if err := f.executor.ExecCommand("docker", append(args, "peer", "channel", "join", "-b", block)...); err != nil {
-					return fmt.Errorf("Error when joining the peer %s of the organization %s to the channel %s: %v\n", peer.Subdomain, organization.Name, profile.Name, err)
+					return fmt.Errorf("Error when joining the peer %s of the organization %s to the channel %s: %v\n", peer.Subdomain, organization.Name, channel.Name, err)
 				}
 			}
 		}

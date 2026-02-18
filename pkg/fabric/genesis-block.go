@@ -12,7 +12,7 @@ func (f *Fabric) GenerateGenesisBlock() error {
 	for _, organization := range f.config.Organizations {
 
 		if organization.Bootstrap {
-			for _, profile := range f.config.Profiles {
+			for _, channel := range f.config.Channels {
 				fmt.Printf("\n=========== Generating orderer genesis block to %s ===========\n", organization.Name)
 
 				containerName := buildToolsContainerName(organization)
@@ -21,9 +21,9 @@ func (f *Fabric) GenerateGenesisBlock() error {
 				args := []string{
 					"compose", "-f", f.network, "-f", tools, "run", "--rm", "-T", containerName,
 					"configtxgen",
-					"-outputBlock", fmt.Sprintf("%s/channel/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(profile.Name)),
-					"-profile", profile.Name,
-					"-channelID", strings.ToLower(profile.Name),
+					"-outputBlock", fmt.Sprintf("%s/channel/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(channel.Name)),
+					"-profile", channel.Profile.Name,
+					"-channelID", strings.ToLower(channel.Name),
 					"-configPath", fmt.Sprintf("%s/", constants.DEFAULT_FABRIC_DIRECTORY),
 				}
 
@@ -64,17 +64,17 @@ func (f *Fabric) FetchGenesisBlock() error {
 		}
 
 		tools := fmt.Sprintf("%s/%s/tools.yml", f.config.Output, organization.Domain)
-		for _, profile := range f.config.Profiles {
+		for _, channel := range f.config.Channels {
 			containerName := buildToolsContainerName(organization)
-			block := fmt.Sprintf("%s/channel/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(profile.Name))
+			block := fmt.Sprintf("%s/channel/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(channel.Name))
 
 			args := []string{
 				"compose", "-f", f.network, "-f", tools, "run", "--rm", "-T", containerName,
-				"peer", "channel", "fetch", "0", block, "-c", strings.ToLower(profile.Name), "-o", ordererAddress, "--tls", "--cafile", caFile,
+				"peer", "channel", "fetch", "0", block, "-c", strings.ToLower(channel.Name), "-o", ordererAddress, "--tls", "--cafile", caFile,
 			}
 
 			if err := f.executor.ExecCommand("docker", args...); err != nil {
-				return fmt.Errorf("Error when fetching the orderer %s of the organization %s to the channel %s: %v", orderer.Name, organization.Name, profile.Name, err)
+				return fmt.Errorf("Error when fetching the orderer %s of the organization %s to the channel %s: %v", orderer.Name, organization.Name, channel.Name, err)
 			}
 		}
 	}
