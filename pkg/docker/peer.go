@@ -3,6 +3,7 @@ package docker
 import (
 	"fmt"
 
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
@@ -14,13 +15,13 @@ type PeerNode struct {
 func NewPeer(
 	mspID string,
 	peerDomain string,
-	domain string,
+	currentOrganization config.Organization,
 	corePeerGossipBootstrap string,
 	network string,
 	organizations []config.Organization,
 ) *PeerNode {
 
-	peerHostDir := fmt.Sprintf("./%[1]s/certificates/organizations/peerOrganizations/%[1]s/peers/%[2]s", domain, peerDomain)
+	peerHostDir := fmt.Sprintf("./%[1]s/certificates/organizations/peerOrganizations/%[1]s/peers/%[2]s", currentOrganization.Domain, peerDomain)
 	peerContainerDir := "/etc/hyperledger/fabric"
 
 	volumes := []*yaml.Node{
@@ -28,11 +29,19 @@ func NewPeer(
 		yaml.ScalarNode(fmt.Sprintf("%s/tls:%s/tls", peerHostDir, peerContainerDir)),
 	}
 
+	version := currentOrganization.Version.Peer
+
+	if version == "" {
+		version = constants.DEFAULT_FABRIC_VERSION
+	}
+
 	node := yaml.MappingNode(
 		yaml.ScalarNode(peerDomain),
 		yaml.MappingNode(
 			yaml.ScalarNode("container_name"),
 			yaml.ScalarNode(peerDomain),
+			yaml.ScalarNode("image"),
+			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-peer:%s", version)),
 			yaml.ScalarNode("extends"),
 			yaml.MappingNode(
 				yaml.ScalarNode("file"),

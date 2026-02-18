@@ -103,9 +103,9 @@ func (c *Builder) BuildProfiles(
 func (c *Builder) Build() (*yaml.Node, error) {
 	c.BuildOrganizations()
 
-	appCapLabel, appCapVal := NewApplicationCapability()
-	ordCapLabel, ordCapVal := NewOrdererCapability()
-	chCapLabel, chCapVal := NewChannelCapability()
+	appCapLabel, appCapVal := NewApplicationCapability(c.config.Capabilties.Application)
+	ordCapLabel, ordCapVal := NewOrdererCapability(c.config.Capabilties.Orderer)
+	chCapLabel, chCapVal := NewChannelCapability(c.config.Capabilties.Channel)
 
 	orderer := NewOrderer().
 		WithAddresses(c.ordererAddresses).

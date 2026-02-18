@@ -1,0 +1,45 @@
+output: output/cross-version-compatibility
+network: cross-version-compatibility
+
+capabilities:
+  channel: V2_0
+  orderer: V2_0
+  application: V2_0
+
+organizations:
+  - name: Org1
+    domain: org1.cross-version-compatibility.com
+    bootstrap: true
+    version:
+      certificateAuthority: 1.5.15
+      peer: 2.5.14
+      orderer: 2.4.7
+    orderers:
+      - name: Orderer
+        subdomain: orderer
+    peers:
+      - name: Peer0
+        subdomain: peer0
+        isAnchor: true
+
+  - name: Org2
+    domain: org2.cross-version-compatibility.com
+    version:
+      certificateAuthority: 1.5.8
+      peer: 2.3.3
+      orderer: 2.4.9
+    peers:
+      - name: Peer0
+        subdomain: peer0
+        isAnchor: true
+
+profiles:
+  - &DefaultProfile
+    name: DefaultProfile
+    organizations:
+      - Org1
+      - Org2
+
+channels:
+  - name: defaultchannel
+    profile: *DefaultProfile

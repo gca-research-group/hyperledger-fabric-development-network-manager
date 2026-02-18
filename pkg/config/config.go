@@ -19,6 +19,12 @@ type CertificateAuthority struct {
 	ExposePort int `yaml:"exposePort,omitempty" json:"exposePort,omitempty" toml:"bootstrap,omitempty"`
 }
 
+type Version struct {
+	CertificateAuthority string `yaml:"certificateAuthority" json:"certificateAuthority" toml:"certificateAuthority"`
+	Peer                 string `yaml:"peer" json:"peer" toml:"peer"`
+	Orderer              string `yaml:"orderer" json:"orderer" toml:"orderer"`
+}
+
 type Organization struct {
 	Name                 string               `yaml:"name" json:"name" toml:"name"`
 	Domain               string               `yaml:"domain" json:"domain" toml:"domain"`
@@ -27,6 +33,7 @@ type Organization struct {
 	Users                int                  `yaml:"users" json:"users" toml:"users"`
 	CertificateAuthority CertificateAuthority `yaml:"certificateAuthority" json:"certificateAuthority" toml:"certificateAuthority"`
 	Bootstrap            bool                 `yaml:"bootstrap,omitempty" json:"bootstrap,omitempty" toml:"bootstrap,omitempty"`
+	Version              Version              `yaml:"version" json:"version" toml:"version"`
 }
 
 type Channel struct {
@@ -39,9 +46,16 @@ type Profile struct {
 	Organizations []string `yaml:"organizations" json:"organizations" toml:"organizations"`
 }
 
+type Capabilties struct {
+	Channel     string `yaml:"channel" json:"channel" toml:"channel"`
+	Orderer     string `yaml:"orderer" json:"orderer" toml:"orderer"`
+	Application string `yaml:"application" json:"application" toml:"application"`
+}
+
 type Config struct {
 	Output        string         `yaml:"output" json:"output" toml:"output"`
 	Network       string         `yaml:"network" json:"network" toml:"network"`
+	Capabilties   Capabilties    `yaml:"capabilities" json:"capabilities" toml:"capabilities"`
 	Organizations []Organization `yaml:"organizations" json:"organizations" toml:"organizations"`
 	Profiles      []Profile      `yaml:"profiles" json:"profiles" toml:"profiles"`
 	Channels      []Channel      `yaml:"channels" json:"channels" toml:"channels"`

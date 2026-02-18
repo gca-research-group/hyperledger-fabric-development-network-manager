@@ -63,8 +63,19 @@ func (f *Fabric) FetchGenesisBlock() error {
 			continue
 		}
 
-		tools := fmt.Sprintf("%s/%s/tools.yml", f.config.Output, organization.Domain)
+		var channels []config.Channel
+
 		for _, channel := range f.config.Channels {
+			for _, organizationName := range channel.Profile.Organizations {
+				if organizationName == organization.Name {
+					channels = append(channels, channel)
+					break
+				}
+			}
+		}
+
+		tools := fmt.Sprintf("%s/%s/tools.yml", f.config.Output, organization.Domain)
+		for _, channel := range channels {
 			containerName := buildToolsContainerName(organization)
 			block := fmt.Sprintf("%s/channel/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(channel.Name))
 

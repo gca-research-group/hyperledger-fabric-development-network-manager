@@ -1,0 +1,40 @@
+output = "output/minimal-network"
+network = "minimal-network"
+
+[capabilities]
+channel = "V2_0"
+orderer = "V2_0"
+application = "V2_5"
+
+[[organizations]]
+name = "Org1"
+domain = "org1.minimal-network.com"
+bootstrap = true
+
+[[organizations.orderers]]
+name = "Orderer"
+subdomain = "orderer"
+
+[[organizations.peers]]
+name = "Peer0"
+subdomain = "peer0"
+isAnchor = true
+
+[[organizations]]
+name = "Org2"
+domain = "org2.minimal-network.com"
+
+[[organizations.peers]]
+name = "Peer0"
+subdomain = "peer0"
+isAnchor = true
+
+[[profiles]]
+name = "DefaultProfile"
+organizations = ["Org1", "Org2"]
+
+[[channels]]
+name = "defaultchannel"
+[channels.profile]
+name = "DefaultProfile"
+organizations = ["Org1", "Org2"]

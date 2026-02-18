@@ -16,11 +16,17 @@ func NewCertificateAuthority(organization config.Organization) *CertificateAutho
 
 	host := fmt.Sprintf("ca.%s", organization.Domain)
 
+	version := organization.Version.CertificateAuthority
+
+	if version == "" {
+		version = "latest"
+	}
+
 	node := yaml.MappingNode(
 		yaml.ScalarNode(host),
 		yaml.MappingNode(
 			yaml.ScalarNode("image"),
-			yaml.ScalarNode("hyperledger/fabric-ca:latest"),
+			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-ca:%s", version)),
 			yaml.ScalarNode("container_name"),
 			yaml.ScalarNode(host),
 			yaml.ScalarNode("tty"),

@@ -56,7 +56,7 @@ func (f *Fabric) RemoveContainers() error {
 
 	fmt.Print("\n=========== Removing certificate authority containers ===========\n")
 	for _, organization := range f.config.Organizations {
-		file := fmt.Sprintf("%s/%s/ca.yml", f.config.Output, organization.Domain)
+		file := fmt.Sprintf("%s/%s/certificate-authority.yml", f.config.Output, organization.Domain)
 		args := []string{"compose", "-f", f.network, "-f", file, "down", "-v"}
 		if err := f.executor.ExecCommand("docker", args...); err != nil {
 			return fmt.Errorf("Error when removing the CA container for the organization %s: %v\n", organization.Name, err)
@@ -112,7 +112,7 @@ func (f *Fabric) RunPeerContainers() error {
 func (f *Fabric) RunCAContainers() error {
 	fmt.Print("\n=========== Executing certificate authority containers ===========\n")
 	for _, organization := range f.config.Organizations {
-		file := fmt.Sprintf("%s/%s/ca.yml", f.config.Output, organization.Domain)
+		file := fmt.Sprintf("%s/%s/certificate-authority.yml", f.config.Output, organization.Domain)
 
 		args := []string{"compose", "-f", f.network, "-f", file, "up", "--build", "-d"}
 

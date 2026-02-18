@@ -11,14 +11,14 @@ func capability(version string) *yaml.Node {
 	return node
 }
 
-func NewApplicationCapability() (*yaml.Node, *yaml.Node) {
-	return yaml.ScalarNode(ApplicationKey), capability("V2_5").WithAnchor(ApplicationCapabilitiesKey)
+func NewApplicationCapability(version string) (*yaml.Node, *yaml.Node) {
+	return yaml.ScalarNode(ApplicationKey), capability(version).WithAnchor(ApplicationCapabilitiesKey)
 }
 
-func NewOrdererCapability() (*yaml.Node, *yaml.Node) {
-	return yaml.ScalarNode(OrdererKey), capability("V2_0").WithAnchor(OrdererCapabilitiesKey)
+func NewOrdererCapability(version string) (*yaml.Node, *yaml.Node) {
+	return yaml.ScalarNode(OrdererKey), capability(version).WithAnchor(OrdererCapabilitiesKey)
 }
 
-func NewChannelCapability() (*yaml.Node, *yaml.Node) {
-	return yaml.ScalarNode(ChannelKey), capability("V2_0").WithAnchor(ChannelCapabilitiesKey)
+func NewChannelCapability(version string) (*yaml.Node, *yaml.Node) {
+	return yaml.ScalarNode(ChannelKey), capability(version).WithAnchor(ChannelCapabilitiesKey)
 }

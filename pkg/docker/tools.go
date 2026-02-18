@@ -80,13 +80,19 @@ func NewTools(currentOrganization config.Organization, organizations []config.Or
 
 	corePeerHost := fmt.Sprintf("%s.%s:%d", corePeerSubdomain, currentOrganization.Domain, corePeerPort)
 
+	version := currentOrganization.Version.Peer
+
+	if version == "" {
+		version = constants.DEFAULT_FABRIC_VERSION
+	}
+
 	node := yaml.MappingNode(
 		yaml.ScalarNode(fmt.Sprintf("hyperledger-fabric-tools-%s", strings.ToLower(name))),
 		yaml.MappingNode(
 			yaml.ScalarNode("container_name"),
 			yaml.ScalarNode(fmt.Sprintf("hyperledger-fabric-tools-%s", strings.ToLower(name))),
 			yaml.ScalarNode("image"),
-			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-tools:%s", constants.DEFAULT_FABRIC_VERSION)),
+			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-tools:%s", version)),
 			yaml.ScalarNode("tty"),
 			yaml.ScalarNode("true"),
 			yaml.ScalarNode("stdin_open"),

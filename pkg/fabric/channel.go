@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
 
 func (f *Fabric) JoinOrdererToTheChannel() error {
@@ -44,17 +45,27 @@ func (f *Fabric) JoinPeersToTheChannels() error {
 
 		tools := fmt.Sprintf("%s/%s/tools.yml", f.config.Output, organization.Domain)
 
-		for _, peer := range organization.Peers {
-			peerPort := peer.Port
+		var channels []config.Channel
 
-			if peerPort == 0 {
-				peerPort = constants.DEFAULT_PEER_PORT
+		for _, channel := range f.config.Channels {
+			for _, organizationName := range channel.Profile.Organizations {
+				if organizationName == organization.Name {
+					channels = append(channels, channel)
+					break
+				}
 			}
+		}
 
-			for _, channel := range f.config.Channels {
-				containerName := buildToolsContainerName(organization)
+		for _, channel := range channels {
+			containerName := buildToolsContainerName(organization)
+			block := fmt.Sprintf("%s/channel/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(channel.Name))
 
-				block := fmt.Sprintf("%s/channel/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(channel.Name))
+			for _, peer := range organization.Peers {
+				peerPort := peer.Port
+
+				if peerPort == 0 {
+					peerPort = constants.DEFAULT_PEER_PORT
+				}
 
 				tlsCertFile := fmt.Sprintf("%[1]s/%[2]s/peerOrganizations/peers/%[3]s.%[2]s/tls/server.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, peer.Subdomain)
 				tlsKeyFile := fmt.Sprintf("%[1]s/%[2]s/peerOrganizations/peers/%[3]s.%[2]s/tls/server.key", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, peer.Subdomain)

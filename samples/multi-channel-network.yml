@@ -1,4 +1,5 @@
-output: ./dist/hyperledger-fabric
+output: output/multi-channel-network
+network: multi-channel-network
 
 capabilities:
   channel: V2_0
@@ -7,12 +8,7 @@ capabilities:
 
 organizations:
   - name: Org1
-    domain: org1.com
-    version:
-      ca: 1.5.7
-      fabric: 2.5
-      peer: 2.5
-      orderer: 2.5
+    domain: org1.multi-channel-network.com
     orderers:
       - name: Orderer
         subdomain: orderer
@@ -23,28 +19,39 @@ organizations:
         isAnchor: true
 
   - name: Org2
-    domain: org2.com
+    domain: org2.multi-channel-network.com
     peers:
       - name: Peer0
         subdomain: peer0
         isAnchor: true
 
   - name: Org3
-    domain: org3.com
+    domain: org3.multi-channel-network.com
     peers:
       - name: Peer0
         subdomain: peer0
         isAnchor: true
 
-
 profiles:
-  - &DefaultProfile
-    name: DefaultProfile
+  - &TwoOrgsProfile
+    name: TwoOrgsProfile
+    organizations:
+      - Org1
+      - Org2
+
+  - &AllOrgsProfile
+    name: AllOrgsProfile
     organizations:
       - Org1
       - Org2
       - Org3
 
 channels:
-  - name: multichannel
-    profile: *DefaultProfile
+  - name: channel1
+    profile: *TwoOrgsProfile
+
+  - name: channel2
+    profile: *TwoOrgsProfile
+
+  - name: channel3
+    profile: *AllOrgsProfile

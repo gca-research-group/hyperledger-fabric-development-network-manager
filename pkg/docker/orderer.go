@@ -13,10 +13,10 @@ type OrdererNode struct {
 	*yaml.Node
 }
 
-func NewOrderer(hostname string, domain string, organizations []config.Organization) *OrdererNode {
-	ordererDomain := fmt.Sprintf("%s.%s", hostname, domain)
+func NewOrderer(hostname string, currentOrganization config.Organization, organizations []config.Organization) *OrdererNode {
+	ordererDomain := fmt.Sprintf("%s.%s", hostname, currentOrganization.Domain)
 
-	ordererHostDir := fmt.Sprintf("./%[1]s/certificates/organizations/ordererOrganizations/%[1]s/orderers/%[2]s", domain, ordererDomain)
+	ordererHostDir := fmt.Sprintf("./%[1]s/certificates/organizations/ordererOrganizations/%[1]s/orderers/%[2]s", currentOrganization.Domain, ordererDomain)
 	ordererContainerDir := "/var/hyperledger/orderer"
 
 	volumes := []*yaml.Node{
@@ -26,11 +26,17 @@ func NewOrderer(hostname string, domain string, organizations []config.Organizat
 
 	cas := "/var/hyperledger/orderer/tls/ca.crt"
 
+	version := currentOrganization.Version.Orderer
+
+	if version == "" {
+		version = constants.DEFAULT_FABRIC_VERSION
+	}
+
 	node := yaml.MappingNode(
 		yaml.ScalarNode(ordererDomain),
 		yaml.MappingNode(
 			yaml.ScalarNode("image"),
-			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-orderer:%s", constants.DEFAULT_FABRIC_VERSION)),
+			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-orderer:%s", version)),
 			yaml.ScalarNode("container_name"),
 			yaml.ScalarNode(ordererDomain),
 			yaml.ScalarNode("working_dir"),

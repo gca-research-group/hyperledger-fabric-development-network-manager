@@ -31,7 +31,7 @@ func (r *Renderer) RenderNetwork(networkName string, path string) error {
 
 func (r *Renderer) RenderOrderers(organization config.Organization) error {
 	for _, orderer := range organization.Orderers {
-		node := NewOrderer(orderer.Subdomain, organization.Domain, r.config.Organizations).
+		node := NewOrderer(orderer.Subdomain, organization, r.config.Organizations).
 			WithNetworks([]*yaml.Node{yaml.ScalarNode(r.config.Network)})
 
 		err := yaml.MappingNode(
@@ -70,14 +70,14 @@ func (r *Renderer) RenderCertificateAuthority(organization config.Organization) 
 	return yaml.MappingNode(
 		yaml.ScalarNode("services"),
 		yaml.MappingNode(nodes...),
-	).ToFile(fmt.Sprintf("%s/%s/ca.yml", r.config.Output, organization.Domain))
+	).ToFile(fmt.Sprintf("%s/%s/certificate-authority.yml", r.config.Output, organization.Domain))
 }
 
 func (r *Renderer) RenderPeer(organization config.Organization, corePeerGossipBootstrap string, peer config.Peer) error {
 	node := NewPeer(
 		fmt.Sprintf("%sMSP", organization.Name),
 		fmt.Sprintf("%s.%s", peer.Subdomain, organization.Domain),
-		organization.Domain,
+		organization,
 		corePeerGossipBootstrap,
 		r.config.Network,
 		r.config.Organizations,
