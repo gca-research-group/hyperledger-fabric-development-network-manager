@@ -3,8 +3,9 @@ package cli
 import (
 	"fmt"
 
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/executor"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/fabric"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/network"
 	"github.com/spf13/cobra"
 )
 
@@ -21,13 +22,13 @@ var deployCmd = &cobra.Command{
 			return err
 		}
 
-		instance, err := fabric.NewFabric(*config, &fabric.DefaultExecutor{})
+		instance, err := network.NewNetwork(*config, &executor.DefaultExecutor{})
 
 		if err != nil {
 			return err
 		}
 
-		if err := instance.DeployNetwork(); err != nil {
+		if err := instance.Deploy(); err != nil {
 			return fmt.Errorf("Network deployment failed: %v", err)
 		}
 

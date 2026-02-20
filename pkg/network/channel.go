@@ -1,20 +1,22 @@
-package fabric
+package network
 
 import (
 	"fmt"
 	"strings"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/compose"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
 
-func (f *Fabric) JoinOrdererToTheChannel() error {
+func (f *Network) JoinOrdererToTheChannel() error {
 
 	for _, organization := range f.config.Organizations {
-		tools := fmt.Sprintf("%s/%s/tools.yml", f.config.Output, organization.Domain)
+		tools := compose.ResolveToolsDockerComposeFile(f.config.Output, organization.Domain)
+		containerName := compose.ResolveToolsContainerName(organization)
+
 		for _, orderer := range organization.Orderers {
 			for _, channel := range f.config.Channels {
-				containerName := buildToolsContainerName(organization)
 				caFile := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/ca.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Subdomain)
 				clientCert := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/server.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Subdomain)
 				clientKey := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/server.key", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Subdomain)
@@ -23,7 +25,7 @@ func (f *Fabric) JoinOrdererToTheChannel() error {
 					"compose", "-f", f.network, "-f", tools, "run", "--rm", "-T", containerName,
 					"osnadmin", "channel", "join",
 					"--channelID", strings.ToLower(channel.Name),
-					"--config-block", fmt.Sprintf("%s/channel/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(channel.Name)),
+					"--config-block", fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(channel.Name)),
 					"-o", fmt.Sprintf("%s.%s:7053", orderer.Subdomain, organization.Domain),
 					"--ca-file", caFile,
 					"--client-cert", clientCert,
@@ -40,10 +42,10 @@ func (f *Fabric) JoinOrdererToTheChannel() error {
 	return nil
 }
 
-func (f *Fabric) JoinPeersToTheChannels() error {
+func (f *Network) JoinPeersToTheChannels() error {
 	for _, organization := range f.config.Organizations {
 
-		tools := fmt.Sprintf("%s/%s/tools.yml", f.config.Output, organization.Domain)
+		tools := compose.ResolveToolsDockerComposeFile(f.config.Output, organization.Domain)
 
 		var channels []config.Channel
 
@@ -57,8 +59,8 @@ func (f *Fabric) JoinPeersToTheChannels() error {
 		}
 
 		for _, channel := range channels {
-			containerName := buildToolsContainerName(organization)
-			block := fmt.Sprintf("%s/channel/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(channel.Name))
+			containerName := compose.ResolveToolsContainerName(organization)
+			block := fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(channel.Name))
 
 			for _, peer := range organization.Peers {
 				peerPort := peer.Port

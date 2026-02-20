@@ -3,9 +3,8 @@ package cli
 import (
 	"fmt"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/compose"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/docker"
 	"github.com/spf13/cobra"
 )
 
@@ -22,13 +21,9 @@ var downCmd = &cobra.Command{
 			return err
 		}
 
-		network := config.Network
+		network := compose.ResolveDockerNetworkName(config.Network)
 
-		if network == "" {
-			network = constants.DEFAULT_NETWORK
-		}
-
-		if err = docker.RemoveContainersInNetwork(network); err != nil {
+		if err = compose.RemoveContainersInNetwork(network); err != nil {
 			return err
 		}
 
@@ -48,5 +43,5 @@ func init() {
 
 	downCmd.MarkFlagRequired("config")
 
-	rootCmd.AddCommand(downCmd)
+	networkCmd.AddCommand(downCmd)
 }

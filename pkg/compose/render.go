@@ -1,4 +1,4 @@
-package docker
+package compose
 
 import (
 	"fmt"
@@ -13,9 +13,7 @@ type Renderer struct {
 }
 
 func NewRenderer(config *config.Config) *Renderer {
-	if config.Network == "" {
-		config.Network = constants.DEFAULT_NETWORK
-	}
+	config.Network = ResolveDockerNetworkName(config.Network)
 
 	return &Renderer{
 		config: config,
@@ -26,13 +24,11 @@ func (r *Renderer) RenderNetwork(networkName string, path string) error {
 	return yaml.MappingNode(
 		yaml.ScalarNode("networks"),
 		NewBridgeNetwork(networkName),
-	).ToFile(fmt.Sprintf("%s/network.yml", path))
+	).ToFile(ResolveNetworkDockerComposeFile(path))
 }
 
 func (r *Renderer) RenderOrderers(organization config.Organization) error {
 	for _, orderer := range organization.Orderers {
-		storage := fmt.Sprintf("%[1]s/%[2]s/orderers/%[3]s", r.config.Output, organization.Domain, orderer.Subdomain)
-
 		node := NewOrderer(orderer, organization, r.config.Organizations).
 			WithNetworks([]*yaml.Node{yaml.ScalarNode(r.config.Network)}).
 			WithVolumes().
@@ -41,7 +37,7 @@ func (r *Renderer) RenderOrderers(organization config.Organization) error {
 		err := yaml.MappingNode(
 			yaml.ScalarNode("services"),
 			node.Build(),
-		).ToFile(fmt.Sprintf("%s/%s.yml", storage, orderer.Subdomain))
+		).ToFile(ResolveOrdererDockerComposeFile(r.config.Output, organization.Domain, orderer.Subdomain))
 
 		return err
 	}
@@ -71,12 +67,10 @@ func (r *Renderer) RenderCertificateAuthority(organization config.Organization) 
 	return yaml.MappingNode(
 		yaml.ScalarNode("services"),
 		yaml.MappingNode(nodes...),
-	).ToFile(fmt.Sprintf("%s/%s/certificate-authority/certificate-authority.yml", r.config.Output, organization.Domain))
+	).ToFile(ResolveCertificateAuthorityDockerComposeFile(r.config.Output, organization.Domain))
 }
 
 func (r *Renderer) RenderPeer(organization config.Organization, corePeerGossipBootstrap string, peer config.Peer) error {
-	storage := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s", r.config.Output, organization.Domain, peer.Subdomain)
-
 	node := NewPeer(
 		fmt.Sprintf("%sMSP", organization.Name),
 		peer,
@@ -89,14 +83,14 @@ func (r *Renderer) RenderPeer(organization config.Organization, corePeerGossipBo
 	if err := yaml.MappingNode(
 		yaml.ScalarNode("services"),
 		node,
-	).ToFile(fmt.Sprintf("%s/%s.yml", storage, peer.Subdomain)); err != nil {
+	).ToFile(ResolvePeerDockerComposeFile(r.config.Output, organization.Domain, peer.Subdomain)); err != nil {
 		return err
 	}
 
 	return yaml.MappingNode(
 		yaml.ScalarNode("services"),
 		NewCouchDB(organization.Domain, peer.Subdomain, r.config.Network).Build(),
-	).ToFile(fmt.Sprintf("%s/couchdb.yml", storage))
+	).ToFile(ResolvePeerCouchDBDockerComposeFile(r.config.Output, organization.Domain, peer.Subdomain))
 }
 
 func (r *Renderer) RenderPeers(organization config.Organization) error {
@@ -165,7 +159,7 @@ func (r *Renderer) RenderTools(organization config.Organization, domains []strin
 			organization,
 			r.config.Organizations,
 			r.config.Network).Build(),
-	).ToFile(fmt.Sprintf("%s/%s/tools.yml", r.config.Output, organization.Domain))
+	).ToFile(ResolveToolsDockerComposeFile(r.config.Output, organization.Domain))
 }
 
 func (r *Renderer) Render() error {

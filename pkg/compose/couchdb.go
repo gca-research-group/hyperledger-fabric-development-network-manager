@@ -1,4 +1,4 @@
-package docker
+package compose
 
 import (
 	"fmt"
@@ -16,7 +16,7 @@ func NewCouchDB(
 	network string,
 ) *CouchDBNode {
 
-	peerDomain := resolvePeerDomain(peerSubdomain, domain)
+	peerDomain := ResolvePeerDomain(peerSubdomain, domain)
 
 	node := yaml.MappingNode(
 		yaml.ScalarNode(fmt.Sprintf("couchdb.%s", peerDomain)),

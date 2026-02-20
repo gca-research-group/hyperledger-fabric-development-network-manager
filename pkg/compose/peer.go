@@ -1,4 +1,4 @@
-package docker
+package compose
 
 import (
 	"fmt"
@@ -23,8 +23,8 @@ func NewPeer(
 ) *PeerNode {
 
 	domain := currentOrganization.Domain
-	peerDomain := resolvePeerDomain(peer.Subdomain, domain)
-	peerPort := resolvePeerPort(peer.Port)
+	peerDomain := ResolvePeerDomain(peer.Subdomain, domain)
+	peerPort := ResolvePeerPort(peer.Port)
 
 	node := yaml.MappingNode(
 		yaml.ScalarNode(peerDomain),
@@ -32,7 +32,7 @@ func NewPeer(
 			yaml.ScalarNode("container_name"),
 			yaml.ScalarNode(peerDomain),
 			yaml.ScalarNode("image"),
-			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-peer:%s", resolvePeerVersion(currentOrganization.Version.Peer))),
+			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-peer:%s", ResolvePeerVersion(currentOrganization.Version.Peer))),
 			yaml.ScalarNode("extends"),
 			yaml.MappingNode(
 				yaml.ScalarNode("file"),
@@ -65,17 +65,17 @@ func (pn *PeerNode) ExposePort() *PeerNode {
 	}
 
 	domain := pn.domain
-	peerDomain := resolvePeerDomain(pn.peer.Subdomain, domain)
+	peerDomain := ResolvePeerDomain(pn.peer.Subdomain, domain)
 
 	node := pn.GetValue(peerDomain)
-	node.GetOrCreateValue("ports", yaml.SequenceNode(yaml.ScalarNode(fmt.Sprintf("%d:%d", pn.peer.ExposePort, resolvePeerPort(pn.peer.Port)))))
+	node.GetOrCreateValue("ports", yaml.SequenceNode(yaml.ScalarNode(fmt.Sprintf("%d:%d", pn.peer.ExposePort, ResolvePeerPort(pn.peer.Port)))))
 
 	return pn
 }
 
 func (pn *PeerNode) WithVolumes() *PeerNode {
 	domain := pn.domain
-	peerDomain := resolvePeerDomain(pn.peer.Subdomain, domain)
+	peerDomain := ResolvePeerDomain(pn.peer.Subdomain, domain)
 
 	peerHostDir := fmt.Sprintf("./%[1]s/certificate-authority/organizations/peerOrganizations/%[1]s/peers/%[2]s", domain, peerDomain)
 	peerContainerDir := "/etc/hyperledger/fabric"

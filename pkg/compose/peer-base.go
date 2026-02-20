@@ -1,4 +1,4 @@
-package docker
+package compose
 
 import (
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"

@@ -1,10 +1,12 @@
-package fabric
+package network
 
 import (
 	"fmt"
 	"strings"
 
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/executor"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/file"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/compose"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
 
@@ -16,10 +18,10 @@ const (
 
 type IdentityManager struct {
 	config   config.Config
-	executor Executor
+	executor executor.Executor
 }
 
-func NewIdentityManager(config config.Config, executor Executor) *IdentityManager {
+func NewIdentityManager(config config.Config, executor executor.Executor) *IdentityManager {
 	return &IdentityManager{
 		config:   config,
 		executor: executor,
@@ -69,8 +71,8 @@ func (im *IdentityManager) GenerateAll() error {
 }
 
 func (im *IdentityManager) execInCA(domain string, script string) error {
-	caContainer := fmt.Sprintf("ca.%s", domain)
-	args := []string{"exec", caContainer, "sh", "-c", script}
+	caName := compose.ResolveCertificateAuthorityContainerName(domain)
+	args := []string{"exec", caName, "sh", "-c", script}
 	return im.executor.ExecCommand("docker", args...)
 }
 
@@ -84,7 +86,7 @@ func getOrgBaseDir(domain string, orgType string) string {
 func (im *IdentityManager) enrollCAadmin(organization config.Organization) error {
 	tls := "/etc/hyperledger/fabric-ca-server/ca-cert.pem"
 	u := "https://admin:adminpw@localhost:7054"
-	caName := fmt.Sprintf("ca.%s", organization.Domain)
+	caName := compose.ResolveCertificateAuthorityContainerName(organization.Domain)
 
 	args := []string{
 		"exec", caName,
@@ -133,7 +135,7 @@ NodeOUs:
 
 func (im *IdentityManager) copyCACertificates(organization config.Organization, orgType string) error {
 	basePath := getOrgBaseDir(organization.Domain, orgType)
-	caName := fmt.Sprintf("ca.%s", organization.Domain)
+	caName := compose.ResolveCertificateAuthorityContainerName(organization.Domain)
 
 	tlscacerts := fmt.Sprintf("%[1]s/msp/tlscacerts", basePath)
 	tlsca := fmt.Sprintf("%[1]s/tlsca", basePath)
@@ -194,7 +196,7 @@ func (im *IdentityManager) isRegistered(caName string, id string) (bool, error) 
 }
 
 func (im *IdentityManager) registerPeers(organization config.Organization) error {
-	caName := fmt.Sprintf("ca.%s", organization.Domain)
+	caName := compose.ResolveCertificateAuthorityContainerName(organization.Domain)
 
 	for _, peer := range organization.Peers {
 		id := peer.Subdomain
@@ -222,7 +224,7 @@ func (im *IdentityManager) registerPeers(organization config.Organization) error
 }
 
 func (im *IdentityManager) registerOrderers(organization config.Organization) error {
-	caName := fmt.Sprintf("ca.%s", organization.Domain)
+	caName := compose.ResolveCertificateAuthorityContainerName(organization.Domain)
 
 	for _, orderer := range organization.Orderers {
 		id := strings.ToLower(orderer.Subdomain)
@@ -250,7 +252,7 @@ func (im *IdentityManager) registerOrderers(organization config.Organization) er
 }
 
 func (im *IdentityManager) registerUser(organization config.Organization) error {
-	caName := fmt.Sprintf("ca.%s", organization.Domain)
+	caName := compose.ResolveCertificateAuthorityContainerName(organization.Domain)
 	id := "user1"
 
 	if alreadyExists, _ := im.isRegistered(caName, id); alreadyExists {
@@ -275,7 +277,7 @@ func (im *IdentityManager) registerUser(organization config.Organization) error 
 }
 
 func (im *IdentityManager) registerOrgAdmin(organization config.Organization) error {
-	caName := fmt.Sprintf("ca.%s", organization.Domain)
+	caName := compose.ResolveCertificateAuthorityContainerName(organization.Domain)
 	id := "orgadmin"
 
 	if alreadyExists, _ := im.isRegistered(caName, id); alreadyExists {
@@ -300,7 +302,7 @@ func (im *IdentityManager) registerOrgAdmin(organization config.Organization) er
 }
 
 func (im *IdentityManager) generateMSP(organization config.Organization, origin, destination string, id string) error {
-	caName := fmt.Sprintf("ca.%s", organization.Domain)
+	caName := compose.ResolveCertificateAuthorityContainerName(organization.Domain)
 	u := fmt.Sprintf("https://%[1]s:%[1]spw@localhost:7054", id)
 
 	for _, dir := range []string{origin, destination} {
@@ -431,7 +433,7 @@ func (im *IdentityManager) generateOrdererOrgAdminMSP(organization config.Organi
 }
 
 func (im *IdentityManager) generateTLS(organization config.Organization, origin string, destination string, id string) error {
-	caName := fmt.Sprintf("ca.%s", organization.Domain)
+	caName := compose.ResolveCertificateAuthorityContainerName(organization.Domain)
 	u := fmt.Sprintf("https://%[1]s:%[1]spw@localhost:7054", id)
 
 	for _, dir := range []string{origin, destination} {

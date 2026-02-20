@@ -1,4 +1,4 @@
-package docker
+package compose
 
 import (
 	"fmt"
@@ -15,11 +15,11 @@ type OrdererNode struct {
 
 func NewOrderer(orderer config.Orderer, currentOrganization config.Organization, organizations []config.Organization) *OrdererNode {
 	domain := currentOrganization.Domain
-	ordererDomain := resolveOrdererDomain(orderer.Subdomain, domain)
+	ordererDomain := ResolveOrdererDomain(orderer.Subdomain, domain)
 
 	cas := "/var/hyperledger/orderer/tls/ca.crt"
 
-	version := resolveOrdererVersion(currentOrganization.Version.Orderer)
+	version := ResolveOrdererVersion(currentOrganization.Version.Orderer)
 
 	node := yaml.MappingNode(
 		yaml.ScalarNode(ordererDomain),
@@ -55,14 +55,14 @@ func NewOrderer(orderer config.Orderer, currentOrganization config.Organization,
 }
 
 func (o *OrdererNode) WithNetworks(nodes []*yaml.Node) *OrdererNode {
-	node := o.GetValue(resolveOrdererDomain(o.orderer.Subdomain, o.domain))
+	node := o.GetValue(ResolveOrdererDomain(o.orderer.Subdomain, o.domain))
 	node.GetOrCreateValue("networks", yaml.SequenceNode(nodes...))
 	return o
 }
 
 func (o *OrdererNode) WithVolumes() *OrdererNode {
 	domain := o.domain
-	ordererDomain := resolveOrdererDomain(o.orderer.Subdomain, domain)
+	ordererDomain := ResolveOrdererDomain(o.orderer.Subdomain, domain)
 
 	ordererHostDir := fmt.Sprintf("./%[1]s/certificate-authority/organizations/ordererOrganizations/%[1]s/orderers/%[2]s", o.domain, ordererDomain)
 	ordererContainerDir := "/var/hyperledger/orderer"
@@ -84,10 +84,10 @@ func (o *OrdererNode) ExposePort() *OrdererNode {
 		return o
 	}
 
-	ordererDomain := resolveOrdererDomain(o.orderer.Subdomain, o.domain)
+	ordererDomain := ResolveOrdererDomain(o.orderer.Subdomain, o.domain)
 
 	node := o.GetValue(ordererDomain)
-	node.GetOrCreateValue("ports", yaml.SequenceNode(yaml.ScalarNode(fmt.Sprintf("%d:%d", o.orderer.ExposePort, resolveOrdererPort(o.orderer.Port)))))
+	node.GetOrCreateValue("ports", yaml.SequenceNode(yaml.ScalarNode(fmt.Sprintf("%d:%d", o.orderer.ExposePort, ResolveOrdererPort(o.orderer.Port)))))
 
 	return o
 }

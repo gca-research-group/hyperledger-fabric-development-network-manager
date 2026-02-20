@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/directory"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/compose"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/configtx"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/docker"
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +33,7 @@ var artifactsGenerateCmd = &cobra.Command{
 		}
 
 		configTxRenderer := configtx.NewRenderer(config)
-		dockerRenderer := docker.NewRenderer(config)
+		dockerRenderer := compose.NewRenderer(config)
 
 		if err := configTxRenderer.Render(); err != nil {
 			return err

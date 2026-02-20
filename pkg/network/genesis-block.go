@@ -1,27 +1,28 @@
-package fabric
+package network
 
 import (
 	"fmt"
 	"strings"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/compose"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
 
-func (f *Fabric) GenerateGenesisBlock() error {
+func (f *Network) GenerateGenesisBlock() error {
 	for _, organization := range f.config.Organizations {
 
 		if organization.Bootstrap {
 			for _, channel := range f.config.Channels {
 				fmt.Printf("\n=========== Generating orderer genesis block to %s ===========\n", organization.Name)
 
-				containerName := buildToolsContainerName(organization)
-				tools := fmt.Sprintf("%s/%s/tools.yml", f.config.Output, organization.Domain)
+				tools := compose.ResolveToolsDockerComposeFile(f.config.Output, organization.Domain)
+				containerName := compose.ResolveToolsContainerName(organization)
 
 				args := []string{
 					"compose", "-f", f.network, "-f", tools, "run", "--rm", "-T", containerName,
 					"configtxgen",
-					"-outputBlock", fmt.Sprintf("%s/channel/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(channel.Name)),
+					"-outputBlock", fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(channel.Name)),
 					"-profile", channel.Profile.Name,
 					"-channelID", strings.ToLower(channel.Name),
 					"-configPath", fmt.Sprintf("%s/", constants.DEFAULT_FABRIC_DIRECTORY),
@@ -37,7 +38,7 @@ func (f *Fabric) GenerateGenesisBlock() error {
 	return nil
 }
 
-func (f *Fabric) FetchGenesisBlock() error {
+func (f *Network) FetchGenesisBlock() error {
 	var orderer config.Orderer
 	var ordererDomain string
 	var ordererPort int
@@ -74,10 +75,10 @@ func (f *Fabric) FetchGenesisBlock() error {
 			}
 		}
 
-		tools := fmt.Sprintf("%s/%s/tools.yml", f.config.Output, organization.Domain)
+		tools := compose.ResolveToolsDockerComposeFile(f.config.Output, organization.Domain)
 		for _, channel := range channels {
-			containerName := buildToolsContainerName(organization)
-			block := fmt.Sprintf("%s/channel/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(channel.Name))
+			containerName := compose.ResolveToolsContainerName(organization)
+			block := fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(channel.Name))
 
 			args := []string{
 				"compose", "-f", f.network, "-f", tools, "run", "--rm", "-T", containerName,

@@ -1,4 +1,4 @@
-package docker
+package compose
 
 import (
 	"fmt"
@@ -18,9 +18,9 @@ func NewCertificateAuthority(organization config.Organization) *CertificateAutho
 
 	domain := organization.Domain
 	certificateAuthority := organization.CertificateAuthority
-	certificateAuthorityDomain := resolveCertificateAuthorityDomain(domain)
+	certificateAuthorityDomain := ResolveCertificateAuthorityDomain(domain)
 
-	version := resolveCertificateAuthorityVersion(organization.Version.CertificateAuthority)
+	version := ResolveCertificateAuthorityVersion(organization.Version.CertificateAuthority)
 
 	node := yaml.MappingNode(
 		yaml.ScalarNode(certificateAuthorityDomain),
@@ -56,7 +56,7 @@ func NewCertificateAuthority(organization config.Organization) *CertificateAutho
 }
 
 func (ca *CertificateAuthorityNode) WithNetworks(nodes []*yaml.Node) *CertificateAuthorityNode {
-	node := ca.GetValue(resolveCertificateAuthorityDomain(ca.domain))
+	node := ca.GetValue(ResolveCertificateAuthorityDomain(ca.domain))
 	node.GetOrCreateValue("networks", yaml.SequenceNode(nodes...))
 	return ca
 }
@@ -66,7 +66,7 @@ func (ca *CertificateAuthorityNode) ExposePort() *CertificateAuthorityNode {
 		return ca
 	}
 
-	certificateAuthorityDomain := resolveCertificateAuthorityDomain(ca.domain)
+	certificateAuthorityDomain := ResolveCertificateAuthorityDomain(ca.domain)
 
 	node := ca.GetValue(certificateAuthorityDomain)
 	node.GetOrCreateValue("ports", yaml.SequenceNode(yaml.ScalarNode(fmt.Sprintf("%d:%d", ca.certificateAuthority.ExposePort, constants.DEFAULT_CERTIFICATE_AUTHORITY_PORT))))

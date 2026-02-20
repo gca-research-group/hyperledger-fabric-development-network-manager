@@ -7,9 +7,9 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "tool",
-	Short: "Tool generates and manages artifacts",
-	Long:  "Tool is a CLI for generating and managing artifacts from configuration files.",
+	Use:   "fno",
+	Short: "fno generates and manages artifacts",
+	Long:  "fno is a CLI for generating and managing artifacts from configuration files.",
 }
 
 func Execute() {

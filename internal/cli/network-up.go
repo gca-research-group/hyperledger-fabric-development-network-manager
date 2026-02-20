@@ -3,8 +3,9 @@ package cli
 import (
 	"fmt"
 
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/executor"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/fabric"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/network"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +22,7 @@ var upCmd = &cobra.Command{
 			return err
 		}
 
-		instance, err := fabric.NewFabric(*config, &fabric.DefaultExecutor{})
+		instance, err := network.NewNetwork(*config, &executor.DefaultExecutor{})
 
 		if err != nil {
 			return err
@@ -47,5 +48,5 @@ func init() {
 
 	upCmd.MarkFlagRequired("config")
 
-	rootCmd.AddCommand(upCmd)
+	networkCmd.AddCommand(upCmd)
 }

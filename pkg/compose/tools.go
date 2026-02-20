@@ -1,4 +1,4 @@
-package docker
+package compose
 
 import (
 	"fmt"
@@ -21,7 +21,7 @@ func NewTools(currentOrganization config.Organization, organizations []config.Or
 
 	volumes := []*yaml.Node{
 		yaml.ScalarNode(fmt.Sprintf("./configtx.yml:%s/configtx.yml", constants.DEFAULT_FABRIC_DIRECTORY)),
-		yaml.ScalarNode(fmt.Sprintf("./%s/channel:%s/channel", domain, constants.DEFAULT_FABRIC_DIRECTORY)),
+		yaml.ScalarNode(fmt.Sprintf("./%s/channels:%s/channels", domain, constants.DEFAULT_FABRIC_DIRECTORY)),
 
 		yaml.ScalarNode(fmt.Sprintf("./%[1]s/certificate-authority/organizations:%[2]s/%[1]s", domain, constants.DEFAULT_FABRIC_DIRECTORY)),
 	}
