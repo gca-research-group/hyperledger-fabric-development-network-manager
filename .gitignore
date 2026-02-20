@@ -1,12 +1,11 @@
 # Binaries & Build Artifacts
 /my-gin-api
-.bin/**
-*.exe
 *.out
 *.test
 *.so
 *.dll
 dist
+output
 
 # Go Modules & Dependencies
 /vendor/
