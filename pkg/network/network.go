@@ -22,10 +22,6 @@ func NewNetwork(config config.Config, exec executor.Executor) (*Network, error) 
 		return nil, fmt.Errorf("configuration must contain at least one organization")
 	}
 
-	if exec == nil {
-		exec = &executor.DefaultExecutor{}
-	}
-
 	network := compose.ResolveNetworkDockerComposeFile(config.Output)
 
 	identityManager := NewIdentityManager(config, exec)

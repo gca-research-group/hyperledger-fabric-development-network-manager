@@ -192,7 +192,7 @@ func (im *IdentityManager) isRegistered(caName string, id string) (bool, error) 
 		return false, err
 	}
 
-	return strings.Contains(string(output), id), nil
+	return strings.Contains(strings.TrimSpace(string(output)), id), nil
 }
 
 func (im *IdentityManager) registerPeers(organization config.Organization) error {

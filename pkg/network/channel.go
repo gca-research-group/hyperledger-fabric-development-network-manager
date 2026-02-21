@@ -63,11 +63,7 @@ func (f *Network) JoinPeersToTheChannels() error {
 			block := fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(channel.Name))
 
 			for _, peer := range organization.Peers {
-				peerPort := peer.Port
-
-				if peerPort == 0 {
-					peerPort = constants.DEFAULT_PEER_PORT
-				}
+				peerPort := compose.ResolvePeerPort(peer.Port)
 
 				tlsCertFile := fmt.Sprintf("%[1]s/%[2]s/peerOrganizations/peers/%[3]s.%[2]s/tls/server.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, peer.Subdomain)
 				tlsKeyFile := fmt.Sprintf("%[1]s/%[2]s/peerOrganizations/peers/%[3]s.%[2]s/tls/server.key", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, peer.Subdomain)

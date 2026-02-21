@@ -2,6 +2,7 @@ package compose
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
@@ -14,7 +15,7 @@ type ToolsNode struct {
 	name string
 }
 
-func NewTools(currentOrganization config.Organization, organizations []config.Organization, network string) *ToolsNode {
+func NewTools(currentOrganization config.Organization, organizations []config.Organization, chaincodes []config.Chaincode, network string) *ToolsNode {
 	name := currentOrganization.Name
 	domain := currentOrganization.Domain
 	mspID := fmt.Sprintf("%sMSP", currentOrganization.Name)
@@ -63,6 +64,10 @@ func NewTools(currentOrganization config.Organization, organizations []config.Or
 		}
 	}
 
+	for _, chaincode := range chaincodes {
+		volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%[1]s:/chaincodes/%[2]s", chaincode.Path, filepath.Base(chaincode.Path))))
+	}
+
 	corePeerHostIndex := 0
 
 	for i, peer := range currentOrganization.Peers {
@@ -71,20 +76,12 @@ func NewTools(currentOrganization config.Organization, organizations []config.Or
 		}
 	}
 
-	corePeerPort := currentOrganization.Peers[corePeerHostIndex].Port
+	corePeerPort := ResolvePeerPort(currentOrganization.Peers[corePeerHostIndex].Port)
 	corePeerSubdomain := currentOrganization.Peers[corePeerHostIndex].Subdomain
-
-	if corePeerPort == 0 {
-		corePeerPort = constants.DEFAULT_PEER_PORT
-	}
 
 	corePeerHost := fmt.Sprintf("%s.%s:%d", corePeerSubdomain, currentOrganization.Domain, corePeerPort)
 
-	version := currentOrganization.Version.Peer
-
-	if version == "" {
-		version = constants.DEFAULT_FABRIC_VERSION
-	}
+	version := ResolvePeerVersion(currentOrganization.Version.Peer)
 
 	node := yaml.MappingNode(
 		yaml.ScalarNode(fmt.Sprintf("hyperledger-fabric-tools-%s", strings.ToLower(name))),

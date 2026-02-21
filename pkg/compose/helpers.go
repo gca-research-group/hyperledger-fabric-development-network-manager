@@ -118,6 +118,10 @@ func RemoveContainersInNetwork(network string) error {
 	return nil
 }
 
+func ResolvePeerContainerName(domain string, subdomain string) string {
+	return fmt.Sprintf("%s.%s", subdomain, domain)
+}
+
 func ResolvePeerDockerComposeFile(output string, domain string, subdomain string) string {
 	return fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s/%[3]s.yml", output, domain, subdomain)
 }
@@ -155,5 +159,4 @@ func RunContainerFromTheDockerComposeFile(network string, file string) error {
 	executor := &executor.DefaultExecutor{}
 
 	return executor.ExecCommand("docker", args...)
-
 }

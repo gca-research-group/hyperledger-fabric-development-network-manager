@@ -3,7 +3,6 @@ package compose
 import (
 	"fmt"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
@@ -104,11 +103,7 @@ func (r *Renderer) RenderPeers(organization config.Organization) error {
 
 		gossipPeer := organization.Peers[gossipPeerIndex]
 
-		gossipPeerPort := gossipPeer.Port
-
-		if gossipPeerPort == 0 {
-			gossipPeerPort = constants.DEFAULT_PEER_PORT
-		}
+		gossipPeerPort := ResolvePeerPort(gossipPeer.Port)
 
 		corePeerGossipBootstrap := fmt.Sprintf("%s.%s:%d", gossipPeer.Subdomain, organization.Domain, gossipPeerPort)
 
@@ -158,6 +153,7 @@ func (r *Renderer) RenderTools(organization config.Organization, domains []strin
 		NewTools(
 			organization,
 			r.config.Organizations,
+			r.config.Chaincodes,
 			r.config.Network).Build(),
 	).ToFile(ResolveToolsDockerComposeFile(r.config.Output, organization.Domain))
 }
