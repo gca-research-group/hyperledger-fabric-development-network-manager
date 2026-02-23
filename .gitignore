@@ -6,6 +6,7 @@
 *.dll
 dist
 output
+tmp
 
 # Go Modules & Dependencies
 /vendor/

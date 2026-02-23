@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/compose"
@@ -45,4 +46,8 @@ func ResolvePeersTLSConnection(organizations []config.Organization) [][2]string 
 	}
 
 	return data
+}
+
+func ResolveChannelID(channel config.Channel) string {
+	return strings.ToLower(channel.Name)
 }

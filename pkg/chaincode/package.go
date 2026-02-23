@@ -3,7 +3,6 @@ package chaincode
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/compose"
 )
@@ -17,26 +16,19 @@ func (c *Chaincode) Package() error {
 
 	for _, chaincode := range c.config.Chaincodes {
 		name := filepath.Base(chaincode.Path)
-		basePath := fmt.Sprintf("/chaincodes/%[1]s", name)
-		tarfile := fmt.Sprintf("%s/%s.tar.gz", basePath, name)
+		version := DEFAULT_CHAINCODE_VERSION
+		label := ResolveLabel(name, version)
+		basePath := ResolveChaincodePath(name)
+		tarfile := ResolveChaincode(name, version)
 
-		args := []string{
-			"compose", "-f", c.network, "-f", composefile, "run", "--rm", "-T", containerName,
-			"sh", "-c", fmt.Sprintf("sha256sum -c %[1]s/%[2]s.sha256sum", basePath, name),
-		}
+		isChaincodeUpToDate := c.IsChaincodeUpToDate(composefile, containerName, basePath, name, version)
+		chaincodeFileExists := c.ChaincodeFileExists(composefile, containerName, tarfile)
 
-		output, _ := c.executor.OutputCommand("docker", args...)
-
-		args = []string{
-			"compose", "-f", c.network, "-f", composefile, "run", "--rm", "-T", containerName,
-			"sh", "-c", fmt.Sprintf("[ -f %s ]", tarfile),
-		}
-
-		if err := c.executor.ExecCommand("docker", args...); err == nil && strings.Contains(strings.TrimSpace(string(output)), "OK") {
+		if chaincodeFileExists && isChaincodeUpToDate {
 			continue
 		}
 
-		args = []string{
+		args := []string{
 			"compose", "-f", c.network, "-f", composefile, "run", "--rm", "-T", containerName,
 			"sh", "-c", fmt.Sprintf("cd %s && [ -f go.mod ] || go mod init %s; go mod tidy", basePath, name),
 		}
@@ -47,7 +39,7 @@ func (c *Chaincode) Package() error {
 
 		args = []string{
 			"compose", "-f", c.network, "-f", composefile, "run", "--rm", "-T", containerName,
-			"sh", "-c", fmt.Sprintf("sha256sum %[1]s/%[2]s.go > %[1]s/%[2]s.sha256sum", basePath, name),
+			"sh", "-c", fmt.Sprintf("sha256sum %[1]s/%[2]s.go > %[3]s", basePath, name, ResolveChecksum(name, version)),
 		}
 
 		if err := c.executor.ExecCommand("docker", args...); err != nil {
@@ -59,7 +51,7 @@ func (c *Chaincode) Package() error {
 			"peer", "lifecycle", "chaincode", "package", tarfile,
 			"--path", basePath,
 			"--lang", "golang",
-			"--label", name,
+			"--label", label,
 		}
 
 		if err := c.executor.ExecCommand("docker", args...); err != nil {

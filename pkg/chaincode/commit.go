@@ -3,7 +3,6 @@ package chaincode
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/compose"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/network"
@@ -11,16 +10,7 @@ import (
 
 func (c *Chaincode) Commit() error {
 	ordererAddress, caFile := network.ResolveOrdererTLSConnection(c.config.Organizations)
-	signaturePolicy := ""
-
-	for _, organization := range c.config.Organizations {
-		if signaturePolicy == "" {
-			signaturePolicy = fmt.Sprintf("'%sMSP.peer'", organization.Name)
-			continue
-		}
-
-		signaturePolicy = strings.Join([]string{signaturePolicy, fmt.Sprintf("'%sMSP.peer'", organization.Name)}, ",")
-	}
+	signaturePolicy := c.ResolveSignaturePolicy()
 
 	organization := c.config.Organizations[0]
 
@@ -30,31 +20,23 @@ func (c *Chaincode) Commit() error {
 	for _, channel := range c.config.Channels {
 		for _, chaincode := range channel.Chaincodes {
 			name := filepath.Base(chaincode.Path)
+			version := DEFAULT_CHAINCODE_VERSION
+			sequence := DEFAULT_CHAINCODE_SEQUENCE
 
-			args := []string{
-				"compose", "-f", c.network, "-f", composefile, "run", "--rm", "-T", containerName,
-				"peer", "lifecycle", "chaincode", "querycommitted", "--channelID", strings.ToLower(channel.Name), "--name", name,
-			}
-
-			approved, _ := c.executor.OutputCommand("docker", args...)
-
-			if strings.Contains(strings.TrimSpace(string(approved)), "Approved") {
+			if c.IsChaincodeCommitted(composefile, containerName, network.ResolveChannelID(channel), name) {
 				continue
 			}
 
-			version := "1.0"
-			sequence := "1"
-
 			peers := network.ResolvePeersTLSConnection(c.config.Organizations)
 
-			args = []string{
+			args := []string{
 				"compose", "-f", c.network, "-f", composefile, "run", "--rm", "-T", containerName,
 				"peer", "lifecycle", "chaincode", "commit",
-				"--channelID", strings.ToLower(channel.Name),
+				"--channelID", network.ResolveChannelID(channel),
 				"--name", name,
 				"--version", version,
 				"--sequence", sequence,
-				"--signature-policy", fmt.Sprintf("AND(%s)", signaturePolicy),
+				"--signature-policy", signaturePolicy,
 				"--orderer", ordererAddress,
 				"--tls", "--cafile", caFile,
 			}

@@ -3,7 +3,6 @@ package chaincode
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/compose"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/network"
@@ -11,16 +10,7 @@ import (
 
 func (c *Chaincode) Approve() error {
 	ordererAddress, caFile := network.ResolveOrdererTLSConnection(c.config.Organizations)
-	signaturePolicy := ""
-
-	for _, organization := range c.config.Organizations {
-		if signaturePolicy == "" {
-			signaturePolicy = fmt.Sprintf("'%sMSP.peer'", organization.Name)
-			continue
-		}
-
-		signaturePolicy = strings.Join([]string{signaturePolicy, fmt.Sprintf("'%sMSP.peer'", organization.Name)}, ",")
-	}
+	signaturePolicy := c.ResolveSignaturePolicy()
 
 	for _, organization := range c.config.Organizations {
 		composefile := compose.ResolveToolsDockerComposeFile(c.config.Output, organization.Domain)
@@ -29,39 +19,25 @@ func (c *Chaincode) Approve() error {
 		for _, channel := range c.config.Channels {
 			for _, chaincode := range channel.Chaincodes {
 				name := filepath.Base(chaincode.Path)
-				basePath := fmt.Sprintf("/chaincodes/%[1]s", name)
-				tarfile := fmt.Sprintf("%s/%s.tar.gz", basePath, name)
+				version := DEFAULT_CHAINCODE_VERSION
+				sequence := DEFAULT_CHAINCODE_SEQUENCE
+				tarfile := ResolveChaincode(name, version)
 
-				args := []string{
-					"compose", "-f", c.network, "-f", composefile, "run", "--rm", "-T", containerName,
-					"peer", "lifecycle", "chaincode", "calculatepackageid", tarfile,
-				}
-
-				packageId, _ := c.executor.OutputCommand("docker", args...)
-
-				args = []string{
-					"compose", "-f", c.network, "-f", composefile, "run", "--rm", "-T", containerName,
-					"peer", "lifecycle", "chaincode", "queryapproved", "--channelID", strings.ToLower(channel.Name), "--name", name,
-				}
-
-				approved, _ := c.executor.OutputCommand("docker", args...)
-
-				if strings.Contains(strings.TrimSpace(string(approved)), "Approved") {
+				if c.IsChaincodeApproved(composefile, containerName, network.ResolveChannelID(channel), name) {
 					continue
 				}
 
-				version := "1.0"
-				sequence := "1"
+				packageId := c.QueryPackageId(composefile, containerName, tarfile)
 
-				args = []string{
+				args := []string{
 					"compose", "-f", c.network, "-f", composefile, "run", "--rm", "-T", containerName,
 					"peer", "lifecycle", "chaincode", "approveformyorg",
-					"--channelID", strings.ToLower(channel.Name),
+					"--channelID", network.ResolveChannelID(channel),
 					"--name", name,
 					"--version", version,
 					"--sequence", sequence,
-					"--package-id", string(packageId),
-					"--signature-policy", fmt.Sprintf("AND(%s)", signaturePolicy),
+					"--package-id", packageId,
+					"--signature-policy", signaturePolicy,
 					"--orderer", ordererAddress,
 					"--tls", "--cafile", caFile,
 				}

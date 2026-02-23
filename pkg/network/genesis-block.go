@@ -2,7 +2,6 @@ package network
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/compose"
@@ -22,9 +21,9 @@ func (f *Network) GenerateGenesisBlock() error {
 				args := []string{
 					"compose", "-f", f.network, "-f", tools, "run", "--rm", "-T", containerName,
 					"configtxgen",
-					"-outputBlock", fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(channel.Name)),
+					"-outputBlock", fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, ResolveChannelID(channel)),
 					"-profile", channel.Profile.Name,
-					"-channelID", strings.ToLower(channel.Name),
+					"-channelID", ResolveChannelID(channel),
 					"-configPath", fmt.Sprintf("%s/", constants.DEFAULT_FABRIC_DIRECTORY),
 				}
 
@@ -60,11 +59,11 @@ func (f *Network) FetchGenesisBlock() error {
 		tools := compose.ResolveToolsDockerComposeFile(f.config.Output, organization.Domain)
 		for _, channel := range channels {
 			containerName := compose.ResolveToolsContainerName(organization)
-			block := fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(channel.Name))
+			block := fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, ResolveChannelID(channel))
 
 			args := []string{
 				"compose", "-f", f.network, "-f", tools, "run", "--rm", "-T", containerName,
-				"peer", "channel", "fetch", "0", block, "-c", strings.ToLower(channel.Name), "-o", ordererAddress, "--tls", "--cafile", caFile,
+				"peer", "channel", "fetch", "0", block, "-c", ResolveChannelID(channel), "-o", ordererAddress, "--tls", "--cafile", caFile,
 			}
 
 			if err := f.executor.ExecCommand("docker", args...); err != nil {

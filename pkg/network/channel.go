@@ -24,8 +24,8 @@ func (f *Network) JoinOrdererToTheChannel() error {
 				args := []string{
 					"compose", "-f", f.network, "-f", tools, "run", "--rm", "-T", containerName,
 					"osnadmin", "channel", "join",
-					"--channelID", strings.ToLower(channel.Name),
-					"--config-block", fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(channel.Name)),
+					"--channelID", ResolveChannelID(channel),
+					"--config-block", fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, ResolveChannelID(channel)),
 					"-o", fmt.Sprintf("%s.%s:7053", orderer.Subdomain, organization.Domain),
 					"--ca-file", caFile,
 					"--client-cert", clientCert,
@@ -60,7 +60,7 @@ func (f *Network) JoinPeersToTheChannels() error {
 
 		for _, channel := range channels {
 			containerName := compose.ResolveToolsContainerName(organization)
-			block := fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, strings.ToLower(channel.Name))
+			block := fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, ResolveChannelID(channel))
 
 			for _, peer := range organization.Peers {
 				peerPort := compose.ResolvePeerPort(peer.Port)
@@ -84,7 +84,7 @@ func (f *Network) JoinPeersToTheChannels() error {
 					return fmt.Errorf("Error when listing the channels that the peer %s of the organization %s has joined to the channel %s: %v\n", peer.Subdomain, organization.Name, channel.Name, err)
 				}
 
-				if strings.Contains(string(output), strings.ToLower(channel.Name)) {
+				if strings.Contains(string(output), ResolveChannelID(channel)) {
 					fmt.Printf("Skipping: the peer %s of the organization %s has already joined to the channel %s\n", peer.Subdomain, organization.Name, channel.Name)
 					continue
 				}

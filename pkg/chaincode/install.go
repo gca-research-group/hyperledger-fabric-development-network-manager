@@ -16,28 +16,13 @@ func (c *Chaincode) Install() error {
 
 		for _, chaincode := range c.config.Chaincodes {
 			name := filepath.Base(chaincode.Path)
-			basePath := fmt.Sprintf("/chaincodes/%[1]s", name)
-			tarfile := fmt.Sprintf("%s/%s.tar.gz", basePath, name)
+			tarfile := ResolveChaincode(name, DEFAULT_CHAINCODE_VERSION)
 
-			args := []string{
-				"compose", "-f", c.network, "-f", composefile, "run", "--rm", "-T", containerName,
-				"peer", "lifecycle", "chaincode", "calculatepackageid", tarfile,
-			}
-
-			packageId, _ := c.executor.OutputCommand("docker", args...)
-
-			args = []string{
-				"compose", "-f", c.network, "-f", composefile, "run", "--rm", "-T", containerName,
-				"peer", "lifecycle", "chaincode", "queryinstalled",
-			}
-
-			installed, _ := c.executor.OutputCommand("docker", args...)
-
-			if strings.Contains(strings.TrimSpace(string(installed)), strings.TrimSpace(string(packageId))) {
+			if c.IsChaincodeInstalled(composefile, containerName, tarfile) {
 				continue
 			}
 
-			args = []string{
+			args := []string{
 				"compose", "-f", c.network, "-f", composefile, "run", "--rm", "-T", containerName,
 				"peer", "lifecycle", "chaincode", "install", tarfile,
 			}
@@ -49,4 +34,22 @@ func (c *Chaincode) Install() error {
 	}
 
 	return nil
+}
+
+func (c *Chaincode) QueryInstalled(toolsComposeFile, containerName string) string {
+
+	args := []string{
+		"compose", "-f", c.network, "-f", toolsComposeFile, "run", "--rm", "-T", containerName,
+		"peer", "lifecycle", "chaincode", "queryinstalled",
+	}
+
+	installed, _ := c.executor.OutputCommand("docker", args...)
+
+	return strings.TrimSpace(string(installed))
+}
+
+func (c *Chaincode) IsChaincodeInstalled(toolsComposeFile, containerName string, chaincodeTarFile string) bool {
+	packageId := c.QueryPackageId(toolsComposeFile, containerName, chaincodeTarFile)
+	installed := c.QueryInstalled(toolsComposeFile, containerName)
+	return strings.Contains(installed, packageId)
 }

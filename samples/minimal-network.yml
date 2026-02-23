@@ -1,5 +1,8 @@
 output: output/minimal-network
 network: minimal-network
+chaincodes:
+  - &product
+    path: C:/Users/teles/Documents/hyperledger-fabric-network-development-manager/samples/chaincodes/product
 
 capabilities:
   channel: V2_0
@@ -35,3 +38,5 @@ profiles:
 channels:
   - name: defaultchannel
     profile: *DefaultProfile
+    chaincodes:
+      - *product

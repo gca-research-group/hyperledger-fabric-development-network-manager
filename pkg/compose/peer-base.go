@@ -1,6 +1,8 @@
 package compose
 
 import (
+	"fmt"
+
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
 )
 
@@ -15,7 +17,7 @@ func NewPeerBase(network string) *PeerBaseNode {
 			yaml.ScalarNode("environment"),
 			yaml.SequenceNode(
 				yaml.ScalarNode("CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock"),
-				yaml.ScalarNode("CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=network"),
+				yaml.ScalarNode(fmt.Sprintf("CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=%s", network)),
 				yaml.ScalarNode("FABRIC_LOGGING_SPEC=INFO"),
 				yaml.ScalarNode("CORE_PEER_GOSSIP_USELEADERELECTION=true"),
 				yaml.ScalarNode("CORE_PEER_GOSSIP_ORGLEADER=false"),
