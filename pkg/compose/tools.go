@@ -2,6 +2,7 @@ package compose
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
@@ -63,8 +64,15 @@ func NewTools(currentOrganization config.Organization, organizations []config.Or
 		}
 	}
 
+	currentDir, _ := os.Getwd()
+
 	for _, chaincode := range chaincodes {
-		volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%[1]s:/chaincodes/%[2]s", filepath.Dir(chaincode.Path), filepath.Base(filepath.Dir(chaincode.Path)))))
+		hostDir := filepath.Dir(chaincode.Path)
+		if !filepath.IsAbs(hostDir) {
+			hostDir = filepath.Join(currentDir, hostDir)
+		}
+
+		volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%[1]s:/chaincodes/%[2]s", hostDir, filepath.Base(filepath.Dir(chaincode.Path)))))
 	}
 
 	corePeerHostIndex := 0
