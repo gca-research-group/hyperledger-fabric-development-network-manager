@@ -51,3 +51,16 @@ func (f *Network) RunCAContainers() error {
 
 	return nil
 }
+
+func (f *Network) RunToolsContainers() error {
+	fmt.Print("\n=========== Executing tools containers ===========\n")
+	for _, organization := range f.config.Organizations {
+		config := compose.ResolveToolsDockerComposeFile(f.config.Output, organization.Domain)
+
+		if err := compose.RunContainerFromTheDockerComposeFile(f.network, config); err != nil {
+			return fmt.Errorf("Error when executing the tool container for the organization %s: %v\n", organization.Name, err)
+		}
+	}
+
+	return nil
+}

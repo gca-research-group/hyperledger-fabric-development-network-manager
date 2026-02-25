@@ -10,6 +10,7 @@ func (f *Network) Start() error {
 		{"Start Certificate Authorities", f.RunCAContainers},
 		{"Start Orderers", f.RunOrdererContainers},
 		{"Start Peers", f.RunPeerContainers},
+		{"Start Tools", f.RunToolsContainers},
 	}
 
 	for _, step := range steps {

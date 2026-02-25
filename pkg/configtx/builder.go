@@ -33,7 +33,7 @@ func NewBuilder(config *config.Config) *Builder {
 func (c *Builder) BuildOrganizations() {
 	for _, organization := range c.config.Organizations {
 		for _, orderer := range organization.Orderers {
-			mspID := BuildMSPID(orderer.Name)
+			mspID := config.ResolveOrdererMSPID(orderer)
 			org := NewOrdererOrganization(orderer.Name, organization.Domain, mspID).
 				WithDefaultOrdererPolicies(mspID)
 
@@ -46,7 +46,7 @@ func (c *Builder) BuildOrganizations() {
 	}
 
 	for _, organization := range c.config.Organizations {
-		mspID := BuildMSPID(organization.Name)
+		mspID := config.ResolveOrganizationMSPID(organization)
 
 		var anchorPeerHost string
 		var anchorPeerPort int

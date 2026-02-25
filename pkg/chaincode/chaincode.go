@@ -31,7 +31,7 @@ func (c *Chaincode) Publish() error {
 	}{
 		{"Package the Chaincodes", c.Package},
 		{"Install in the Peers", c.Install},
-		{"Approving the Chaincodes", c.Approve},
+		{"Approve the Chaincodes", c.Approve},
 		{"Commit the Chaincodes", c.Commit},
 	}
 

@@ -2,51 +2,57 @@ package chaincode
 
 import (
 	"fmt"
-	"path/filepath"
+	"strconv"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/compose"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/network"
 )
 
 func (c *Chaincode) Commit() error {
 	ordererAddress, caFile := network.ResolveOrdererTLSConnection(c.config.Organizations)
-	signaturePolicy := c.ResolveSignaturePolicy()
-
 	organization := c.config.Organizations[0]
 
-	composefile := compose.ResolveToolsDockerComposeFile(c.config.Output, organization.Domain)
-	containerName := compose.ResolveToolsContainerName(organization)
-
 	for _, channel := range c.config.Channels {
+		channelID := network.ResolveChannelID(channel)
 		for _, chaincode := range channel.Chaincodes {
-			name := filepath.Base(chaincode.Path)
-			version := DEFAULT_CHAINCODE_VERSION
-			sequence := DEFAULT_CHAINCODE_SEQUENCE
+			version := LoadVersion(chaincode)
+			sequence := c.QueryCurrentApprovedSequence(organization, channelID, chaincode.Name)
 
-			if c.IsChaincodeCommitted(composefile, containerName, network.ResolveChannelID(channel), name) {
+			if c.IsChaincodeCommitted(organization, channelID, chaincode.Name, version) {
 				continue
 			}
 
 			peers := network.ResolvePeersTLSConnection(c.config.Organizations)
 
 			args := []string{
-				"compose", "-f", c.network, "-f", composefile, "run", "--rm", "-T", containerName,
 				"peer", "lifecycle", "chaincode", "commit",
-				"--channelID", network.ResolveChannelID(channel),
-				"--name", name,
+				"--channelID", channelID,
+				"--name", chaincode.Name,
 				"--version", version,
-				"--sequence", sequence,
-				"--signature-policy", signaturePolicy,
+				"--sequence", strconv.Itoa(sequence),
 				"--orderer", ordererAddress,
 				"--tls", "--cafile", caFile,
+			}
+
+			if chaincode.SignaturePolicy != "" {
+				args = append(args, "--signature-policy", chaincode.SignaturePolicy)
+			}
+
+			if chaincode.ChannelConfigPolicy != "" {
+				args = append(args, "--channel-config-policy", chaincode.ChannelConfigPolicy)
+			}
+
+			if chaincode.CollectionsConfig != "" {
+				args = append(args, "--collections-config", ResolveCollectionsConfig(chaincode))
 			}
 
 			for _, peer := range peers {
 				args = append(args, []string{"--peerAddresses", peer[0], "--tlsRootCertFiles", peer[1]}...)
 			}
 
-			if err := c.executor.ExecCommand("docker", args...); err != nil {
-				return fmt.Errorf("Error when approving the chaincode %s in the organization %s: %v", name, organization.Name, err)
+			_, err := c.ExecInTools(organization, args)
+
+			if err != nil {
+				return fmt.Errorf("Error when committing the chaincode %s in the organization %s: %v", chaincode.Name, organization.Name, err)
 			}
 		}
 	}

@@ -71,7 +71,6 @@ func (r *Renderer) RenderCertificateAuthority(organization config.Organization) 
 
 func (r *Renderer) RenderPeer(organization config.Organization, corePeerGossipBootstrap string, peer config.Peer) error {
 	node := NewPeer(
-		fmt.Sprintf("%sMSP", organization.Name),
 		peer,
 		organization,
 		corePeerGossipBootstrap,

@@ -17,6 +17,7 @@ func (f *Network) Deploy() error {
 		{"Join Orderers", f.JoinOrdererToTheChannel},
 		{"Fetch Genesis Block", f.FetchGenesisBlock},
 		{"Join Peers", f.JoinPeersToTheChannels},
+		{"Start Tools", f.RunToolsContainers},
 	}
 
 	for _, step := range steps {

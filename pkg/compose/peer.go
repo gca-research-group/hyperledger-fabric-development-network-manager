@@ -14,7 +14,6 @@ type PeerNode struct {
 }
 
 func NewPeer(
-	mspID string,
 	peer config.Peer,
 	currentOrganization config.Organization,
 	corePeerGossipBootstrap string,
@@ -42,7 +41,7 @@ func NewPeer(
 			),
 			yaml.ScalarNode("environment"),
 			yaml.SequenceNode(
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_LOCALMSPID=%s", mspID)),
+				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_LOCALMSPID=%s", config.ResolveOrganizationMSPID(currentOrganization))),
 				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_ID=%s", peerDomain)),
 				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_ADDRESS=%s:%d", peerDomain, peerPort)),
 				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_LISTENADDRESS=0.0.0.0:%d", peerPort)),

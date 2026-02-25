@@ -1,26 +1,27 @@
 package chaincode
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
+
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/compose"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
 
-const DEFAULT_CHAINCODE_VERSION = "1.0"
-const DEFAULT_CHAINCODE_SEQUENCE = "1"
+func ResolveFilename(chaincode config.Chaincode) string {
+	filename := filepath.Base(chaincode.Path)
+	return filename
+}
 
-func (c *Chaincode) ResolveSignaturePolicy() string {
-	signaturePolicy := ""
-
-	for _, organization := range c.config.Organizations {
-		if signaturePolicy == "" {
-			signaturePolicy = fmt.Sprintf("'%sMSP.peer'", organization.Name)
-			continue
-		}
-
-		signaturePolicy = strings.Join([]string{signaturePolicy, fmt.Sprintf("'%sMSP.peer'", organization.Name)}, ",")
-	}
-
-	return fmt.Sprintf("AND(%s)", signaturePolicy)
+func ResolveFilenameWithoutExtension(chaincode config.Chaincode) string {
+	filename := ResolveFilename(chaincode)
+	name := strings.TrimSuffix(filename, filepath.Ext(filename))
+	return name
 }
 
 func ResolveLabel(name string, version string) string {
@@ -31,66 +32,209 @@ func ResolveChaincodePath(name string) string {
 	return fmt.Sprintf("/chaincodes/%[1]s", name)
 }
 
-func ResolveChaincode(name string, version string) string {
+func ResolveChaincodeTar(chaincode config.Chaincode, version string) string {
+	name := ResolveFilenameWithoutExtension(chaincode)
 	return fmt.Sprintf("%[1]s/%[2]s.tar.gz", ResolveChaincodePath(name), ResolveLabel(name, version))
 }
 
-func ResolveChecksum(name string, version string) string {
-	return fmt.Sprintf("%[1]s/%[2]s.sha256sum", ResolveChaincodePath(name), ResolveLabel(name, version))
+func ResolveChecksum(name string) string {
+	return fmt.Sprintf("%[1]s/%[2]s.sha256sum", ResolveChaincodePath(name), name)
 }
 
-func (c *Chaincode) QueryPackageId(composefile string, containerName string, chaincodeTarFile string) string {
+func ResolveCollectionsConfig(chaincode config.Chaincode) string {
+	return fmt.Sprintf("%s/%s", ResolveChaincodePath(ResolveFilenameWithoutExtension(chaincode)), filepath.Base(chaincode.CollectionsConfig))
+}
+
+func (c *Chaincode) QueryPackageId(organization config.Organization, tarfile string) string {
 
 	args := []string{
-		"compose", "-f", c.network, "-f", composefile, "run", "--rm", "-T", containerName,
-		"peer", "lifecycle", "chaincode", "calculatepackageid", chaincodeTarFile,
+		"peer", "lifecycle", "chaincode", "calculatepackageid", tarfile,
 	}
 
-	packageId, _ := c.executor.OutputCommand("docker", args...)
+	packageId, _ := c.ExecInTools(organization, args)
 
 	return strings.TrimSpace(string(packageId))
 }
 
-func (c *Chaincode) IsChaincodeUpToDate(composefile string, containerName string, basePath string, name string, version string) bool {
+func (c *Chaincode) IsChaincodeUpToDate(organization config.Organization, basePath string, name string) bool {
 	args := []string{
-		"compose", "-f", c.network, "-f", composefile, "run", "--rm", "-T", containerName,
-		"sh", "-c", fmt.Sprintf("sha256sum -c %[1]s", ResolveChecksum(name, version)),
+		"sh", "-c", fmt.Sprintf("sha256sum -c %[1]s", ResolveChecksum(name)),
 	}
 
-	output, _ := c.executor.OutputCommand("docker", args...)
+	output, _ := c.ExecInTools(organization, args)
 
 	return strings.Contains(strings.TrimSpace(string(output)), "OK")
 }
 
-func (c *Chaincode) ChaincodeFileExists(composefile string, containerName string, tarfile string) bool {
+func (c *Chaincode) IsCollectionConfigUpToDate(organization config.Organization, basePath string, name string) bool {
 	args := []string{
-		"compose", "-f", c.network, "-f", composefile, "run", "--rm", "-T", containerName,
+		"sh", "-c", fmt.Sprintf("sha256sum -c %[1]s", ResolveChecksum(name)),
+	}
+
+	output, _ := c.ExecInTools(organization, args)
+
+	return strings.Contains(strings.TrimSpace(string(output)), "OK")
+}
+
+func (c *Chaincode) ChaincodeFileExists(organization config.Organization, tarfile string) bool {
+	args := []string{
 		"sh", "-c", fmt.Sprintf("[ -f %s ]", tarfile),
 	}
 
-	err := c.executor.ExecCommand("docker", args...)
+	_, err := c.ExecInTools(organization, args)
 
 	return err == nil
 }
 
-func (c *Chaincode) IsChaincodeApproved(composefile string, containerName string, channelID string, name string) bool {
-	args := []string{
-		"compose", "-f", c.network, "-f", composefile, "run", "--rm", "-T", containerName,
-		"peer", "lifecycle", "chaincode", "queryapproved", "--channelID", channelID, "--name", name,
+func (c *Chaincode) IsChaincodeApproved(organization config.Organization, channelID string, chaincode config.Chaincode, version string) bool {
+	sequence := strconv.Itoa(c.QueryCurrentApprovedSequence(organization, channelID, chaincode.Name))
+
+	args := []string{"peer", "lifecycle", "chaincode", "checkcommitreadiness",
+		"-C", channelID,
+		"-n", chaincode.Name,
+		"--version", version,
+		"--sequence", sequence,
+		"--output", "json",
 	}
 
-	approved, _ := c.executor.OutputCommand("docker", args...)
+	if chaincode.SignaturePolicy != "" {
+		args = append(args, "--signature-policy", chaincode.SignaturePolicy)
+	}
 
-	return strings.Contains(strings.TrimSpace(string(approved)), "Approved")
+	if chaincode.ChannelConfigPolicy != "" {
+		args = append(args, "--channel-config-policy", chaincode.ChannelConfigPolicy)
+	}
+
+	if chaincode.CollectionsConfig != "" {
+		args = append(args, "--collections-config", ResolveCollectionsConfig(chaincode))
+	}
+
+	output, err := c.ExecInTools(organization, args)
+
+	if err != nil {
+		if strings.Contains(err.Error(), "but new definition must be sequence") {
+			re := regexp.MustCompile(`(\d+)\D*$`)
+			matches := re.FindStringSubmatch(err.Error())
+
+			if len(matches) > 1 {
+				sequence = matches[1]
+				for i, v := range args {
+					if v == "--sequence" && i+1 < len(args) {
+						args[i+1] = sequence
+						break
+					}
+				}
+
+				output, err = c.ExecInTools(organization, args)
+
+				if err != nil {
+					panic(err)
+				}
+			}
+		}
+	}
+
+	var result map[string]map[string]bool
+	json.Unmarshal(output, &result)
+
+	return result["approvals"][config.ResolveOrganizationMSPID(organization)]
 }
 
-func (c *Chaincode) IsChaincodeCommitted(composefile string, containerName string, channelID string, name string) bool {
+func (c *Chaincode) IsChaincodeCommitted(organization config.Organization, channelID string, name string, version string) bool {
 	args := []string{
-		"compose", "-f", c.network, "-f", composefile, "run", "--rm", "-T", containerName,
-		"peer", "lifecycle", "chaincode", "querycommitted", "--channelID", channelID, "--name", name,
+		"peer", "lifecycle", "chaincode", "querycommitted", "--channelID", channelID, "--name", name, "--output", "json",
 	}
 
-	approved, _ := c.executor.OutputCommand("docker", args...)
+	output, _ := c.ExecInTools(organization, args)
 
-	return strings.Contains(strings.TrimSpace(string(approved)), "Approvals")
+	var result struct {
+		Sequence  int             `json:"sequence"`
+		Version   string          `json:"version"`
+		Approvals map[string]bool `json:"approvals"`
+	}
+
+	json.Unmarshal(output, &result)
+
+	currentApprovedSequence := c.QueryCurrentApprovedSequence(organization, channelID, name)
+
+	isApproved := result.Approvals[config.ResolveOrganizationMSPID(organization)]
+	isVersionUpToDate := result.Version == version
+	isSequenceUpToDate := result.Sequence == currentApprovedSequence
+
+	return isApproved && isVersionUpToDate && isSequenceUpToDate
+}
+
+func (c *Chaincode) QueryCurrentApprovedSequence(organization config.Organization, channelID string, name string) int {
+	args := []string{
+		"peer", "lifecycle", "chaincode", "queryapproved", "--channelID", channelID, "--name", name, "--output", "json",
+	}
+
+	output, _ := c.ExecInTools(organization, args)
+
+	var result struct {
+		Sequence int `json:"sequence"`
+	}
+
+	json.Unmarshal(output, &result)
+
+	return result.Sequence
+}
+
+func (c *Chaincode) ComputeCurrentApprovedSequence(organization config.Organization, channelID string, name string) string {
+	sequence := c.QueryCurrentApprovedSequence(organization, channelID, name)
+
+	return strconv.Itoa(sequence + 1)
+}
+
+func (c *Chaincode) QueryCurrentCommittedSequence(organization config.Organization, channelID string, name string) int {
+	args := []string{
+		"peer", "lifecycle", "chaincode", "querycommitted", "--channelID", channelID, "--name", name, "--output", "json",
+	}
+
+	output, _ := c.ExecInTools(organization, args)
+
+	var result struct {
+		Sequence int `json:"sequence"`
+	}
+
+	json.Unmarshal(output, &result)
+
+	return result.Sequence
+}
+
+func (c *Chaincode) QueryInstalled(organization config.Organization) string {
+
+	args := []string{
+		"peer", "lifecycle", "chaincode", "queryinstalled",
+	}
+
+	output, _ := c.ExecInTools(organization, args)
+
+	return strings.TrimSpace(string(output))
+}
+
+func (c *Chaincode) IsChaincodeInstalled(organization config.Organization, tarfile string) bool {
+	packageId := c.QueryPackageId(organization, tarfile)
+	installed := c.QueryInstalled(organization)
+	return strings.Contains(installed, packageId)
+}
+
+func (c *Chaincode) ExecInTools(organization config.Organization, args []string) ([]byte, error) {
+	containerName := compose.ResolveToolsContainerName(organization)
+
+	baseArgs := []string{
+		"exec", containerName,
+	}
+
+	return c.executor.OutputCommand("docker", append(baseArgs, args...)...)
+}
+
+func LoadVersion(chaincode config.Chaincode) string {
+	data, err := os.ReadFile(filepath.Join(filepath.Dir(chaincode.Path), "version"))
+
+	if err != nil {
+		return "1.0"
+	}
+
+	return strings.TrimSpace(string(data))
 }

@@ -151,7 +151,7 @@ func ResolveCertificateAuthorityContainerName(domain string) string {
 }
 
 func ResolveToolsContainerName(organization config.Organization) string {
-	return fmt.Sprintf("hyperledger-fabric-tools-%s", strings.ToLower(organization.Name))
+	return fmt.Sprintf("%s.%s", "tools", organization.Domain)
 }
 
 func RunContainerFromTheDockerComposeFile(network string, file string) error {

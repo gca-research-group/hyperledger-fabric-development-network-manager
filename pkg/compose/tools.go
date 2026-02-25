@@ -3,7 +3,6 @@ package compose
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
@@ -18,7 +17,7 @@ type ToolsNode struct {
 func NewTools(currentOrganization config.Organization, organizations []config.Organization, chaincodes []config.Chaincode, network string) *ToolsNode {
 	name := currentOrganization.Name
 	domain := currentOrganization.Domain
-	mspID := fmt.Sprintf("%sMSP", currentOrganization.Name)
+	mspID := config.ResolveOrganizationMSPID(currentOrganization)
 
 	volumes := []*yaml.Node{
 		yaml.ScalarNode(fmt.Sprintf("./configtx.yml:%s/configtx.yml", constants.DEFAULT_FABRIC_DIRECTORY)),
@@ -65,7 +64,7 @@ func NewTools(currentOrganization config.Organization, organizations []config.Or
 	}
 
 	for _, chaincode := range chaincodes {
-		volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%[1]s:/chaincodes/%[2]s", chaincode.Path, filepath.Base(chaincode.Path))))
+		volumes = append(volumes, yaml.ScalarNode(fmt.Sprintf("%[1]s:/chaincodes/%[2]s", filepath.Dir(chaincode.Path), filepath.Base(filepath.Dir(chaincode.Path)))))
 	}
 
 	corePeerHostIndex := 0
@@ -84,10 +83,10 @@ func NewTools(currentOrganization config.Organization, organizations []config.Or
 	version := ResolvePeerVersion(currentOrganization.Version.Peer)
 
 	node := yaml.MappingNode(
-		yaml.ScalarNode(fmt.Sprintf("hyperledger-fabric-tools-%s", strings.ToLower(name))),
+		yaml.ScalarNode(ResolveToolsContainerName(currentOrganization)),
 		yaml.MappingNode(
 			yaml.ScalarNode("container_name"),
-			yaml.ScalarNode(fmt.Sprintf("hyperledger-fabric-tools-%s", strings.ToLower(name))),
+			yaml.ScalarNode(ResolveToolsContainerName(currentOrganization)),
 			yaml.ScalarNode("image"),
 			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-tools:%s", version)),
 			yaml.ScalarNode("tty"),

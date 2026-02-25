@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var deployCmd = &cobra.Command{
+var networkDeployCmd = &cobra.Command{
 	Use:   "deploy",
 	Short: "Deploy the network",
 	Long:  `Deploy the network starting the containers, generating the identities, generating the genesis block, creating the channels, and joining orderers and peers.`,
@@ -38,7 +38,7 @@ var deployCmd = &cobra.Command{
 }
 
 func init() {
-	deployCmd.Flags().StringVarP(
+	networkDeployCmd.Flags().StringVarP(
 		&configPath,
 		"config",
 		"c",
@@ -46,7 +46,7 @@ func init() {
 		"Path to configuration file",
 	)
 
-	deployCmd.MarkFlagRequired("config")
+	networkDeployCmd.MarkFlagRequired("config")
 
-	rootCmd.AddCommand(deployCmd)
+	networkCmd.AddCommand(networkDeployCmd)
 }

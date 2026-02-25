@@ -54,7 +54,11 @@ type Capabilties struct {
 }
 
 type Chaincode struct {
-	Path string `yaml:"path" json:"path" toml:"path"`
+	Path                string `yaml:"path" json:"path" toml:"path"`
+	Name                string `yaml:"name" json:"name" toml:"name"`
+	SignaturePolicy     string `yaml:"signaturePolicy" json:"signaturePolicy" toml:"signaturePolicy"`
+	ChannelConfigPolicy string `yaml:"channelConfigPolicy" json:"channelConfigPolicy" toml:"channelConfigPolicy"`
+	CollectionsConfig   string `yaml:"collectionsConfig" json:"collectionsConfig" toml:"collectionsConfig"`
 }
 
 type Config struct {

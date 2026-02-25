@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -27,5 +28,13 @@ func (e *DefaultExecutor) OutputCommand(name string, arg ...string) ([]byte, err
 	fmt.Printf("Executing: %s %s\n", name, strings.Join(arg, " "))
 	cmd := exec.Command(name, arg...)
 
-	return cmd.Output()
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	out, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("command failed: %w\nstderr:\n%s", err, stderr.String())
+	}
+
+	return out, nil
 }

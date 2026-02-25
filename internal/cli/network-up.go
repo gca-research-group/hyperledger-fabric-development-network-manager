@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var upCmd = &cobra.Command{
+var networkUpCmd = &cobra.Command{
 	Use:   "up",
 	Short: "Start the network",
 	Long:  `Start the network containers.`,
@@ -38,7 +38,7 @@ var upCmd = &cobra.Command{
 }
 
 func init() {
-	upCmd.Flags().StringVarP(
+	networkUpCmd.Flags().StringVarP(
 		&configPath,
 		"config",
 		"c",
@@ -46,7 +46,7 @@ func init() {
 		"Path to configuration file",
 	)
 
-	upCmd.MarkFlagRequired("config")
+	networkUpCmd.MarkFlagRequired("config")
 
-	networkCmd.AddCommand(upCmd)
+	networkCmd.AddCommand(networkUpCmd)
 }

@@ -28,7 +28,7 @@ var chaincodeDeployCmd = &cobra.Command{
 			return fmt.Errorf("Chaincode deployment failed: %v", err)
 		}
 
-		fmt.Println("Chaincodes deploied successfully.")
+		fmt.Println("Chaincodes deployed successfully.")
 		return nil
 	},
 }

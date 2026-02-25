@@ -10,10 +10,6 @@ type OrganizationNode struct {
 	*yaml.Node
 }
 
-func BuildMSPID(name string) string {
-	return fmt.Sprintf("%sMSP", name)
-}
-
 func NewApplicationOrganization(name string, domain string, mspID string, ordererAddresses []string) *OrganizationNode {
 	ordererEndpoints := []*yaml.Node{}
 

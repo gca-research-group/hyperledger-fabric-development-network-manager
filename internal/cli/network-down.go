@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var downCmd = &cobra.Command{
+var networkDownCmd = &cobra.Command{
 	Use:   "down",
 	Short: "Stop and remove all running containers",
 	Long:  `Stop and remove all running containers.`,
@@ -33,7 +33,7 @@ var downCmd = &cobra.Command{
 }
 
 func init() {
-	downCmd.Flags().StringVarP(
+	networkDownCmd.Flags().StringVarP(
 		&configPath,
 		"config",
 		"c",
@@ -41,7 +41,7 @@ func init() {
 		"Path to configuration file",
 	)
 
-	downCmd.MarkFlagRequired("config")
+	networkDownCmd.MarkFlagRequired("config")
 
-	networkCmd.AddCommand(downCmd)
+	networkCmd.AddCommand(networkDownCmd)
 }
