@@ -41,15 +41,23 @@ The tool is intended for:
 
 ## Table of contents
 
+- [Overview](#overview)
+- [Table of contents](#table-of-contents)
 - [Getting Started](#getting-started)
   - [Executing with Binaries](#executing-with-binaries)
+    - [Commands Workflow](#commands-workflow)
   - [Executing From Source Code](#executing-from-source-code)
+    - [Prerequisites](#prerequisites)
+    - [Clone the repository](#clone-the-repository)
+    - [Install the dependencies](#install-the-dependencies)
+    - [Commands Workflow](#commands-workflow-1)
 - [Configuration File](#configuration-file)
 - [Network Samples](#network-samples)
 - [Chaincode Samples](#chaincode-samples)
-- [Project Repositories](#project-repositories)
+- [Project repositories](#project-repositories)
 - [Related Publications](#related-publications)
 - [License](#license)
+- [Contact](#contact)
 
 ## Getting Started
 
@@ -65,35 +73,35 @@ Compiled binaries are available in the [./.bin](./.bin) directory for Windows, m
 
 #### Commands Workflow
 
-1. **Generate Artifacts** Generates Docker Compose and `configtx` files.
+1. Generate configuration files (configtx.yml), Docker Compose files, and MSP directories.
 
 ```bash
   <binary> artifacts generate --config=samples/minimal-network.yml
 ```
 
-2. **Deploy Network** Starts CAs, generates identities, and initializes orderers/peers.
+2. Complete network setup including starting certificate authorities, generating identities, creating genesis block, establishing channels, and joining orderers and peers.
 
 ```bash
   <binary> network deploy --config=samples/minimal-network.yml
 ```
 
-3. **Start/Stop Containers** Manage the runtime state of the network.
+3. Control the runtime state of the network containers.
 
 ```bash
   # Start network
   <binary> network up --config=samples/minimal-network.yml
 
-  # Stop containers
+  # Stop and remove containers
   <binary> network down --config=samples/minimal-network.yml
 ```
 
-4. **Deploy Chaincode** Deploys and manages the chaincode lifecycle on the network.
+4. Install, approve, and commit chaincode to channels in the network.
 
 ```bash
   <binary> chaincode deploy --config=samples/minimal-network.yml
 ```
 
-5. **Clean Everything** Removes all generated files, ledger state, and identities. Use with caution.
+5. Removes all generated files, ledger state, and identities. Use with caution.
 
 ```bash
   <binary> artifacts clean --config=samples/minimal-network.yml
