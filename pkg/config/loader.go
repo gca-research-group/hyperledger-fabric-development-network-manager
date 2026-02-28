@@ -39,6 +39,10 @@ func LoadConfigFromPath(path string) (*Config, error) {
 		return nil, fmt.Errorf("Error when loading the config file: %v\n", err)
 	}
 
+	if len(config.Organizations) == 0 {
+		return nil, fmt.Errorf("You must define at least one organization.")
+	}
+
 	supportedCapabilityVersions := []string{"V2_0", "V2_5", "V3_0"}
 
 	supportedVersions := map[string][]string{
@@ -83,6 +87,7 @@ func LoadConfigFromPath(path string) (*Config, error) {
 	}
 
 	quantityOfBootstrapOrganizations := 0
+	hasOrderers := false
 
 	for _, organization := range config.Organizations {
 		if !isVersionSupported(organization.Version.Peer, supportedApplicationVersions) {
@@ -97,7 +102,15 @@ func LoadConfigFromPath(path string) (*Config, error) {
 			quantityOfBootstrapOrganizations += 1
 		}
 
+		if len(organization.Orderers) > 0 {
+			hasOrderers = true
+		}
+
 		organizationNames[organization.Name] += 1
+	}
+
+	if !hasOrderers {
+		return nil, fmt.Errorf("At least one orderer must be configured.")
 	}
 
 	if quantityOfBootstrapOrganizations == 0 {
@@ -122,6 +135,14 @@ func LoadConfigFromPath(path string) (*Config, error) {
 		for _, organizationName := range profile.Organizations {
 			if !isOrganizationDefined(organizationName, config.Organizations) {
 				return nil, fmt.Errorf("Organization is not defined: %s.", organizationName)
+			}
+		}
+	}
+
+	for o := range config.Organizations {
+		for i := range config.Organizations[o].Orderers {
+			if config.Organizations[o].Orderers[i].Port == 0 {
+				config.Organizations[o].Orderers[i].Port = 7050
 			}
 		}
 	}

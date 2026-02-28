@@ -19,10 +19,6 @@ func ResolveOrdererTLSConnection(organizations []config.Organization) (string, s
 			orderer = organization.Orderers[0]
 			ordererDomain = organization.Domain
 			ordererPort = orderer.Port
-
-			if ordererPort == 0 {
-				ordererPort = 7050
-			}
 			break
 		}
 	}
