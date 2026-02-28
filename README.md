@@ -74,7 +74,7 @@ Compiled binaries are available in the [./.bin](./.bin) directory for Windows, m
 2. **Deploy Network** Starts CAs, generates identities, and initializes orderers/peers.
 
 ```bash
-  <binary> deploy --config=samples/minimal-network.yml
+  <binary> network deploy --config=samples/minimal-network.yml
 ```
 
 3. **Start/Stop Containers** Manage the runtime state of the network.
@@ -87,7 +87,13 @@ Compiled binaries are available in the [./.bin](./.bin) directory for Windows, m
   <binary> network down --config=samples/minimal-network.yml
 ```
 
-4. **Clean Everything** Removes all generated files, ledger state, and identities. Use with caution.
+4. **Deploy Chaincode** Deploys and manages the chaincode lifecycle on the network.
+
+```bash
+  <binary> chaincode deploy --config=samples/minimal-network.yml
+```
+
+5. **Clean Everything** Removes all generated files, ledger state, and identities. Use with caution.
 
 ```bash
   <binary> artifacts clean --config=samples/minimal-network.yml
