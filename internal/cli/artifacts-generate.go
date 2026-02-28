@@ -49,17 +49,7 @@ var artifactsGenerateCmd = &cobra.Command{
 }
 
 func init() {
-	artifactsCmd.AddCommand(artifactsGenerateCmd)
-
-	artifactsGenerateCmd.Flags().StringVarP(
-		&configPath,
-		"config",
-		"c",
-		"",
-		"Path to configuration file",
-	)
-
-	artifactsGenerateCmd.MarkFlagRequired("config")
+	AddConfigCommand(artifactsGenerateCmd)
 
 	artifactsGenerateCmd.Flags().BoolVarP(
 		&force,
@@ -69,4 +59,5 @@ func init() {
 		"Remove existing files from the output folder",
 	)
 
+	artifactsCmd.AddCommand(artifactsGenerateCmd)
 }

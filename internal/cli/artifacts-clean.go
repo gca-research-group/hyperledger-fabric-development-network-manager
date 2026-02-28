@@ -28,15 +28,7 @@ var artifactsCleanCmd = &cobra.Command{
 }
 
 func init() {
+	AddConfigCommand(artifactsCleanCmd)
+
 	artifactsCmd.AddCommand(artifactsCleanCmd)
-
-	artifactsCleanCmd.Flags().StringVarP(
-		&configPath,
-		"config",
-		"c",
-		"",
-		"Path to configuration file",
-	)
-
-	artifactsCleanCmd.MarkFlagRequired("config")
 }

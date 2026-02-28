@@ -34,15 +34,7 @@ var chaincodeDeployCmd = &cobra.Command{
 }
 
 func init() {
-	chaincodeDeployCmd.Flags().StringVarP(
-		&configPath,
-		"config",
-		"c",
-		"",
-		"Path to configuration file",
-	)
-
-	chaincodeDeployCmd.MarkFlagRequired("config")
+	AddConfigCommand(chaincodeDeployCmd)
 
 	chaincodeCmd.AddCommand(chaincodeDeployCmd)
 }

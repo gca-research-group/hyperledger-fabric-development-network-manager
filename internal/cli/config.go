@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
+	"github.com/spf13/cobra"
 )
 
 var configPath string
@@ -14,4 +15,17 @@ func LoadConfig() (*config.Config, error) {
 	}
 
 	return config.LoadConfigFromPath(configPath)
+}
+
+func AddConfigCommand(command *cobra.Command) {
+	command.Flags().StringVarP(
+		&configPath,
+		"config",
+		"c",
+		"",
+		"Path to configuration file",
+	)
+
+	command.MarkFlagFilename("config")
+	command.MarkFlagRequired("config")
 }

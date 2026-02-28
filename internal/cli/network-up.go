@@ -38,15 +38,7 @@ var networkUpCmd = &cobra.Command{
 }
 
 func init() {
-	networkUpCmd.Flags().StringVarP(
-		&configPath,
-		"config",
-		"c",
-		"",
-		"Path to configuration file",
-	)
-
-	networkUpCmd.MarkFlagRequired("config")
+	AddConfigCommand(networkUpCmd)
 
 	networkCmd.AddCommand(networkUpCmd)
 }
