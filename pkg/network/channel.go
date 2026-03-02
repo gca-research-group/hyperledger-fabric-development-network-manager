@@ -17,23 +17,29 @@ func (f *Network) JoinOrdererToTheChannel() error {
 
 		for _, orderer := range organization.Orderers {
 			for _, channel := range f.config.Channels {
-				caFile := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/ca.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Subdomain)
-				clientCert := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/server.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Subdomain)
-				clientKey := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/server.key", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Subdomain)
+
+				caFile := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/users/Admin@%[2]s/tls/ca.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain)
+
+				clientCert := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/users/Admin@%[2]s/tls/client.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain)
+
+				clientKey := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/users/Admin@%[2]s/tls/client.key", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain)
+
+				blockFile := fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, ResolveChannelID(channel))
 
 				args := []string{
-					"compose", "-f", f.network, "-f", tools, "run", "--rm", "-T", containerName,
-					"osnadmin", "channel", "join",
-					"--channelID", ResolveChannelID(channel),
-					"--config-block", fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, ResolveChannelID(channel)),
-					"-o", fmt.Sprintf("%s.%s:7053", orderer.Subdomain, organization.Domain),
-					"--ca-file", caFile,
-					"--client-cert", clientCert,
-					"--client-key", clientKey,
+					"compose", "-f", f.network, "-f", tools,
+					"run", "--rm", "-T", containerName,
+					"curl",
+					"-X", "POST",
+					fmt.Sprintf("https://%s.%s:7053/participation/v1/channels", orderer.Subdomain, organization.Domain),
+					"--cacert", caFile,
+					"--cert", clientCert,
+					"--key", clientKey,
+					"-F", fmt.Sprintf("config-block=@%s", blockFile),
 				}
 
 				if err := f.executor.ExecCommand("docker", args...); err != nil {
-					return fmt.Errorf("Error when joining the orderer %s of the organization %s to the channel %s: %v", orderer.Name, organization.Name, channel.Name, err)
+					return fmt.Errorf("error joining orderer %s of organization %s to channel %s: %v", orderer.Name, organization.Name, channel.Name, err)
 				}
 			}
 		}

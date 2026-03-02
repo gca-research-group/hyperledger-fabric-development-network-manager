@@ -50,6 +50,8 @@ func (im *IdentityManager) GenerateAll() error {
 			{"Generate Orderers MSP", im.generateOrderersMSP},
 			{"Generate Orderer Org Admin MSP", im.generateOrdererOrgAdminMSP},
 			{"Generate Orderer User MSP", im.generateOrdererUserMSP},
+			{"Generate Orderer Org Admin TLS", im.generateOrdererOrgAdminTLS},
+			{"Generate Orderer User TLS", im.generateOrdererUserTLS},
 
 			{"Generate Peer TLS Certs", im.generatePeerTlsCertificates},
 			{"Generate Orderer TLS Certs", im.generateOrdererTlsCertificates},
@@ -432,7 +434,7 @@ func (im *IdentityManager) generateOrdererOrgAdminMSP(organization config.Organi
 	return nil
 }
 
-func (im *IdentityManager) generateTLS(organization config.Organization, origin string, destination string, id string) error {
+func (im *IdentityManager) generateTLS(organization config.Organization, origin string, destination string, id string, kind string) error {
 	caName := compose.ResolveCertificateAuthorityContainerName(organization.Domain)
 	u := fmt.Sprintf("https://%[1]s:%[1]spw@localhost:7054", id)
 
@@ -468,8 +470,8 @@ func (im *IdentityManager) generateTLS(organization config.Organization, origin 
 	scripts := []string{
 		fmt.Sprintf("mkdir -p '%s'", destination),
 		fmt.Sprintf("cp '%s/tlscacerts/'* '%s/ca.crt'", origin, destination),
-		fmt.Sprintf("cp '%s/signcerts/'* '%s/server.crt'", origin, destination),
-		fmt.Sprintf("cp '%s/keystore/'* '%s/server.key'", origin, destination),
+		fmt.Sprintf("cp '%s/signcerts/'* '%s/%s.crt'", origin, destination, kind),
+		fmt.Sprintf("cp '%s/keystore/'* '%s/%s.key'", origin, destination, kind),
 	}
 
 	for _, script := range scripts {
@@ -487,7 +489,7 @@ func (im *IdentityManager) generatePeerTlsCertificates(organization config.Organ
 		origin := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s.%[2]s/tls", "/var/hyperledger", organization.Domain, id)
 		destination := fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s.%[2]s/tls", peerOrgPath, organization.Domain, id)
 
-		if err := im.generateTLS(organization, origin, destination, id); err != nil {
+		if err := im.generateTLS(organization, origin, destination, id, "server"); err != nil {
 			return err
 		}
 	}
@@ -502,9 +504,33 @@ func (im *IdentityManager) generateOrdererTlsCertificates(organization config.Or
 		origin := fmt.Sprintf("%[1]s/%[2]s/orderers/%[3]s.%[2]s/tls", "/var/hyperledger", organization.Domain, id)
 		destination := fmt.Sprintf("%[1]s/%[2]s/orderers/%[3]s.%[2]s/tls", ordererOrgPath, organization.Domain, id)
 
-		if err := im.generateTLS(organization, origin, destination, id); err != nil {
+		if err := im.generateTLS(organization, origin, destination, id, "server"); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (im *IdentityManager) generateOrdererUserTLS(organization config.Organization) error {
+	id := "user1"
+	origin := fmt.Sprintf("%[1]s/%[2]s/orderers/users/User1@%[2]s/tls", "/var/hyperledger", organization.Domain)
+	destination := fmt.Sprintf("%[1]s/%[2]s/users/User1@%[2]s/tls", ordererOrgPath, organization.Domain)
+
+	if err := im.generateTLS(organization, origin, destination, id, "client"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (im *IdentityManager) generateOrdererOrgAdminTLS(organization config.Organization) error {
+	id := "orgadmin"
+	origin := fmt.Sprintf("%[1]s/%[2]s/orderers/users/Admin@%[2]s/tls", "/var/hyperledger", organization.Domain)
+	destination := fmt.Sprintf("%[1]s/%[2]s/users/Admin@%[2]s/tls", ordererOrgPath, organization.Domain)
+
+	if err := im.generateTLS(organization, origin, destination, id, "client"); err != nil {
+		return err
 	}
 
 	return nil
