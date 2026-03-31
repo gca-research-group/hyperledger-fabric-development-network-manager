@@ -42,12 +42,17 @@ type Channel struct {
 	Chaincodes []Chaincode `yaml:"chaincodes" json:"chaincodes" toml:"chaincodes"`
 }
 
-type Profile struct {
-	Name          string   `yaml:"name" json:"name" toml:"name"`
-	Organizations []string `yaml:"organizations" json:"organizations" toml:"organizations"`
+type Consensus struct {
+	Type string `yaml:"type" json:"type" toml:"type"`
 }
 
-type Capabilties struct {
+type Profile struct {
+	Name          string    `yaml:"name" json:"name" toml:"name"`
+	Organizations []string  `yaml:"organizations" json:"organizations" toml:"organizations"`
+	Consensus     Consensus `yaml:"consensus" json:"consensus" toml:"consensus"`
+}
+
+type Capabilities struct {
 	Channel     string `yaml:"channel" json:"channel" toml:"channel"`
 	Orderer     string `yaml:"orderer" json:"orderer" toml:"orderer"`
 	Application string `yaml:"application" json:"application" toml:"application"`
@@ -65,7 +70,7 @@ type Config struct {
 	Output        string         `yaml:"output" json:"output" toml:"output"`
 	Chaincodes    []Chaincode    `yaml:"chaincodes" json:"chaincodes" toml:"chaincodes"`
 	Network       string         `yaml:"network" json:"network" toml:"network"`
-	Capabilties   Capabilties    `yaml:"capabilities" json:"capabilities" toml:"capabilities"`
+	Capabilities  Capabilities   `yaml:"capabilities" json:"capabilities" toml:"capabilities"`
 	Organizations []Organization `yaml:"organizations" json:"organizations" toml:"organizations"`
 	Profiles      []Profile      `yaml:"profiles" json:"profiles" toml:"profiles"`
 	Channels      []Channel      `yaml:"channels" json:"channels" toml:"channels"`

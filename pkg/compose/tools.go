@@ -15,7 +15,7 @@ type ToolsNode struct {
 	name string
 }
 
-func NewTools(currentOrganization config.Organization, organizations []config.Organization, chaincodes []config.Chaincode, network string) *ToolsNode {
+func NewTools(currentOrganization config.Organization, organizations []config.Organization, chaincodes []config.Chaincode, network string, capabilities config.Capabilities) *ToolsNode {
 	name := currentOrganization.Name
 	domain := currentOrganization.Domain
 	mspID := config.ResolveOrganizationMSPID(currentOrganization)
@@ -88,7 +88,27 @@ func NewTools(currentOrganization config.Organization, organizations []config.Or
 
 	corePeerHost := fmt.Sprintf("%s.%s:%d", corePeerSubdomain, currentOrganization.Domain, corePeerPort)
 
+	environment := []*yaml.Node{
+		yaml.ScalarNode("GOPATH=/opt/gopath"),
+		yaml.ScalarNode("CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock"),
+		yaml.ScalarNode("FABRIC_LOGGING_SPEC=INFO"),
+		yaml.ScalarNode("CORE_PEER_ID=cli"),
+		yaml.ScalarNode(fmt.Sprintf("CORE_PEER_ADDRESS=%s", corePeerHost)),
+		yaml.ScalarNode(fmt.Sprintf("CORE_PEER_LOCALMSPID=%s", mspID)),
+		yaml.ScalarNode("CORE_PEER_TLS_ENABLED=true"),
+		yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_CERT_FILE=%[1]s/%[2]s/peerOrganizations/%[2]s/peers/%[3]s.%[2]s/tls/server.crt", constants.DEFAULT_FABRIC_DIRECTORY, domain, corePeerSubdomain)),
+		yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_KEY_FILE=%[1]s/%[2]s/peerOrganizations/%[2]s/peers/%[3]s.%[2]s/tls/server.key", constants.DEFAULT_FABRIC_DIRECTORY, domain, corePeerSubdomain)),
+		yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_ROOTCERT_FILE=%[1]s/%[2]s/peerOrganizations/%[2]s/peers/%[3]s.%[2]s/tls/ca.crt", constants.DEFAULT_FABRIC_DIRECTORY, domain, corePeerSubdomain)),
+		yaml.ScalarNode(fmt.Sprintf("CORE_PEER_MSPCONFIGPATH=%[1]s/%[2]s/peerOrganizations/%[2]s/users/Admin@%[2]s/msp", constants.DEFAULT_FABRIC_DIRECTORY, domain)),
+	}
+
 	version := ResolvePeerVersion(currentOrganization.Version.Peer)
+	image := fmt.Sprintf("hyperledger/fabric-tools:%s", version)
+
+	if capabilities.Channel == "V3_0" {
+		image = "ghcr.io/gca-research-group/fabric-tools:3.1.4"
+		environment = append(environment, yaml.ScalarNode("FABRIC_CFG_PATH=/etc/hyperledger/fabric"))
+	}
 
 	node := yaml.MappingNode(
 		yaml.ScalarNode(ResolveToolsContainerName(currentOrganization)),
@@ -96,29 +116,13 @@ func NewTools(currentOrganization config.Organization, organizations []config.Or
 			yaml.ScalarNode("container_name"),
 			yaml.ScalarNode(ResolveToolsContainerName(currentOrganization)),
 			yaml.ScalarNode("image"),
-			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-tools:%s", version)),
+			yaml.ScalarNode(image),
 			yaml.ScalarNode("tty"),
 			yaml.ScalarNode("true"),
 			yaml.ScalarNode("stdin_open"),
 			yaml.ScalarNode("true"),
 			yaml.ScalarNode("environment"),
-			yaml.SequenceNode(
-				yaml.ScalarNode("GOPATH=/opt/gopath"),
-				yaml.ScalarNode("CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock"),
-				yaml.ScalarNode("FABRIC_LOGGING_SPEC=INFO"),
-				yaml.ScalarNode("CORE_PEER_ID=cli"),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_ADDRESS=%s", corePeerHost)),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_LOCALMSPID=%s", mspID)),
-				yaml.ScalarNode("CORE_PEER_TLS_ENABLED=true"),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_CERT_FILE=%[1]s/%[2]s/peerOrganizations/%[2]s/peers/%[3]s.%[2]s/tls/server.crt", constants.DEFAULT_FABRIC_DIRECTORY, domain, corePeerSubdomain)),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_KEY_FILE=%[1]s/%[2]s/peerOrganizations/%[2]s/peers/%[3]s.%[2]s/tls/server.key", constants.DEFAULT_FABRIC_DIRECTORY, domain, corePeerSubdomain)),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_TLS_ROOTCERT_FILE=%[1]s/%[2]s/peerOrganizations/%[2]s/peers/%[3]s.%[2]s/tls/ca.crt", constants.DEFAULT_FABRIC_DIRECTORY, domain, corePeerSubdomain)),
-				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_MSPCONFIGPATH=%[1]s/%[2]s/peerOrganizations/%[2]s/users/Admin@%[2]s/msp", constants.DEFAULT_FABRIC_DIRECTORY, domain)),
-			),
-			yaml.ScalarNode("working_dir"),
-			yaml.ScalarNode(constants.DEFAULT_FABRIC_DIRECTORY),
-			yaml.ScalarNode("command"),
-			yaml.ScalarNode("/bin/bash"),
+			yaml.SequenceNode(environment...),
 			yaml.ScalarNode("volumes"),
 			yaml.SequenceNode(volumes...),
 			yaml.ScalarNode("networks"),

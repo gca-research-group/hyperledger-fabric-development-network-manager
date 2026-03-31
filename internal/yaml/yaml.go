@@ -84,6 +84,11 @@ func (n *Node) WithDoubleQuotedStyle() *Node {
 	return n
 }
 
+func (n *Node) WithFolderStyle() *Node {
+	n.WithStyle(yaml.FoldedStyle)
+	return n
+}
+
 func (n *Node) WithLiteralStyle() *Node {
 	n.WithStyle(yaml.LiteralStyle)
 	return n

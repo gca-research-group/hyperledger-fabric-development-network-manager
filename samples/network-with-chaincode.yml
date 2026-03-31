@@ -28,25 +28,21 @@ organizations:
     orderers:
       - name: Orderer
         subdomain: orderer
-    bootstrap: true
     peers:
       - name: Peer0
         subdomain: peer0
-        isAnchor: true
 
   - name: Org2
     domain: org2.network-with-chaincode.com
     peers:
       - name: Peer0
         subdomain: peer0
-        isAnchor: true
 
   - name: Org3
     domain: org3.network-with-chaincode.com
     peers:
       - name: Peer0
         subdomain: peer0
-        isAnchor: true
 
 profiles:
   - &DefaultProfile

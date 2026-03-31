@@ -24,16 +24,21 @@ func NewBuilder(config *config.Config) *Builder {
 
 func (c *Builder) BuildOrganizations() {
 	for _, organization := range c.config.Organizations {
-		for _, orderer := range organization.Orderers {
-			mspID := config.ResolveOrdererMSPID(orderer)
-			org := NewOrdererOrganization(orderer.Name, organization.Domain, mspID).
+		if len(organization.Orderers) > 0 {
+			ordererAddresses := []string{}
+			for _, orderer := range organization.Orderers {
+				ordererAddresses = append(ordererAddresses, fmt.Sprintf("%s.%s:%d", orderer.Subdomain, organization.Domain, orderer.Port))
+			}
+
+			organizationName := fmt.Sprintf("%sOrderer", organization.Name)
+			mspID := config.ResolveOrdererMSPID(organization)
+			org := NewOrdererOrganization(organizationName, organization.Domain, mspID, ordererAddresses).
 				WithDefaultOrdererPolicies(mspID)
 
 			c.ordererOrgs = append(c.ordererOrgs, org.Build())
-			c.ordererAliases = append(c.ordererAliases, yaml.AliasNode(orderer.Name, org.Build()))
+			c.ordererAliases = append(c.ordererAliases, yaml.AliasNode(organizationName, org.Build()))
 
-			ordererAddress := fmt.Sprintf("%s.%s:%d", orderer.Subdomain, organization.Domain, orderer.Port)
-			c.ordererAddresses = append(c.ordererAddresses, ordererAddress)
+			c.ordererAddresses = append(c.ordererAddresses, ordererAddresses...)
 		}
 	}
 
@@ -59,7 +64,7 @@ func (c *Builder) BuildOrganizations() {
 			anchorPeerPort = constants.DEFAULT_PEER_PORT
 		}
 
-		org := NewApplicationOrganization(organization.Name, organization.Domain, mspID, c.ordererAddresses).
+		org := NewApplicationOrganization(organization.Name, organization.Domain, mspID, c.ordererAddresses, c.config.Capabilities).
 			WithAnchorPeer(anchorPeerHost, anchorPeerPort).
 			WithDefaultApplicationPolicies(mspID)
 
@@ -68,46 +73,37 @@ func (c *Builder) BuildOrganizations() {
 	}
 }
 
-func (c *Builder) BuildProfiles(
-	orderer *yaml.Node,
-	application *yaml.Node,
-	channel *yaml.Node,
-	appAliases []*yaml.Node,
-	appCapability *yaml.Node,
-) []*yaml.Node {
-	var profiles []*yaml.Node
+// func (c *Builder) BuildProfiles(
+// 	orderer *yaml.Node,
+// 	application *yaml.Node,
+// 	channel *yaml.Node,
+// 	appAliases []*yaml.Node,
+// 	appCapability *yaml.Node,
+// ) []*yaml.Node {
+// 	var profiles []*yaml.Node
 
-	for _, profile := range c.config.Profiles {
-		var appAliases []*yaml.Node
-		for _, organization := range profile.Organizations {
-			appAliases = append(appAliases, c.appAliases[organization])
-		}
+// 	for _, profile := range c.config.Profiles {
+// 		var appAliases []*yaml.Node
+// 		for _, organization := range profile.Organizations {
+// 			appAliases = append(appAliases, c.appAliases[organization])
+// 		}
 
-		currentProfile := NewProfile(profile.Name, orderer, application, channel, appAliases, appCapability).Build()
+// 		currentProfile := NewProfile(profile.Name, orderer, application, channel, appAliases, appCapability).Build()
 
-		for _, node := range currentProfile.Content {
-			profiles = append(profiles, (*yaml.Node)(node))
-		}
-	}
+// 		for _, node := range currentProfile.Content {
+// 			profiles = append(profiles, (*yaml.Node)(node))
+// 		}
+// 	}
 
-	return profiles
-}
+// 	return profiles
+// }
 
 func (c *Builder) Build() (*yaml.Node, error) {
 	c.BuildOrganizations()
 
-	appCapLabel, appCapVal := NewApplicationCapability(c.config.Capabilties.Application)
-	ordCapLabel, ordCapVal := NewOrdererCapability(c.config.Capabilties.Orderer)
-	chCapLabel, chCapVal := NewChannelCapability(c.config.Capabilties.Channel)
-
-	orderer := NewOrderer().
-		WithAddresses(c.ordererAddresses).
-		WithCapabilities(ordCapVal).
-		WithPolicies().
-		WithOrganizations(c.ordererAliases).
-		WithBatchConfig().
-		WithRaftConfig(c.config.Organizations).
-		WithAnchor(OrdererDefaultsKey)
+	appCapLabel, appCapVal := NewApplicationCapability(c.config.Capabilities.Application)
+	ordCapLabel, ordCapVal := NewOrdererCapability(c.config.Capabilities.Orderer)
+	chCapLabel, chCapVal := NewChannelCapability(c.config.Capabilities.Channel)
 
 	var appAliases []*yaml.Node
 
@@ -126,14 +122,37 @@ func (c *Builder) Build() (*yaml.Node, error) {
 		WithCapabilities(chCapVal).
 		WithAnchor(ChannelDefaultsKey)
 
-	profiles := c.BuildProfiles(orderer, application, channel, appAliases, appCapVal)
+	profiles := []*yaml.Node{}
 
-	return yaml.MappingNode(
+	orderer := NewOrderer(c.config.Capabilities).
+		WithAddresses(c.ordererAddresses, c.config.Capabilities).
+		WithCapabilities(ordCapVal).
+		WithPolicies().
+		WithOrganizations(c.ordererAliases)
+
+	for _, profile := range c.config.Profiles {
+		var appAliases []*yaml.Node
+		for _, organization := range profile.Organizations {
+			appAliases = append(appAliases, c.appAliases[organization])
+		}
+
+		currentProfile := NewProfile(profile, c.config.Organizations, orderer, application, channel, appAliases, appCapVal).Build()
+
+		for _, node := range currentProfile.Content {
+			profiles = append(profiles, (*yaml.Node)(node))
+		}
+	}
+
+	nodes := []*yaml.Node{
 		yaml.ScalarNode(CapabilitiesKey), yaml.MappingNode(appCapLabel, appCapVal, ordCapLabel, ordCapVal, chCapLabel, chCapVal),
 		yaml.ScalarNode(OrganizationsKey), yaml.SequenceNode(append(c.ordererOrgs, c.appOrgs...)...),
-		yaml.ScalarNode(OrdererKey), orderer,
+		yaml.ScalarNode(OrdererKey), orderer.WithAnchor(OrdererDefaultsKey),
 		yaml.ScalarNode(ApplicationKey), application,
 		yaml.ScalarNode(ChannelKey), channel,
 		yaml.ScalarNode(ProfilesKey), yaml.MappingNode(profiles...),
+	}
+
+	return yaml.MappingNode(
+		nodes...,
 	), nil
 }

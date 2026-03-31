@@ -34,6 +34,10 @@ func ResolvePeerVersion(version string) string {
 		return constants.DEFAULT_FABRIC_VERSION
 	}
 
+	if len(strings.Split(version, ".")) == 2 {
+		return fmt.Sprintf("%s.0", version)
+	}
+
 	return version
 }
 
@@ -48,6 +52,10 @@ func ResolveOrdererDomain(subdomain string, domain string) string {
 func ResolveOrdererVersion(version string) string {
 	if version == "" {
 		return constants.DEFAULT_FABRIC_VERSION
+	}
+
+	if len(strings.Split(version, ".")) == 2 {
+		return fmt.Sprintf("%s.0", version)
 	}
 
 	return version

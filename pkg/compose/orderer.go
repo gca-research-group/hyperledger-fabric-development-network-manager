@@ -13,13 +13,31 @@ type OrdererNode struct {
 	domain  string
 }
 
-func NewOrderer(orderer config.Orderer, currentOrganization config.Organization, organizations []config.Organization) *OrdererNode {
+func NewOrderer(orderer config.Orderer, currentOrganization config.Organization, organizations []config.Organization, capabilities config.Capabilities) *OrdererNode {
 	domain := currentOrganization.Domain
 	ordererDomain := ResolveOrdererDomain(orderer.Subdomain, domain)
 
 	cas := "/var/hyperledger/orderer/tls/ca.crt"
 
 	version := ResolveOrdererVersion(currentOrganization.Version.Orderer)
+
+	environment := []*yaml.Node{
+		yaml.ScalarNode("ORDERER_GENERAL_LOGLEVEL=INFO"),
+		yaml.ScalarNode("ORDERER_GENERAL_LISTENADDRESS=0.0.0.0"),
+		yaml.ScalarNode("ORDERER_GENERAL_BOOTSTRAPMETHOD=none"),
+		yaml.ScalarNode(fmt.Sprintf("ORDERER_GENERAL_LOCALMSPID=%s", config.ResolveOrdererMSPID(currentOrganization))),
+		yaml.ScalarNode("ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp"),
+		yaml.ScalarNode("ORDERER_GENERAL_TLS_ENABLED=true"),
+		yaml.ScalarNode("ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key"),
+		yaml.ScalarNode("ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt"),
+		yaml.ScalarNode(fmt.Sprintf("ORDERER_GENERAL_TLS_ROOTCAS=[%s]", cas)),
+		yaml.ScalarNode("ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053"),
+		yaml.ScalarNode("ORDERER_ADMIN_TLS_ENABLED=true"),
+		yaml.ScalarNode("ORDERER_ADMIN_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key"),
+		yaml.ScalarNode("ORDERER_ADMIN_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt"),
+		yaml.ScalarNode(fmt.Sprintf("ORDERER_ADMIN_TLS_CLIENTROOTCAS=[%s]", cas)),
+		yaml.ScalarNode("ORDERER_CHANNELPARTICIPATION_ENABLED=true"),
+	}
 
 	node := yaml.MappingNode(
 		yaml.ScalarNode(ordererDomain),
@@ -31,23 +49,7 @@ func NewOrderer(orderer config.Orderer, currentOrganization config.Organization,
 			yaml.ScalarNode("working_dir"),
 			yaml.ScalarNode("/var/hyperledger/orderer"),
 			yaml.ScalarNode("environment"),
-			yaml.SequenceNode(
-				yaml.ScalarNode("ORDERER_GENERAL_LOGLEVEL=INFO"),
-				yaml.ScalarNode("ORDERER_GENERAL_LISTENADDRESS=0.0.0.0"),
-				yaml.ScalarNode("ORDERER_GENERAL_BOOTSTRAPMETHOD=none"),
-				yaml.ScalarNode(fmt.Sprintf("ORDERER_GENERAL_LOCALMSPID=%s", config.ResolveOrdererMSPID(orderer))),
-				yaml.ScalarNode("ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp"),
-				yaml.ScalarNode("ORDERER_GENERAL_TLS_ENABLED=true"),
-				yaml.ScalarNode("ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key"),
-				yaml.ScalarNode("ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt"),
-				yaml.ScalarNode(fmt.Sprintf("ORDERER_GENERAL_TLS_ROOTCAS=[%s]", cas)),
-				yaml.ScalarNode("ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053"),
-				yaml.ScalarNode("ORDERER_ADMIN_TLS_ENABLED=true"),
-				yaml.ScalarNode("ORDERER_ADMIN_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key"),
-				yaml.ScalarNode("ORDERER_ADMIN_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt"),
-				yaml.ScalarNode(fmt.Sprintf("ORDERER_ADMIN_TLS_CLIENTROOTCAS=[%s]", cas)),
-				yaml.ScalarNode("ORDERER_CHANNELPARTICIPATION_ENABLED=true"),
-			),
+			yaml.SequenceNode(environment...),
 		),
 	)
 

@@ -4,13 +4,28 @@ import (
 	"fmt"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
+	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/network"
 )
 
 type OrganizationNode struct {
 	*yaml.Node
 }
 
-func NewApplicationOrganization(name string, domain string, mspID string, ordererAddresses []string) *OrganizationNode {
+func NewApplicationOrganization(name string, domain string, mspID string, ordererAddresses []string, capabilities config.Capabilities) *OrganizationNode {
+	nodes := []*yaml.Node{
+		yaml.ScalarNode(NameKey),
+		yaml.ScalarNode(name),
+		yaml.ScalarNode(IDKey),
+		yaml.ScalarNode(mspID),
+		yaml.ScalarNode(MSPDirKey),
+		yaml.ScalarNode(fmt.Sprintf(network.PEER_MSP_DIR, domain)),
+	}
+
+	return &OrganizationNode{yaml.MappingNode(nodes...).WithAnchor(name).WithTag("!!map")}
+}
+
+func NewOrdererOrganization(name string, domain string, mspID string, ordererAddresses []string) *OrganizationNode {
 	ordererEndpoints := []*yaml.Node{}
 
 	for _, address := range ordererAddresses {
@@ -23,22 +38,9 @@ func NewApplicationOrganization(name string, domain string, mspID string, ordere
 		yaml.ScalarNode(IDKey),
 		yaml.ScalarNode(mspID),
 		yaml.ScalarNode(MSPDirKey),
-		yaml.ScalarNode(fmt.Sprintf("./%s/peerOrganizations/%s/msp", domain, domain)),
+		yaml.ScalarNode(fmt.Sprintf(network.ORDERER_MSP_DIR, domain)),
 		yaml.ScalarNode("OrdererEndpoints"),
 		yaml.SequenceNode(ordererEndpoints...),
-	).WithAnchor(name).WithTag("!!map")
-
-	return &OrganizationNode{node}
-}
-
-func NewOrdererOrganization(name string, domain string, mspID string) *OrganizationNode {
-	node := yaml.MappingNode(
-		yaml.ScalarNode(NameKey),
-		yaml.ScalarNode(name),
-		yaml.ScalarNode(IDKey),
-		yaml.ScalarNode(mspID),
-		yaml.ScalarNode(MSPDirKey),
-		yaml.ScalarNode(fmt.Sprintf("./%s/ordererOrganizations/%s/msp", domain, domain)),
 	).WithAnchor(name).WithTag("!!map")
 
 	return &OrganizationNode{node}

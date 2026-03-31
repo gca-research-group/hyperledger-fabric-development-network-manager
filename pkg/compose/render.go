@@ -28,7 +28,7 @@ func (r *Renderer) RenderNetwork(networkName string, path string) error {
 
 func (r *Renderer) RenderOrderers(organization config.Organization) error {
 	for _, orderer := range organization.Orderers {
-		node := NewOrderer(orderer, organization, r.config.Organizations).
+		node := NewOrderer(orderer, organization, r.config.Organizations, r.config.Capabilities).
 			WithNetworks([]*yaml.Node{yaml.ScalarNode(r.config.Network)}).
 			WithVolumes().
 			ExposePort()
@@ -38,7 +38,9 @@ func (r *Renderer) RenderOrderers(organization config.Organization) error {
 			node.Build(),
 		).ToFile(ResolveOrdererDockerComposeFile(r.config.Output, organization.Domain, orderer.Subdomain))
 
-		return err
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -153,7 +155,8 @@ func (r *Renderer) RenderTools(organization config.Organization, domains []strin
 			organization,
 			r.config.Organizations,
 			r.config.Chaincodes,
-			r.config.Network).Build(),
+			r.config.Network,
+			r.config.Capabilities).Build(),
 	).ToFile(ResolveToolsDockerComposeFile(r.config.Output, organization.Domain))
 }
 

@@ -7,7 +7,7 @@ import (
 )
 
 func (f *Network) RunOrdererContainers() error {
-	fmt.Print("\n=========== Executing orderer containeres ===========\n")
+	fmt.Print("\n=========== Executing orderer containers ===========\n")
 	for _, organization := range f.config.Organizations {
 		for _, orderer := range organization.Orderers {
 			config := compose.ResolveOrdererDockerComposeFile(f.config.Output, organization.Domain, orderer.Subdomain)
@@ -22,7 +22,7 @@ func (f *Network) RunOrdererContainers() error {
 }
 
 func (f *Network) RunPeerContainers() error {
-	fmt.Print("\n=========== Executing peer containeres ===========\n")
+	fmt.Print("\n=========== Executing peer containers ===========\n")
 	for _, organization := range f.config.Organizations {
 		for _, peer := range organization.Peers {
 			peerFile := compose.ResolvePeerDockerComposeFile(f.config.Output, organization.Domain, peer.Subdomain)

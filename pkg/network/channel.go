@@ -3,6 +3,7 @@ package network
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/compose"
@@ -12,34 +13,31 @@ import (
 func (f *Network) JoinOrdererToTheChannel() error {
 
 	for _, organization := range f.config.Organizations {
-		tools := compose.ResolveToolsDockerComposeFile(f.config.Output, organization.Domain)
 		containerName := compose.ResolveToolsContainerName(organization)
 
 		for _, orderer := range organization.Orderers {
 			for _, channel := range f.config.Channels {
+				caFile := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/ca.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Subdomain)
+				clientCert := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/server.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Subdomain)
+				clientKey := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/server.key", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain, orderer.Subdomain)
 
-				caFile := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/users/Admin@%[2]s/tls/ca.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain)
+				script := strings.Join(
+					[]string{
+						"osnadmin", "channel", "join",
+						"--channelID", ResolveChannelID(channel),
+						"--config-block", fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, ResolveChannelID(channel)),
+						"-o", fmt.Sprintf("%s.%s:7053", orderer.Subdomain, organization.Domain),
+						"--ca-file", caFile,
+						"--client-cert", clientCert,
+						"--client-key", clientKey,
+					},
+					" ",
+				)
 
-				clientCert := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/users/Admin@%[2]s/tls/client.crt", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain)
-
-				clientKey := fmt.Sprintf("%[1]s/%[2]s/ordererOrganizations/%[2]s/users/Admin@%[2]s/tls/client.key", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain)
-
-				blockFile := fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, ResolveChannelID(channel))
-
-				args := []string{
-					"compose", "-f", f.network, "-f", tools,
-					"run", "--rm", "-T", containerName,
-					"curl",
-					"-X", "POST",
-					fmt.Sprintf("https://%s.%s:7053/participation/v1/channels", orderer.Subdomain, organization.Domain),
-					"--cacert", caFile,
-					"--cert", clientCert,
-					"--key", clientKey,
-					"-F", fmt.Sprintf("config-block=@%s", blockFile),
-				}
+				args := []string{"exec", containerName, "sh", "-c", script}
 
 				if err := f.executor.ExecCommand("docker", args...); err != nil {
-					return fmt.Errorf("error joining orderer %s of organization %s to channel %s: %v", orderer.Name, organization.Name, channel.Name, err)
+					return fmt.Errorf("Error when joining the orderer %s of the organization %s to the channel %s: %v", orderer.Name, organization.Name, channel.Name, err)
 				}
 			}
 		}
@@ -51,8 +49,7 @@ func (f *Network) JoinOrdererToTheChannel() error {
 func (f *Network) JoinPeersToTheChannels() error {
 	for _, organization := range f.config.Organizations {
 
-		tools := compose.ResolveToolsDockerComposeFile(f.config.Output, organization.Domain)
-
+		containerName := compose.ResolveToolsContainerName(organization)
 		var channels []config.Channel
 
 		for _, channel := range f.config.Channels {
@@ -65,7 +62,6 @@ func (f *Network) JoinPeersToTheChannels() error {
 		}
 
 		for _, channel := range channels {
-			containerName := compose.ResolveToolsContainerName(organization)
 			block := fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, ResolveChannelID(channel))
 
 			for _, peer := range organization.Peers {
@@ -76,7 +72,7 @@ func (f *Network) JoinPeersToTheChannels() error {
 				mspConfigPath := fmt.Sprintf("%[1]s/%[2]s/peerOrganizations/%[2]s/users/Admin@%[2]s/msp", constants.DEFAULT_FABRIC_DIRECTORY, organization.Domain)
 
 				args := []string{
-					"compose", "-f", f.network, "-f", tools, "run", "--rm", "-T",
+					"exec",
 					"-e", fmt.Sprintf("CORE_PEER_ADDRESS=%s.%s:%d", peer.Subdomain, organization.Domain, peerPort),
 					"-e", fmt.Sprintf("CORE_PEER_TLS_CERT_FILE=%s", tlsCertFile),
 					"-e", fmt.Sprintf("CORE_PEER_TLS_KEY_FILE=%s", tlsKeyFile),
@@ -84,14 +80,43 @@ func (f *Network) JoinPeersToTheChannels() error {
 					containerName,
 				}
 
-				output, err := f.executor.OutputCommand("docker", append(args, "peer", "channel", "list")...)
+				maxRetries := 12
+				skip := false
+				ready := false
 
-				if err != nil {
+				for i := 0; i < maxRetries; i++ {
+					output, err := f.executor.OutputCommand("docker", append(args, "peer", "channel", "list")...)
+					combined := strings.ToLower(string(output))
+
+					if err != nil {
+						combined += " " + strings.ToLower(err.Error())
+					}
+
+					if err == nil {
+						skip = strings.Contains(string(output), ResolveChannelID(channel))
+						ready = true
+						break
+					}
+
+					if strings.Contains(combined, "connection refused") ||
+						strings.Contains(combined, "context deadline exceeded") ||
+						strings.Contains(combined, "Error while dialing") {
+
+						fmt.Printf("Peer %s is not ready yet. Retrying...\n", peer.Name)
+						time.Sleep(time.Second * 5)
+						continue
+					}
+
 					return fmt.Errorf("Error when listing the channels that the peer %s of the organization %s has joined to the channel %s: %v\n", peer.Subdomain, organization.Name, channel.Name, err)
+
 				}
 
-				if strings.Contains(string(output), ResolveChannelID(channel)) {
-					fmt.Printf("Skipping: the peer %s of the organization %s has already joined to the channel %s\n", peer.Subdomain, organization.Name, channel.Name)
+				if !ready {
+					return fmt.Errorf("peer %s did not become ready in time", peer.Name)
+				}
+
+				if skip {
+					fmt.Printf("Skipping: peer %s already joined channel %s\n", peer.Subdomain, channel.Name)
 					continue
 				}
 

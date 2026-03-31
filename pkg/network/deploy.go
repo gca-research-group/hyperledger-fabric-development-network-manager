@@ -10,6 +10,8 @@ func (f *Network) Deploy() error {
 		{"Start Certificate Authorities", f.RunCAContainers},
 		{"Generate Certificates", f.identityManager.GenerateAll},
 
+		{"Start Tools", f.RunToolsContainers},
+
 		{"Generate Genesis", f.GenerateGenesisBlock},
 
 		{"Start Orderers", f.RunOrdererContainers},
@@ -17,7 +19,6 @@ func (f *Network) Deploy() error {
 		{"Join Orderers", f.JoinOrdererToTheChannel},
 		{"Fetch Genesis Block", f.FetchGenesisBlock},
 		{"Join Peers", f.JoinPeersToTheChannels},
-		{"Start Tools", f.RunToolsContainers},
 	}
 
 	for _, step := range steps {

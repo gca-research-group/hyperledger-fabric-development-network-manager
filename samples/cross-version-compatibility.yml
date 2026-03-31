@@ -9,7 +9,6 @@ capabilities:
 organizations:
   - name: Org1
     domain: org1.cross-version-compatibility.com
-    bootstrap: true
     version:
       certificateAuthority: 1.5.15
       peer: 2.5.14
@@ -20,7 +19,6 @@ organizations:
     peers:
       - name: Peer0
         subdomain: peer0
-        isAnchor: true
 
   - name: Org2
     domain: org2.cross-version-compatibility.com
@@ -31,7 +29,6 @@ organizations:
     peers:
       - name: Peer0
         subdomain: peer0
-        isAnchor: true
 
 profiles:
   - &DefaultProfile

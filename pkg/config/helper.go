@@ -6,6 +6,6 @@ func ResolveOrganizationMSPID(organization Organization) string {
 	return fmt.Sprintf("%sMSP", organization.Name)
 }
 
-func ResolveOrdererMSPID(orderer Orderer) string {
-	return fmt.Sprintf("%sMSP", orderer.Name)
+func ResolveOrdererMSPID(organization Organization) string {
+	return fmt.Sprintf("%sOrdererMSP", organization.Name)
 }

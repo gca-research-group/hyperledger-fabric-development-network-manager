@@ -12,11 +12,9 @@ organizations:
     orderers:
       - name: Orderer
         subdomain: orderer
-    bootstrap: true
     peers:
       - name: Peer0
         subdomain: peer0
-        isAnchor: true
       - name: Peer1
         subdomain: peer1
 
@@ -25,7 +23,6 @@ organizations:
     peers:
       - name: Peer0
         subdomain: peer0
-        isAnchor: true
       - name: Peer1
         subdomain: peer1
 
@@ -34,7 +31,6 @@ organizations:
     peers:
       - name: Peer0
         subdomain: peer0
-        isAnchor: true
       - name: Peer1
         subdomain: peer1
 
@@ -43,7 +39,6 @@ organizations:
     peers:
       - name: Peer0
         subdomain: peer0
-        isAnchor: true
       - name: Peer1
         subdomain: peer1
 
@@ -52,7 +47,6 @@ organizations:
     peers:
       - name: Peer0
         subdomain: peer0
-        isAnchor: true
       - name: Peer1
         subdomain: peer1
 

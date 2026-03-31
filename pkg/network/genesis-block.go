@@ -2,6 +2,8 @@ package network
 
 import (
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/compose"
@@ -12,20 +14,22 @@ func (f *Network) GenerateGenesisBlock() error {
 	for _, organization := range f.config.Organizations {
 
 		if organization.Bootstrap {
+			containerName := compose.ResolveToolsContainerName(organization)
+
 			for _, channel := range f.config.Channels {
 				fmt.Printf("\n=========== Generating orderer genesis block to %s ===========\n", organization.Name)
 
-				tools := compose.ResolveToolsDockerComposeFile(f.config.Output, organization.Domain)
-				containerName := compose.ResolveToolsContainerName(organization)
+				script := strings.Join(
+					[]string{
+						"configtxgen",
+						"-outputBlock", fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, ResolveChannelID(channel)),
+						"-profile", channel.Profile.Name,
+						"-channelID", ResolveChannelID(channel),
+						"-configPath", fmt.Sprintf("%s/", constants.DEFAULT_FABRIC_DIRECTORY),
+					}, " ",
+				)
 
-				args := []string{
-					"compose", "-f", f.network, "-f", tools, "run", "--rm", "-T", containerName,
-					"configtxgen",
-					"-outputBlock", fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, ResolveChannelID(channel)),
-					"-profile", channel.Profile.Name,
-					"-channelID", ResolveChannelID(channel),
-					"-configPath", fmt.Sprintf("%s/", constants.DEFAULT_FABRIC_DIRECTORY),
-				}
+				args := []string{"exec", containerName, "sh", "-c", script}
 
 				if err := f.executor.ExecCommand("docker", args...); err != nil {
 					return fmt.Errorf("Error when generating the genesis block for the organization %s: %v", organization.Name, err)
@@ -56,18 +60,36 @@ func (f *Network) FetchGenesisBlock() error {
 			}
 		}
 
-		tools := compose.ResolveToolsDockerComposeFile(f.config.Output, organization.Domain)
 		for _, channel := range channels {
 			containerName := compose.ResolveToolsContainerName(organization)
 			block := fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, ResolveChannelID(channel))
 
 			args := []string{
-				"compose", "-f", f.network, "-f", tools, "run", "--rm", "-T", containerName,
-				"peer", "channel", "fetch", "0", block, "-c", ResolveChannelID(channel), "-o", ordererAddress, "--tls", "--cafile", caFile,
+				"exec", containerName,
+				"peer", "channel", "fetch", "newest", block,
+				"-c", ResolveChannelID(channel),
+				"-o", ordererAddress,
+				"--tls", "--cafile", caFile,
 			}
 
-			if err := f.executor.ExecCommand("docker", args...); err != nil {
-				return fmt.Errorf("Error when fetching genesis block for the organization %s to the channel %s: %v", organization.Name, channel.Name, err)
+			deadline := time.Now().Add(60 * time.Second)
+
+			for {
+				_, err := f.executor.OutputCommand("docker", args...)
+
+				if err == nil {
+					break
+				}
+
+				if !strings.Contains(err.Error(), "SERVICE_UNAVAILABLE") {
+					return fmt.Errorf("Fatal error while waiting for orderer readiness: %w", err)
+				}
+
+				if time.Now().After(deadline) {
+					return fmt.Errorf("Timeout waiting for genesis block: %w", err)
+				}
+
+				time.Sleep(5 * time.Second)
 			}
 		}
 	}
