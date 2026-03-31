@@ -12,32 +12,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type capabilityLevel int
-
-const (
-	V2_0 capabilityLevel = iota + 1
-	V2_5
-	V3_0
-)
-
-var capabilityMap = map[string]capabilityLevel{
-	"V2_0": V2_0,
-	"V2_5": V2_5,
-	"V3_0": V3_0,
-}
-
-var minBinaryVersion = map[string]string{
-	"V2_0": "2.0.0",
-	"V2_5": "2.5.0",
-	"V3_0": "3.0.0",
-}
-
-var defaultVersionByCapability = map[string]string{
-	"V2_0": "2.5.0",
-	"V2_5": "2.5.0",
-	"V3_0": "3.1.4",
-}
-
 func LoadConfigFromPath(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -85,35 +59,33 @@ func setUpDefaultValues(config *Config) {
 		}
 	}
 
-	channelCapability, _ := capabilityMap[config.Capabilities.Channel]
-	applicationCapability, _ := capabilityMap[config.Capabilities.Application]
-	ordererCapability, _ := capabilityMap[config.Capabilities.Orderer]
+	channelCapability, _ := CapabilityMap[config.Capabilities.Channel]
+	applicationCapability, _ := CapabilityMap[config.Capabilities.Application]
+	ordererCapability, _ := CapabilityMap[config.Capabilities.Orderer]
 
 	hasBootstrapOrganization := false
 
 	for i := range config.Organizations {
 		organization := &config.Organizations[i]
 
+		if organization.CertificateAuthority.Version == "" {
+			organization.CertificateAuthority.Version = "latest"
+		}
+
 		for j := range organization.Orderers {
+
 			orderer := &organization.Orderers[j]
+
 			if orderer.Port == 0 {
 				orderer.Port = 7050
 			}
-		}
 
-		if organization.Version.Peer == "" {
-			if channelCapability > applicationCapability {
-				organization.Version.Peer = defaultVersionByCapability[config.Capabilities.Channel]
-			} else {
-				organization.Version.Peer = defaultVersionByCapability[config.Capabilities.Application]
-			}
-		}
-
-		if organization.Version.Orderer == "" {
-			if channelCapability > ordererCapability {
-				organization.Version.Orderer = defaultVersionByCapability[config.Capabilities.Channel]
-			} else {
-				organization.Version.Orderer = defaultVersionByCapability[config.Capabilities.Orderer]
+			if orderer.Version == "" {
+				if channelCapability > ordererCapability {
+					orderer.Version = DefaultVersionByCapability[config.Capabilities.Channel]
+				} else {
+					orderer.Version = DefaultVersionByCapability[config.Capabilities.Orderer]
+				}
 			}
 		}
 
@@ -122,10 +94,20 @@ func setUpDefaultValues(config *Config) {
 		}
 
 		hasAnchorPeer := false
+
 		for i := range organization.Peers {
 			peer := &organization.Peers[i]
+
 			if peer.IsAnchor {
 				hasAnchorPeer = true
+			}
+
+			if peer.Version == "" {
+				if channelCapability > applicationCapability {
+					peer.Version = DefaultVersionByCapability[config.Capabilities.Channel]
+				} else {
+					peer.Version = DefaultVersionByCapability[config.Capabilities.Application]
+				}
 			}
 		}
 
@@ -149,15 +131,15 @@ func validateConfig(config Config) error {
 		return fmt.Errorf("at least one organization must be defined")
 	}
 
-	if _, ok := capabilityMap[config.Capabilities.Channel]; !ok {
+	if _, ok := CapabilityMap[config.Capabilities.Channel]; !ok {
 		return fmt.Errorf("unsupported channel capability: %s", config.Capabilities.Channel)
 	}
 
-	if _, ok := capabilityMap[config.Capabilities.Application]; !ok {
+	if _, ok := CapabilityMap[config.Capabilities.Application]; !ok {
 		return fmt.Errorf("unsupported application capability: %s", config.Capabilities.Application)
 	}
 
-	if _, ok := capabilityMap[config.Capabilities.Orderer]; !ok {
+	if _, ok := CapabilityMap[config.Capabilities.Orderer]; !ok {
 		return fmt.Errorf("unsupported orderer capability: %s", config.Capabilities.Orderer)
 	}
 
@@ -182,12 +164,16 @@ func validateConfig(config Config) error {
 			hasOrderer = true
 		}
 
-		if err := validateBinary(organization.Version.Peer, minBinaryVersion[config.Capabilities.Channel]); err != nil {
-			return fmt.Errorf("peer version of org %s invalid: %w", organization.Name, err)
+		for _, peer := range organization.Peers {
+			if err := validateBinary(peer.Version, MinBinaryVersion[config.Capabilities.Channel]); err != nil {
+				return fmt.Errorf("peer version of org %s invalid: %w", organization.Name, err)
+			}
 		}
 
-		if err := validateBinary(organization.Version.Orderer, minBinaryVersion[config.Capabilities.Channel]); err != nil {
-			return fmt.Errorf("orderer version of org %s invalid: %w", organization.Name, err)
+		for _, orderer := range organization.Orderers {
+			if err := validateBinary(orderer.Version, MinBinaryVersion[config.Capabilities.Channel]); err != nil {
+				return fmt.Errorf("orderer version of org %s invalid: %w", organization.Name, err)
+			}
 		}
 	}
 

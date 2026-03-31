@@ -102,7 +102,7 @@ func NewTools(currentOrganization config.Organization, organizations []config.Or
 		yaml.ScalarNode(fmt.Sprintf("CORE_PEER_MSPCONFIGPATH=%[1]s/%[2]s/peerOrganizations/%[2]s/users/Admin@%[2]s/msp", constants.DEFAULT_FABRIC_DIRECTORY, domain)),
 	}
 
-	version := ResolvePeerVersion(currentOrganization.Version.Peer)
+	version := ResolvePeerVersion(config.DefaultVersionByCapability[capabilities.Application])
 	image := fmt.Sprintf("hyperledger/fabric-tools:%s", version)
 
 	if capabilities.Channel == "V3_0" {

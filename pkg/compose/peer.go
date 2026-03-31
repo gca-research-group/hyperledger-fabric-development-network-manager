@@ -31,7 +31,7 @@ func NewPeer(
 			yaml.ScalarNode("container_name"),
 			yaml.ScalarNode(peerDomain),
 			yaml.ScalarNode("image"),
-			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-peer:%s", ResolvePeerVersion(currentOrganization.Version.Peer))),
+			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-peer:%s", ResolvePeerVersion(peer.Version))),
 			yaml.ScalarNode("extends"),
 			yaml.MappingNode(
 				yaml.ScalarNode("file"),

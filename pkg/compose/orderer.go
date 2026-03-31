@@ -19,7 +19,7 @@ func NewOrderer(orderer config.Orderer, currentOrganization config.Organization,
 
 	cas := "/var/hyperledger/orderer/tls/ca.crt"
 
-	version := ResolveOrdererVersion(currentOrganization.Version.Orderer)
+	version := ResolveOrdererVersion(orderer.Version)
 
 	environment := []*yaml.Node{
 		yaml.ScalarNode("ORDERER_GENERAL_LOGLEVEL=INFO"),

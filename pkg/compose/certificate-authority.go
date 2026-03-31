@@ -20,7 +20,7 @@ func NewCertificateAuthority(organization config.Organization) *CertificateAutho
 	certificateAuthority := organization.CertificateAuthority
 	certificateAuthorityDomain := ResolveCertificateAuthorityDomain(domain)
 
-	version := ResolveCertificateAuthorityVersion(organization.Version.CertificateAuthority)
+	version := ResolveCertificateAuthorityVersion(organization.CertificateAuthority.Version)
 
 	node := yaml.MappingNode(
 		yaml.ScalarNode(certificateAuthorityDomain),
