@@ -32,13 +32,6 @@ func NewPeer(
 			yaml.ScalarNode(peerDomain),
 			yaml.ScalarNode("image"),
 			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-peer:%s", ResolvePeerVersion(peer.Version))),
-			yaml.ScalarNode("extends"),
-			yaml.MappingNode(
-				yaml.ScalarNode("file"),
-				yaml.ScalarNode("./peer.base.yml"),
-				yaml.ScalarNode("service"),
-				yaml.ScalarNode("peer.base"),
-			),
 			yaml.ScalarNode("environment"),
 			yaml.SequenceNode(
 				yaml.ScalarNode(fmt.Sprintf("CORE_PEER_LOCALMSPID=%s", config.ResolveOrganizationMSPID(currentOrganization))),
@@ -51,7 +44,25 @@ func NewPeer(
 				yaml.ScalarNode(fmt.Sprintf("CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb.%s:5984", peerDomain)),
 				yaml.ScalarNode("CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin"),
 				yaml.ScalarNode("CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=adminpw"),
+				yaml.ScalarNode("CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock"),
+				yaml.ScalarNode(fmt.Sprintf("CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=%s", network)),
+				yaml.ScalarNode("FABRIC_LOGGING_SPEC=INFO"),
+				yaml.ScalarNode("CORE_PEER_GOSSIP_USELEADERELECTION=true"),
+				yaml.ScalarNode("CORE_PEER_GOSSIP_ORGLEADER=false"),
+				yaml.ScalarNode("CORE_PEER_GOSSIP_STATE_ENABLED=true"),
+				yaml.ScalarNode("CORE_PEER_PROFILE_ENABLED=true"),
+				yaml.ScalarNode("CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp"),
+				yaml.ScalarNode("CORE_PEER_TLS_ENABLED=true"),
+				yaml.ScalarNode("CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key"),
+				yaml.ScalarNode("CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt"),
+				yaml.ScalarNode("CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt"),
 			),
+			yaml.ScalarNode("working_dir"),
+			yaml.ScalarNode("/etc/hyperledger/fabric"),
+			yaml.ScalarNode("command"),
+			yaml.ScalarNode("peer node start"),
+			yaml.ScalarNode("networks"),
+			yaml.SequenceNode(yaml.ScalarNode(network)),
 		),
 	)
 
@@ -80,6 +91,7 @@ func (pn *PeerNode) WithVolumes() *PeerNode {
 	peerContainerDir := "/etc/hyperledger/fabric"
 
 	volumes := []*yaml.Node{
+		yaml.ScalarNode("/var/run/docker.sock:/host/var/run/docker.sock"),
 		yaml.ScalarNode(fmt.Sprintf("%s/msp:%s/msp", peerHostDir, peerContainerDir)),
 		yaml.ScalarNode(fmt.Sprintf("%s/tls:%s/tls", peerHostDir, peerContainerDir)),
 		yaml.ScalarNode(fmt.Sprintf("./%s/peers/%s/peer:/var/hyperledger/production", domain, pn.peer.Subdomain)),

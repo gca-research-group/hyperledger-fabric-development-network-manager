@@ -46,14 +46,6 @@ func (r *Renderer) RenderOrderers(organization config.Organization) error {
 	return nil
 }
 
-func (r *Renderer) RenderPeerBase() error {
-	return yaml.MappingNode(
-		yaml.ScalarNode("services"),
-		NewPeerBase(r.config.Network).
-			Build(),
-	).ToFile(fmt.Sprintf("%s/peer.base.yml", r.config.Output))
-}
-
 func (r *Renderer) RenderCertificateAuthority(organization config.Organization) error {
 	var nodes []*yaml.Node
 
@@ -164,10 +156,6 @@ func (r *Renderer) Render() error {
 
 	if err := r.RenderNetwork(r.config.Network, r.config.Output); err != nil {
 		return fmt.Errorf("Error when rendering the network: %w", err)
-	}
-
-	if err := r.RenderPeerBase(); err != nil {
-		return fmt.Errorf("Error when rendering the peer base: %w", err)
 	}
 
 	if err := r.RenderOrganizations(); err != nil {
