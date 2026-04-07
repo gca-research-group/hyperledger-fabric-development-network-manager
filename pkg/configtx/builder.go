@@ -73,31 +73,6 @@ func (c *Builder) BuildOrganizations() {
 	}
 }
 
-// func (c *Builder) BuildProfiles(
-// 	orderer *yaml.Node,
-// 	application *yaml.Node,
-// 	channel *yaml.Node,
-// 	appAliases []*yaml.Node,
-// 	appCapability *yaml.Node,
-// ) []*yaml.Node {
-// 	var profiles []*yaml.Node
-
-// 	for _, profile := range c.config.Profiles {
-// 		var appAliases []*yaml.Node
-// 		for _, organization := range profile.Organizations {
-// 			appAliases = append(appAliases, c.appAliases[organization])
-// 		}
-
-// 		currentProfile := NewProfile(profile.Name, orderer, application, channel, appAliases, appCapability).Build()
-
-// 		for _, node := range currentProfile.Content {
-// 			profiles = append(profiles, (*yaml.Node)(node))
-// 		}
-// 	}
-
-// 	return profiles
-// }
-
 func (c *Builder) Build() (*yaml.Node, error) {
 	c.BuildOrganizations()
 
