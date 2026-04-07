@@ -63,7 +63,7 @@ The tool is intended for:
 
 ### Executing with Binaries
 
-Compiled binaries are available in the [./.bin](./.bin) directory for Windows, macOS, and Linux. Choose the one that matches your OS:
+Compiled binaries are available on the [GitHub release page](https://github.com/gca-research-group/hyperledger-fabric-development-network-manager/releases). Download the binary that matches your OS:
 
 - **Windows:** `fno_windows_amd64.exe`
 - **Linux:** `fno_linux_arm64`
