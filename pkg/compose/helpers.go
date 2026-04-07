@@ -168,3 +168,10 @@ func RunContainerFromTheDockerComposeFile(network string, file string) error {
 
 	return executor.ExecCommand("docker", args...)
 }
+
+func StopContainerFromTheDockerComposeFile(network string, file string) error {
+	args := []string{"compose", "-f", network, "-f", file, "down"}
+	executor := &executor.DefaultExecutor{}
+
+	return executor.ExecCommand("docker", args...)
+}

@@ -22,11 +22,7 @@ var networkDeployCmd = &cobra.Command{
 			return err
 		}
 
-		instance, err := network.NewNetwork(*config, &executor.DefaultExecutor{})
-
-		if err != nil {
-			return err
-		}
+		instance := network.NewNetwork(*config, &executor.DefaultExecutor{})
 
 		if err := instance.Deploy(); err != nil {
 			return fmt.Errorf("Network deployment failed: %v", err)

@@ -12,18 +12,21 @@ type Network struct {
 
 	executor executor.Executor
 
-	identityManager *IdentityManager
+	identityManager  *IdentityManager
+	containerManager *ContainerManager
 }
 
-func NewNetwork(config config.Config, exec executor.Executor) (*Network, error) {
+func NewNetwork(config config.Config, exec executor.Executor) *Network {
 	network := compose.ResolveNetworkDockerComposeFile(config.Output)
 
 	identityManager := NewIdentityManager(config, exec)
+	containerManager := NewContainerManager(config, exec)
 
 	return &Network{
 		config,
 		network,
 		exec,
 		identityManager,
-	}, nil
+		containerManager,
+	}
 }

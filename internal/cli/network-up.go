@@ -22,11 +22,7 @@ var networkUpCmd = &cobra.Command{
 			return err
 		}
 
-		instance, err := network.NewNetwork(*config, &executor.DefaultExecutor{})
-
-		if err != nil {
-			return err
-		}
+		instance := network.NewContainerManager(*config, &executor.DefaultExecutor{})
 
 		if err := instance.Start(); err != nil {
 			return fmt.Errorf("Network starting failed: %v", err)
