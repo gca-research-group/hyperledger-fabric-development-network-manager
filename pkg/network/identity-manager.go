@@ -2,10 +2,10 @@ package network
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/executor"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/file"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/compose"
 	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
 )
@@ -86,7 +86,6 @@ func getOrgBaseDir(domain string, orgType string) string {
 }
 
 func (im *IdentityManager) enrollCAadmin(organization config.Organization) error {
-	tls := "/etc/hyperledger/fabric-ca-server/ca-cert.pem"
 	u := "https://admin:adminpw@localhost:7054"
 	caName := compose.ResolveCertificateAuthorityContainerName(organization.Domain)
 
@@ -95,7 +94,7 @@ func (im *IdentityManager) enrollCAadmin(organization config.Organization) error
 		"fabric-ca-client", "enroll",
 		"-u", u,
 		"--caname", caName,
-		"--tls.certfiles", tls,
+		"--tls.certfiles", caTlsCertPath,
 	}
 
 	if err := im.executor.ExecCommand("docker", args...); err != nil {
@@ -123,8 +122,10 @@ NodeOUs:
     OrganizationalUnitIdentifier: orderer`
 
 	content := fmt.Sprintf(template, organization.Domain)
+	peerMSPDir := fmt.Sprintf("%s/%s", peerOrgPath, organization.Domain)
+	ordererMSPDir := fmt.Sprintf("%s/%s", ordererOrgPath, organization.Domain)
 
-	for _, path := range []string{fmt.Sprintf("%s/%s", peerOrgPath, organization.Domain), fmt.Sprintf("%s/%s", ordererOrgPath, organization.Domain)} {
+	for _, path := range []string{peerMSPDir, ordererMSPDir} {
 		script := fmt.Sprintf("mkdir -p '%[1]s/msp' && cat <<EOF > %[1]s/msp/config.yaml\n%[2]s\nEOF", path, content)
 
 		if err := im.execInCA(organization.Domain, script); err != nil {
@@ -158,7 +159,7 @@ func (im *IdentityManager) copyCACertificates(organization config.Organization, 
 	}
 
 	scripts := []string{
-		fmt.Sprintf("mkdir -p '%[1]s' && cp '%[2]s' '%[1]s/%[3]s-ca.crt'", tlscacerts, caTlsCertPath, organization.Domain),
+		fmt.Sprintf("mkdir -p '%[1]s' && cp '%[2]s' '%[1]s/tlsca.%[3]s.crt'", tlscacerts, caTlsCertPath, organization.Domain),
 		fmt.Sprintf("mkdir -p '%[1]s' && cp '%[2]s' '%[1]s/tlsca.%[3]s-cert.pem'", tlsca, caTlsCertPath, organization.Domain),
 		fmt.Sprintf("mkdir -p '%[1]s' && cp '%[2]s' '%[1]s/ca.%[3]s-cert.pem'", ca, caTlsCertPath, organization.Domain),
 		fmt.Sprintf("mkdir -p '%[1]s' && cp '%[2]s' '%[1]s/ca.%[3]s-cert.pem'", cacerts, caTlsCertPath, organization.Domain),
@@ -344,7 +345,7 @@ func (im *IdentityManager) generateMSP(organization config.Organization, origin,
 		fmt.Sprintf("cp '%s'* '%s'", fmt.Sprintf("%s/cacerts/", origin), fmt.Sprintf("%s/cacerts/ca.%s-cert.pem", destination, organization.Domain)),
 		fmt.Sprintf("cp '%s'* '%s'", fmt.Sprintf("%s/keystore/", origin), fmt.Sprintf("%s/keystore/priv_sk", destination)),
 		fmt.Sprintf("cp '%s'* '%s'", fmt.Sprintf("%s/signcerts/", origin), fmt.Sprintf("%s/signcerts/cert.pem", destination)),
-		fmt.Sprintf("cp '%s' '%s/tlscacerts/%s-ca.crt'", caTlsCertPath, destination, organization.Domain),
+		fmt.Sprintf("cp '%s' '%s/tlscacerts/tlsca.%s.crt'", caTlsCertPath, destination, organization.Domain),
 
 		fmt.Sprintf("cp '%s' '%s'", fmt.Sprintf("%s/%s/msp/config.yaml", peerOrgPath, organization.Domain), fmt.Sprintf("%s/config.yaml", destination)),
 	}
@@ -537,7 +538,6 @@ func (im *IdentityManager) generateOrdererOrgAdminTLS(organization config.Organi
 }
 
 func (im *IdentityManager) shareTlsCertificates() error {
-
 	for _, sourceOrganization := range im.config.Organizations {
 		folder := "%[1]s/%[2]s/certificate-authority/organizations/peerOrganizations/%[2]s"
 
@@ -546,19 +546,39 @@ func (im *IdentityManager) shareTlsCertificates() error {
 				continue
 			}
 
-			origin := fmt.Sprintf("%[1]s/msp/tlscacerts/%[2]s-ca.crt", fmt.Sprintf(folder, im.config.Output, sourceOrganization.Domain), sourceOrganization.Domain)
-			destination := fmt.Sprintf("%[1]s/msp/tlscacerts/%[2]s-ca.crt", fmt.Sprintf(folder, im.config.Output, targetOrganization.Domain), sourceOrganization.Domain)
+			origin := fmt.Sprintf("%[1]s/msp/tlscacerts/tlsca.%[2]s.crt",
+				fmt.Sprintf(folder, im.config.Output, sourceOrganization.Domain),
+				sourceOrganization.Domain)
 
-			if err := file.Copy(origin, destination); err != nil {
-				return err
+			certContent, err := os.ReadFile(origin)
+
+			if err != nil {
+				return fmt.Errorf("failed to read source cert %s: %w", origin, err)
 			}
 
 			for _, peer := range targetOrganization.Peers {
-				destination := fmt.Sprintf("%[1]s/peers/%[2]s.%[3]s/msp/tlscacerts/%[4]s-ca.crt", fmt.Sprintf(folder, im.config.Output, targetOrganization.Domain), peer.Subdomain, targetOrganization.Domain, sourceOrganization.Domain)
+				peerTlsCaPath := fmt.Sprintf("%[1]s/peers/%[2]s.%[3]s/tls/ca.crt",
+					fmt.Sprintf(folder, im.config.Output, targetOrganization.Domain),
+					peer.Subdomain,
+					targetOrganization.Domain)
 
-				if err := file.Copy(origin, destination); err != nil {
+				f, err := os.OpenFile(peerTlsCaPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
+				if err != nil {
+					return fmt.Errorf("failed to open %s for appending: %w", peerTlsCaPath, err)
+				}
+
+				if _, err := f.WriteString("\n"); err != nil {
+					f.Close()
 					return err
 				}
+
+				if _, err := f.Write(certContent); err != nil {
+					f.Close()
+					return err
+				}
+
+				f.Close()
 			}
 		}
 	}
