@@ -1,5 +1,5 @@
-output: output/minimal-network
-network: minimal-network
+output: output/invalid-capability-version
+network: invalid-capability-version
 
 capabilities:
   channel: V1_4
@@ -8,22 +8,19 @@ capabilities:
 
 organizations:
   - name: Org1
-    domain: org1.minimal-network.com
+    domain: org1.invalid-capability-version.com
     orderers:
       - name: Orderer
         subdomain: orderer
-    bootstrap: true
     peers:
       - name: Peer0
         subdomain: peer0
-        isAnchor: true
 
   - name: Org2
-    domain: org2.minimal-network.com
+    domain: org2.invalid-capability-version.com
     peers:
       - name: Peer0
         subdomain: peer0
-        isAnchor: true
 
 profiles:
   - &DefaultProfile

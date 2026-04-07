@@ -12,18 +12,15 @@ organizations:
     orderers:
       - name: Orderer
         subdomain: orderer
-    bootstrap: true
     peers:
       - name: Peer0
         subdomain: peer0
-        isAnchor: true
 
   - name: Org1
     domain: org2.minimal-network.com
     peers:
       - name: Peer0
         subdomain: peer0
-        isAnchor: true
 
 profiles:
   - &DefaultProfile

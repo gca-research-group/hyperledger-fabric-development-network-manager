@@ -31,18 +31,21 @@ organizations:
     peers:
       - name: Peer0
         subdomain: peer0
+        exposePort: 7051
 
   - name: Org2
     domain: org2.network-with-chaincode.com
     peers:
       - name: Peer0
         subdomain: peer0
+        exposePort: 8051
 
   - name: Org3
     domain: org3.network-with-chaincode.com
     peers:
       - name: Peer0
         subdomain: peer0
+        exposePort: 9051
 
 profiles:
   - &DefaultProfile

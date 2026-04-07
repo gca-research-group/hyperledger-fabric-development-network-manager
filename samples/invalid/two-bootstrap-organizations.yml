@@ -1,5 +1,5 @@
-output: output/minimal-network
-network: minimal-network
+output: output/two-bootstrap-organizations
+network: two-bootstrap-organizations
 
 capabilities:
   channel: V2_0
@@ -8,7 +8,7 @@ capabilities:
 
 organizations:
   - name: Org1
-    domain: org1.minimal-network.com
+    domain: org1.two-bootstrap-organizations.com
     orderers:
       - name: Orderer
         subdomain: orderer
@@ -19,7 +19,7 @@ organizations:
         isAnchor: true
 
   - name: Org2
-    domain: org2.minimal-network.com
+    domain: org2.two-bootstrap-organizations.com
     bootstrap: true
     peers:
       - name: Peer0
