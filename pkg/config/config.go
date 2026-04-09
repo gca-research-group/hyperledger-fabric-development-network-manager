@@ -21,8 +21,8 @@ var MinBinaryVersion = map[string]string{
 }
 
 var DefaultVersionByCapability = map[string]string{
-	"V2_0": "2.5.0",
-	"V2_5": "2.5.0",
+	"V2_0": "2.5.15",
+	"V2_5": "2.5.15",
 	"V3_0": "3.1.4",
 }
 
