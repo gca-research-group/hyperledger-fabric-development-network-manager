@@ -185,7 +185,7 @@ You will find chaincode samples in the directory [samples](./samples/chaincodes)
 
 ## Project repositories
 
-- [Smart Contract Execution Monitoring System](https://github.com/gca-research-group/smart-contract-execution-monitoring-system)
+- [Jabuti Monitoring System](https://github.com/gca-research-group/jabuti-monitoring-system)
 - [Fabric Network Orchestrator](https://github.com/gca-research-group/hyperledger-fabric-development-network-manager)
 - [Transformation Engine](https://github.com/gca-research-group/jabuti-ce-transformation-engine)
 - [Jabuti CE (VSCode Plug-in)](https://github.com/gca-research-group/jabuti-ce-vscode-plugin)
