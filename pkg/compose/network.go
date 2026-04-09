@@ -1,6 +1,6 @@
 package compose
 
-import "github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
+import "github.com/gca-research-group/fabric-network-orchestrator/internal/yaml"
 
 func NewBridgeNetwork(name string) *yaml.Node {
 	return yaml.MappingNode(

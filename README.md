@@ -63,7 +63,7 @@ The tool is intended for:
 
 ### Executing with Binaries
 
-Compiled binaries are available on the [GitHub release page](https://github.com/gca-research-group/hyperledger-fabric-development-network-manager/releases). Download the binary that matches your OS:
+Compiled binaries are available on the [GitHub release page](https://github.com/gca-research-group/fabric-network-orchestrator/releases). Download the binary that matches your OS:
 
 - **Windows:** `fno_windows_amd64.exe`
 - **Linux:** `fno_linux_arm64`
@@ -117,7 +117,7 @@ Compiled binaries are available on the [GitHub release page](https://github.com/
 #### Clone the repository
 
 ```bash
-git clone https://github.com/gca-research-group/hyperledger-fabric-development-network-manager
+git clone https://github.com/gca-research-group/fabric-network-orchestrator
 ```
 
 #### Install the dependencies
@@ -186,7 +186,7 @@ You will find chaincode samples in the directory [samples](./samples/chaincodes)
 ## Project repositories
 
 - [Jabuti Monitoring System](https://github.com/gca-research-group/jabuti-monitoring-system)
-- [Fabric Network Orchestrator](https://github.com/gca-research-group/hyperledger-fabric-development-network-manager)
+- [Fabric Network Orchestrator](https://github.com/gca-research-group/fabric-network-orchestrator)
 - [Transformation Engine](https://github.com/gca-research-group/jabuti-ce-transformation-engine)
 - [Jabuti CE (VSCode Plug-in)](https://github.com/gca-research-group/jabuti-ce-vscode-plugin)
 - [Jabuti DSL Grammar](https://github.com/gca-research-group/jabuti-ce-jabuti-dsl-grammar)

@@ -3,9 +3,9 @@ package cli
 import (
 	"fmt"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/executor"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/chaincode"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
+	"github.com/gca-research-group/fabric-network-orchestrator/internal/executor"
+	"github.com/gca-research-group/fabric-network-orchestrator/pkg/chaincode"
+	"github.com/gca-research-group/fabric-network-orchestrator/pkg/config"
 	"github.com/spf13/cobra"
 )
 

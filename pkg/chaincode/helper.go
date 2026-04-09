@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/compose"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
+	"github.com/gca-research-group/fabric-network-orchestrator/pkg/compose"
+	"github.com/gca-research-group/fabric-network-orchestrator/pkg/config"
 )
 
 func ResolveFilename(chaincode config.Chaincode) string {

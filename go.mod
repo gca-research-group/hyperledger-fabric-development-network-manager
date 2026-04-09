@@ -1,4 +1,4 @@
-module github.com/gca-research-group/hyperledger-fabric-development-network-manager
+module github.com/gca-research-group/fabric-network-orchestrator
 
 go 1.26.0
 

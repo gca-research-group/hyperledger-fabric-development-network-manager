@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/docker/docker/client"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/executor"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
+	"github.com/gca-research-group/fabric-network-orchestrator/internal/constants"
+	"github.com/gca-research-group/fabric-network-orchestrator/internal/executor"
+	"github.com/gca-research-group/fabric-network-orchestrator/pkg/config"
 )
 
 func ResolvePeerPort(port int) int {

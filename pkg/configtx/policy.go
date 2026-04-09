@@ -3,7 +3,7 @@ package configtx
 import (
 	"fmt"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
+	"github.com/gca-research-group/fabric-network-orchestrator/internal/yaml"
 )
 
 type Policy struct {

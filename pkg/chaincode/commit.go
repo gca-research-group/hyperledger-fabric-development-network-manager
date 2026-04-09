@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/network"
+	"github.com/gca-research-group/fabric-network-orchestrator/pkg/network"
 )
 
 func (c *Chaincode) Commit() error {

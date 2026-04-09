@@ -1,6 +1,6 @@
 package main
 
-import "github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/cli"
+import "github.com/gca-research-group/fabric-network-orchestrator/internal/cli"
 
 func main() {
 	cli.Execute()

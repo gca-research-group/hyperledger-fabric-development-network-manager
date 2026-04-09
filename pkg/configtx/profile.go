@@ -5,10 +5,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/yaml"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/network"
+	"github.com/gca-research-group/fabric-network-orchestrator/internal/constants"
+	"github.com/gca-research-group/fabric-network-orchestrator/internal/yaml"
+	"github.com/gca-research-group/fabric-network-orchestrator/pkg/config"
+	"github.com/gca-research-group/fabric-network-orchestrator/pkg/network"
 )
 
 type ProfileNode struct {

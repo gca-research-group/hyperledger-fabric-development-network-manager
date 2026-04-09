@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/internal/constants"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/compose"
-	"github.com/gca-research-group/hyperledger-fabric-development-network-manager/pkg/config"
+	"github.com/gca-research-group/fabric-network-orchestrator/internal/constants"
+	"github.com/gca-research-group/fabric-network-orchestrator/pkg/compose"
+	"github.com/gca-research-group/fabric-network-orchestrator/pkg/config"
 )
 
 func ResolveOrdererTLSConnection(organizations []config.Organization) (string, string) {
