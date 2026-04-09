@@ -29,8 +29,8 @@ func NewProfile(
 		yaml.AliasNode(OrdererDefaultsKey, orderer.WithAnchor(OrdererDefaultsKey)),
 	}
 
-	if strings.ToLower(profile.Consensus.Type) == strings.ToLower(EtcdRaftKey) {
-		ordererSettings = append(ordererSettings, yaml.ScalarNode(OrdererTypeKey), yaml.ScalarNode(EtcdRaftKey))
+	if strings.ToLower(profile.Consensus.Type) == strings.ToLower(etcdraftKey) {
+		ordererSettings = append(ordererSettings, yaml.ScalarNode(OrdererTypeKey), yaml.ScalarNode(etcdraftKey))
 		ordererSettings = append(ordererSettings, BuildRaft(organizations)...)
 	} else {
 		ordererSettings = append(ordererSettings, yaml.ScalarNode(OrdererTypeKey), yaml.ScalarNode(BFTKey))

@@ -25,6 +25,7 @@ const (
 	ConsortiumsKey               = "Consortiums"
 	DefaultConsortiumKey         = "DefaultConsortium"
 	EndorsementKey               = "Endorsement"
+	etcdraftKey                  = "etcdraft"
 	EtcdRaftKey                  = "etcdraft"
 	HostKey                      = "Host"
 	IdentityKey                  = "Identity"
