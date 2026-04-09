@@ -13,9 +13,10 @@ func (c *Chaincode) Approve() error {
 			channelID := network.ResolveChannelID(channel)
 
 			for _, chaincode := range channel.Chaincodes {
-				version := LoadVersion(chaincode)
-				sequence := c.ComputeCurrentApprovedSequence(organization, channelID, chaincode.Name)
-				tarfile := ResolveChaincodeTar(chaincode, version)
+				name := chaincode.Name
+				version := ResolveChaincodeVersion(chaincode)
+				sequence := c.ComputeCurrentApprovedSequence(organization, channelID, name)
+				tarfile := ResolveChaincodeTar(chaincode)
 
 				if c.IsChaincodeApproved(organization, channelID, chaincode, version) {
 					continue
@@ -26,7 +27,7 @@ func (c *Chaincode) Approve() error {
 				args := []string{
 					"peer", "lifecycle", "chaincode", "approveformyorg",
 					"--channelID", channelID,
-					"--name", chaincode.Name,
+					"--name", name,
 					"--version", version,
 					"--sequence", sequence,
 					"--package-id", packageId,

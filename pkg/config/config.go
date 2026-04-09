@@ -80,12 +80,19 @@ type Capabilities struct {
 	Application string `yaml:"application" json:"application" toml:"application"`
 }
 
+type Language struct {
+	Name    string `yaml:"name" json:"name" toml:"name"`
+	Version string `yaml:"version" json:"version" toml:"version"`
+}
+
 type Chaincode struct {
-	Path                string `yaml:"path" json:"path" toml:"path"`
-	Name                string `yaml:"name" json:"name" toml:"name"`
-	SignaturePolicy     string `yaml:"signaturePolicy" json:"signaturePolicy" toml:"signaturePolicy"`
-	ChannelConfigPolicy string `yaml:"channelConfigPolicy" json:"channelConfigPolicy" toml:"channelConfigPolicy"`
-	CollectionsConfig   string `yaml:"collectionsConfig" json:"collectionsConfig" toml:"collectionsConfig"`
+	Path                string   `yaml:"path" json:"path" toml:"path"`
+	Name                string   `yaml:"name" json:"name" toml:"name"`
+	Version             string   `yaml:"version" json:"version" toml:"version"`
+	Language            Language `yaml:"language" json:"language" toml:"language"`
+	SignaturePolicy     string   `yaml:"signaturePolicy" json:"signaturePolicy" toml:"signaturePolicy"`
+	ChannelConfigPolicy string   `yaml:"channelConfigPolicy" json:"channelConfigPolicy" toml:"channelConfigPolicy"`
+	CollectionsConfig   string   `yaml:"collectionsConfig" json:"collectionsConfig" toml:"collectionsConfig"`
 }
 
 type Config struct {

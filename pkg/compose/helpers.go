@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/docker/docker/client"
@@ -174,4 +175,16 @@ func StopContainerFromTheDockerComposeFile(network string, file string) error {
 	executor := &executor.DefaultExecutor{}
 
 	return executor.ExecCommand("docker", args...)
+}
+
+func ResolveChaincodeHostDir(chaincode config.Chaincode) string {
+	currentDir, _ := os.Getwd()
+
+	hostDir := chaincode.Path
+
+	if !filepath.IsAbs(hostDir) {
+		hostDir = filepath.Join(currentDir, hostDir)
+	}
+
+	return hostDir
 }

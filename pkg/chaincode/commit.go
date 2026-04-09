@@ -14,7 +14,7 @@ func (c *Chaincode) Commit() error {
 	for _, channel := range c.config.Channels {
 		channelID := network.ResolveChannelID(channel)
 		for _, chaincode := range channel.Chaincodes {
-			version := LoadVersion(chaincode)
+			version := ResolveChaincodeVersion(chaincode)
 			sequence := c.QueryCurrentApprovedSequence(organization, channelID, chaincode.Name)
 
 			if c.IsChaincodeCommitted(organization, channelID, chaincode.Name, version) {

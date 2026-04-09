@@ -3,7 +3,6 @@ package chaincode
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -18,31 +17,20 @@ func ResolveFilename(chaincode config.Chaincode) string {
 	return filename
 }
 
-func ResolveFilenameWithoutExtension(chaincode config.Chaincode) string {
-	filename := ResolveFilename(chaincode)
-	name := strings.TrimSuffix(filename, filepath.Ext(filename))
-	return name
+func ResolveLabel(chaincode config.Chaincode) string {
+	return fmt.Sprintf("%[1]s_%[2]s", chaincode.Name, ResolveChaincodeVersion(chaincode))
 }
 
-func ResolveLabel(name string, version string) string {
-	return fmt.Sprintf("%[1]s_%[2]s", name, version)
+func ResolveChaincodePath(chaincode config.Chaincode) string {
+	return fmt.Sprintf("/chaincodes/%[1]s", filepath.Base(chaincode.Path))
 }
 
-func ResolveChaincodePath(name string) string {
-	return fmt.Sprintf("/chaincodes/%[1]s", name)
-}
-
-func ResolveChaincodeTar(chaincode config.Chaincode, version string) string {
-	name := ResolveFilenameWithoutExtension(chaincode)
-	return fmt.Sprintf("%[1]s/%[2]s.tar.gz", ResolveChaincodePath(name), ResolveLabel(name, version))
-}
-
-func ResolveChecksum(name string) string {
-	return fmt.Sprintf("%[1]s/%[2]s.sha256sum", ResolveChaincodePath(name), name)
+func ResolveChaincodeTar(chaincode config.Chaincode) string {
+	return fmt.Sprintf("%[1]s/%[2]s.tar.gz", ResolveChaincodePath(chaincode), ResolveLabel(chaincode))
 }
 
 func ResolveCollectionsConfig(chaincode config.Chaincode) string {
-	return fmt.Sprintf("%s/%s", ResolveChaincodePath(ResolveFilenameWithoutExtension(chaincode)), filepath.Base(chaincode.CollectionsConfig))
+	return fmt.Sprintf("%s/%s", ResolveChaincodePath(chaincode), filepath.Base(chaincode.CollectionsConfig))
 }
 
 func (c *Chaincode) QueryPackageId(organization config.Organization, tarfile string) string {
@@ -54,26 +42,6 @@ func (c *Chaincode) QueryPackageId(organization config.Organization, tarfile str
 	packageId, _ := c.ExecInTools(organization, args)
 
 	return strings.TrimSpace(string(packageId))
-}
-
-func (c *Chaincode) IsChaincodeUpToDate(organization config.Organization, basePath string, name string) bool {
-	args := []string{
-		"sh", "-c", fmt.Sprintf("sha256sum -c %[1]s", ResolveChecksum(name)),
-	}
-
-	output, _ := c.ExecInTools(organization, args)
-
-	return strings.Contains(strings.TrimSpace(string(output)), "OK")
-}
-
-func (c *Chaincode) IsCollectionConfigUpToDate(organization config.Organization, basePath string, name string) bool {
-	args := []string{
-		"sh", "-c", fmt.Sprintf("sha256sum -c %[1]s", ResolveChecksum(name)),
-	}
-
-	output, _ := c.ExecInTools(organization, args)
-
-	return strings.Contains(strings.TrimSpace(string(output)), "OK")
 }
 
 func (c *Chaincode) ChaincodeFileExists(organization config.Organization, tarfile string) bool {
@@ -229,12 +197,11 @@ func (c *Chaincode) ExecInTools(organization config.Organization, args []string)
 	return c.executor.OutputCommand("docker", append(baseArgs, args...)...)
 }
 
-func LoadVersion(chaincode config.Chaincode) string {
-	data, err := os.ReadFile(filepath.Join(filepath.Dir(chaincode.Path), "version"))
+func ResolveChaincodeVersion(chaincode config.Chaincode) string {
+	version := chaincode.Version
 
-	if err != nil {
-		return "1.0"
+	if version == "" {
+		version = "1.0"
 	}
-
-	return strings.TrimSpace(string(data))
+	return version
 }

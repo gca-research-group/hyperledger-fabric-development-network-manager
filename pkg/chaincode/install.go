@@ -8,8 +8,8 @@ func (c *Chaincode) Install() error {
 
 	for _, organization := range c.config.Organizations {
 		for _, chaincode := range c.config.Chaincodes {
-			version := LoadVersion(chaincode)
-			tarfile := ResolveChaincodeTar(chaincode, version)
+			name := chaincode.Name
+			tarfile := ResolveChaincodeTar(chaincode)
 
 			if c.IsChaincodeInstalled(organization, tarfile) {
 				continue
@@ -22,7 +22,7 @@ func (c *Chaincode) Install() error {
 			_, err := c.ExecInTools(organization, args)
 
 			if err != nil {
-				return fmt.Errorf("Error when installing the chaincode %s in the organization %s: %v", chaincode.Name, organization.Name, err)
+				return fmt.Errorf("Error when installing the chaincode %s in the organization %s: %v", name, organization.Name, err)
 			}
 		}
 	}
