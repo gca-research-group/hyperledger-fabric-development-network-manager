@@ -4,16 +4,21 @@ network: network-with-chaincode
 chaincodes:
   - &asset
     name: Asset
-    path: samples/chaincodes/asset/asset.go
+    version: "1.0"
+    path: samples/chaincodes/asset
+    language:
+      name: golang
+      version: "1.26"
 
   - &product
     name: Product
-    path: samples/chaincodes/product/product.go
-    signaturePolicy: AND("Org1MSP.peer", "Org2MSP.peer", "Org3MSP.peer")
+    version: "1.0"
+    path: samples/chaincodes/product
 
   - &privateagreement
     name: PrivateAgreement
-    path: samples/chaincodes/private-agreement/private-agreement.go
+    version: "1.0"
+    path: samples/chaincodes/private-agreement
     channelConfigPolicy: Channel/Application/Endorsement
     collectionsConfig: samples/chaincodes/private-agreement/collections_config.json
 
