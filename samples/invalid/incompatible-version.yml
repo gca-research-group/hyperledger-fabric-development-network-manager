@@ -15,7 +15,7 @@ organizations:
     peers:
       - name: Peer0
         subdomain: peer0
-        versuion: 3.0
+        version: 1.4
 
   - name: Org2
     domain: org2.incompatible-version.com

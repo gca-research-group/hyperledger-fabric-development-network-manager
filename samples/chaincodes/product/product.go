@@ -7,7 +7,6 @@ import (
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
-// TODO:
 type SmartContract struct {
 	contractapi.Contract
 }
