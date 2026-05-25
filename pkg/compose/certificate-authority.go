@@ -46,8 +46,8 @@ func NewCertificateAuthority(organization config.Organization) *CertificateAutho
 			yaml.ScalarNode("sh -c 'fabric-ca-server start -b admin:adminpw'"),
 			yaml.ScalarNode("volumes"),
 			yaml.SequenceNode(
-				yaml.ScalarNode(fmt.Sprintf("./%s/certificate-authority/fabric-ca-server:/etc/hyperledger/fabric-ca-server", domain)),
-				yaml.ScalarNode(fmt.Sprintf("./%s/certificate-authority/organizations:/etc/hyperledger/organizations", domain)),
+				yaml.ScalarNode(fmt.Sprintf("./%s/data/certificate-authority/fabric-ca-server:/etc/hyperledger/fabric-ca-server", domain)),
+				yaml.ScalarNode(fmt.Sprintf("./%s/data/certificate-authority/organizations:/etc/hyperledger/organizations", domain)),
 			),
 		),
 	)

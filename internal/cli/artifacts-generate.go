@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/gca-research-group/fabric-network-orchestrator/internal/directory"
 	"github.com/gca-research-group/fabric-network-orchestrator/pkg/compose"
@@ -43,7 +44,7 @@ var artifactsGenerateCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Println("Artifacts generated successfully.")
+		slog.Info("Artifacts generated successfully.")
 		return nil
 	},
 }

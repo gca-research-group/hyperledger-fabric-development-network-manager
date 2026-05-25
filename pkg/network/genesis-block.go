@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -17,7 +18,7 @@ func (f *Network) GenerateGenesisBlock() error {
 			containerName := compose.ResolveToolsContainerName(organization)
 
 			for _, channel := range f.config.Channels {
-				fmt.Printf("\n=========== Generating orderer genesis block to %s ===========\n", organization.Name)
+				slog.Info("Generating orderer genesis block", "organization", organization.Name)
 
 				script := strings.Join(
 					[]string{

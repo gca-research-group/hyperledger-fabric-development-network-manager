@@ -15,14 +15,11 @@ func NewCouchDB(
 	peerSubdomain string,
 	network string,
 ) *CouchDBNode {
-
-	peerDomain := ResolvePeerDomain(peerSubdomain, domain)
-
 	node := yaml.MappingNode(
-		yaml.ScalarNode(fmt.Sprintf("couchdb.%s", peerDomain)),
+		yaml.ScalarNode(ResolveCouchDBDomain(peerSubdomain, domain)),
 		yaml.MappingNode(
 			yaml.ScalarNode("container_name"),
-			yaml.ScalarNode(fmt.Sprintf("couchdb.%s", peerDomain)),
+			yaml.ScalarNode(ResolveCouchDBDomain(peerSubdomain, domain)),
 			yaml.ScalarNode("image"),
 			yaml.ScalarNode("couchdb:latest"),
 			yaml.ScalarNode("environment"),
@@ -33,7 +30,7 @@ func NewCouchDB(
 				yaml.ScalarNode("adminpw"),
 			),
 			yaml.ScalarNode("volumes"),
-			yaml.SequenceNode(yaml.ScalarNode(fmt.Sprintf("./%s/peers/%s/couchdb:/opt/couchdb/data", domain, peerSubdomain))),
+			yaml.SequenceNode(yaml.ScalarNode(fmt.Sprintf("./%s/data/peers/%s/couchdb:/opt/couchdb/data", domain, peerSubdomain))),
 			yaml.ScalarNode("networks"),
 			yaml.SequenceNode(yaml.ScalarNode(network)),
 		),

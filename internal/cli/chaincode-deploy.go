@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/gca-research-group/fabric-network-orchestrator/internal/executor"
 	"github.com/gca-research-group/fabric-network-orchestrator/pkg/chaincode"
@@ -28,7 +29,7 @@ var chaincodeDeployCmd = &cobra.Command{
 			return fmt.Errorf("Chaincode deployment failed: %v", err)
 		}
 
-		fmt.Println("Chaincodes deployed successfully.")
+		slog.Info("Chaincodes deployed successfully.")
 		return nil
 	},
 }

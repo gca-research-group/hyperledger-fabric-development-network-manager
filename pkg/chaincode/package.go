@@ -2,6 +2,7 @@ package chaincode
 
 import (
 	"fmt"
+	"log/slog"
 )
 
 func (c *Chaincode) Package() error {
@@ -32,7 +33,7 @@ func (c *Chaincode) Package() error {
 		}
 
 		for _, step := range steps {
-			fmt.Printf(">>> Step: %s\n", step.name)
+			slog.Info("Executing step", "step", step.name)
 			_, err := c.ExecInTools(organization, step.args)
 			if err != nil {
 				return fmt.Errorf(step.message, name, err)

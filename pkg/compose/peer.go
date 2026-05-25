@@ -90,14 +90,14 @@ func (pn *PeerNode) WithVolumes() *PeerNode {
 	domain := pn.domain
 	peerDomain := ResolvePeerDomain(pn.peer.Subdomain, domain)
 
-	peerHostDir := fmt.Sprintf("./%[1]s/certificate-authority/organizations/peerOrganizations/%[1]s/peers/%[2]s", domain, peerDomain)
+	peerHostDir := fmt.Sprintf("./%[1]s/data/certificate-authority/organizations/peerOrganizations/%[1]s/peers/%[2]s", domain, peerDomain)
 	peerContainerDir := "/etc/hyperledger/fabric"
 
 	volumes := []*yaml.Node{
 		yaml.ScalarNode("/var/run/docker.sock:/host/var/run/docker.sock"),
 		yaml.ScalarNode(fmt.Sprintf("%s/msp:%s/msp", peerHostDir, peerContainerDir)),
 		yaml.ScalarNode(fmt.Sprintf("%s/tls:%s/tls", peerHostDir, peerContainerDir)),
-		yaml.ScalarNode(fmt.Sprintf("./%s/peers/%s/peer:/var/hyperledger/production", domain, pn.peer.Subdomain)),
+		yaml.ScalarNode(fmt.Sprintf("./%s/data/peers/%s/peer:/var/hyperledger/production", domain, pn.peer.Subdomain)),
 	}
 
 	node := pn.GetValue(peerDomain)

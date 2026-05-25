@@ -1,6 +1,9 @@
 package network
 
-import "fmt"
+import (
+	"fmt"
+	"log/slog"
+)
 
 func (f *Network) Deploy() error {
 	steps := []struct {
@@ -22,7 +25,7 @@ func (f *Network) Deploy() error {
 	}
 
 	for _, step := range steps {
-		fmt.Printf(">>> Step: %s\n", step.name)
+		slog.Info("Executing step", "step", step.name)
 		if err := step.fn(); err != nil {
 			return fmt.Errorf("failed at step %s: %w", step.name, err)
 		}

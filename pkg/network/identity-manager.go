@@ -3,6 +3,7 @@ package network
 import (
 	"bytes"
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -60,7 +61,7 @@ func (im *IdentityManager) GenerateAll() error {
 		}
 
 		for _, step := range steps {
-			fmt.Printf(">>> Step: %s\n", step.name)
+			slog.Info("Executing step", "step", step.name)
 			if err := step.fn(organization); err != nil {
 				return fmt.Errorf("failed at step %s: %w", step.name, err)
 			}
@@ -564,8 +565,8 @@ func (im *IdentityManager) generateOrdererOrgAdminTLS(organization config.Organi
 func (im *IdentityManager) shareTlsCertificates() error {
 	var tlsContent [][]byte
 
-	peertls := "%[1]s/%[2]s/certificate-authority/organizations/peerOrganizations/%[2]s/peers/%[3]s.%[2]s/tls/ca.crt"
-	orderertls := "%[1]s/%[2]s/certificate-authority/organizations/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/ca.crt"
+	peertls := "%[1]s/%[2]s/data/certificate-authority/organizations/peerOrganizations/%[2]s/peers/%[3]s.%[2]s/tls/ca.crt"
+	orderertls := "%[1]s/%[2]s/data/certificate-authority/organizations/ordererOrganizations/%[2]s/orderers/%[3]s.%[2]s/tls/ca.crt"
 
 	for _, organization := range im.config.Organizations {
 		for _, peer := range organization.Peers {
@@ -626,7 +627,7 @@ func (im *IdentityManager) shareTlsCertificates() error {
 	}
 
 	for _, sourceOrganization := range im.config.Organizations {
-		folder := "%[1]s/%[2]s/certificate-authority/organizations/peerOrganizations/%[2]s"
+		folder := "%[1]s/%[2]s/data/certificate-authority/organizations/peerOrganizations/%[2]s"
 
 		for _, targetOrganization := range im.config.Organizations {
 			if targetOrganization.Domain == sourceOrganization.Domain {
@@ -673,7 +674,7 @@ func (im *IdentityManager) skipIfExists(caName string, item string) (bool, error
 	}
 
 	if strings.TrimSpace(string(output)) == "1" {
-		fmt.Printf("Skipping: Directory already exists\n")
+		slog.Info("Skipping: Directory already exists")
 		return true, nil
 	}
 

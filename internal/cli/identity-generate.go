@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/gca-research-group/fabric-network-orchestrator/internal/executor"
 	"github.com/gca-research-group/fabric-network-orchestrator/pkg/config"
@@ -38,7 +39,7 @@ var identityGenerateCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Println("Identities generated successfully.")
+		slog.Info("Identities generated successfully.")
 		return nil
 	},
 }

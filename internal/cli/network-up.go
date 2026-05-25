@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/gca-research-group/fabric-network-orchestrator/internal/executor"
 	"github.com/gca-research-group/fabric-network-orchestrator/pkg/config"
@@ -28,7 +29,7 @@ var networkUpCmd = &cobra.Command{
 			return fmt.Errorf("Network starting failed: %v", err)
 		}
 
-		fmt.Println("Started successfully.")
+		slog.Info("Started successfully.")
 		return nil
 	},
 }

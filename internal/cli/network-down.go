@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"fmt"
+	"log/slog"
 
 	"github.com/gca-research-group/fabric-network-orchestrator/pkg/compose"
 	"github.com/gca-research-group/fabric-network-orchestrator/pkg/config"
@@ -27,7 +27,7 @@ var networkDownCmd = &cobra.Command{
 			return err
 		}
 
-		fmt.Println("Containers removed successfully.")
+		slog.Info("Containers removed successfully.")
 		return nil
 	},
 }

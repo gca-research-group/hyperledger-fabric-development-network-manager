@@ -66,13 +66,13 @@ func (o *OrdererNode) WithVolumes() *OrdererNode {
 	domain := o.domain
 	ordererDomain := ResolveOrdererDomain(o.orderer.Subdomain, domain)
 
-	ordererHostDir := fmt.Sprintf("./%[1]s/certificate-authority/organizations/ordererOrganizations/%[1]s/orderers/%[2]s", o.domain, ordererDomain)
+	ordererHostDir := fmt.Sprintf("./%[1]s/data/certificate-authority/organizations/ordererOrganizations/%[1]s/orderers/%[2]s", o.domain, ordererDomain)
 	ordererContainerDir := "/var/hyperledger/orderer"
 
 	volumes := []*yaml.Node{
 		yaml.ScalarNode(fmt.Sprintf("%s/msp:%s/msp", ordererHostDir, ordererContainerDir)),
 		yaml.ScalarNode(fmt.Sprintf("%s/tls:%s/tls", ordererHostDir, ordererContainerDir)),
-		yaml.ScalarNode(fmt.Sprintf("./%s/orderers/%s/orderer:/var/hyperledger/production/orderer", domain, o.orderer.Subdomain)),
+		yaml.ScalarNode(fmt.Sprintf("./%s/data/orderers/%s/orderer:/var/hyperledger/production/orderer", domain, o.orderer.Subdomain)),
 	}
 
 	node := o.GetValue(ordererDomain)

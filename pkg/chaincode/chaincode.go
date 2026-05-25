@@ -2,6 +2,7 @@ package chaincode
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/gca-research-group/fabric-network-orchestrator/internal/executor"
 	"github.com/gca-research-group/fabric-network-orchestrator/pkg/compose"
@@ -36,7 +37,7 @@ func (c *Chaincode) Publish() error {
 	}
 
 	for _, step := range steps {
-		fmt.Printf(">>> Step: %s\n", step.name)
+		slog.Info("Executing step", "step", step.name)
 		if err := step.fn(); err != nil {
 			return fmt.Errorf("failed at step %s: %w", step.name, err)
 		}

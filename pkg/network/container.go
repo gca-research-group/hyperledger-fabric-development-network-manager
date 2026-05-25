@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/gca-research-group/fabric-network-orchestrator/internal/executor"
 	"github.com/gca-research-group/fabric-network-orchestrator/pkg/compose"
@@ -25,7 +26,7 @@ func NewContainerManager(config config.Config, executor executor.Executor) *Cont
 }
 
 func (cm *ContainerManager) RunOrdererContainers() error {
-	fmt.Print("\n=========== Executing orderer containers ===========\n")
+	slog.Info("Executing orderer containers")
 	for _, organization := range cm.config.Organizations {
 		for _, orderer := range organization.Orderers {
 			config := compose.ResolveOrdererDockerComposeFile(cm.config.Output, organization.Domain, orderer.Subdomain)
@@ -40,7 +41,7 @@ func (cm *ContainerManager) RunOrdererContainers() error {
 }
 
 func (cm *ContainerManager) RunPeerContainers() error {
-	fmt.Print("\n=========== Executing peer containers ===========\n")
+	slog.Info("Executing peer containers")
 	for _, organization := range cm.config.Organizations {
 		for _, peer := range organization.Peers {
 			couchDBFile := compose.ResolvePeerCouchDBDockerComposeFile(cm.config.Output, organization.Domain, peer.Subdomain)
@@ -58,7 +59,7 @@ func (cm *ContainerManager) RunPeerContainers() error {
 }
 
 func (cm *ContainerManager) RunCAContainers() error {
-	fmt.Print("\n=========== Executing certificate authority containers ===========\n")
+	slog.Info("Executing certificate authority containers")
 	for _, organization := range cm.config.Organizations {
 		config := compose.ResolveCertificateAuthorityDockerComposeFile(cm.config.Output, organization.Domain)
 
@@ -71,7 +72,7 @@ func (cm *ContainerManager) RunCAContainers() error {
 }
 
 func (cm *ContainerManager) RunToolsContainers() error {
-	fmt.Print("\n=========== Executing tools containers ===========\n")
+	slog.Info("Executing tools containers")
 	for _, organization := range cm.config.Organizations {
 		config := compose.ResolveToolsDockerComposeFile(cm.config.Output, organization.Domain)
 
@@ -95,7 +96,7 @@ func (cm *ContainerManager) Start() error {
 	}
 
 	for _, step := range steps {
-		fmt.Printf(">>> Step: %s\n", step.name)
+		slog.Info("Executing step", "step", step.name)
 		if err := step.fn(); err != nil {
 			return fmt.Errorf("failed at step %s: %w", step.name, err)
 		}
@@ -105,7 +106,7 @@ func (cm *ContainerManager) Start() error {
 }
 
 func (cm *ContainerManager) StopCertificateAuthorities() error {
-	fmt.Print("\n=========== Stopping the certificate authority containers ===========\n")
+	slog.Info("Stopping the certificate authority containers")
 	for _, organization := range cm.config.Organizations {
 		config := compose.ResolveCertificateAuthorityDockerComposeFile(cm.config.Output, organization.Domain)
 

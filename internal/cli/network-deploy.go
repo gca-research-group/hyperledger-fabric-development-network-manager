@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/gca-research-group/fabric-network-orchestrator/internal/executor"
 	"github.com/gca-research-group/fabric-network-orchestrator/pkg/config"
@@ -28,7 +29,7 @@ var networkDeployCmd = &cobra.Command{
 			return fmt.Errorf("Network deployment failed: %v", err)
 		}
 
-		fmt.Println("Deployed successfully.")
+		slog.Info("Deployed successfully.")
 		return nil
 	},
 }

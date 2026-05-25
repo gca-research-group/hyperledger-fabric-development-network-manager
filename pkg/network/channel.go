@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -102,7 +103,7 @@ func (f *Network) JoinPeersToTheChannels() error {
 						strings.Contains(combined, "context deadline exceeded") ||
 						strings.Contains(combined, "Error while dialing") {
 
-						fmt.Printf("Peer %s is not ready yet. Retrying...\n", peer.Name)
+						slog.Info("Peer is not ready yet. Retrying...", "peer", peer.Name)
 						time.Sleep(time.Second * 5)
 						continue
 					}
@@ -116,7 +117,7 @@ func (f *Network) JoinPeersToTheChannels() error {
 				}
 
 				if skip {
-					fmt.Printf("Skipping: peer %s already joined channel %s\n", peer.Subdomain, channel.Name)
+					slog.Info("Skipping: peer already joined channel", "peer", peer.Subdomain, "channel", channel.Name)
 					continue
 				}
 

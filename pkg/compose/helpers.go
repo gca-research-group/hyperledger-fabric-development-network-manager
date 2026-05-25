@@ -46,6 +46,12 @@ func ResolvePeerDomain(subdomain string, domain string) string {
 	return fmt.Sprintf("%s.%s", subdomain, domain)
 }
 
+func ResolveCouchDBDomain(subdomain string, domain string) string {
+	peerDomain := ResolvePeerDomain(subdomain, domain)
+
+	return fmt.Sprintf("couchdb.%s", peerDomain)
+}
+
 func ResolveOrdererDomain(subdomain string, domain string) string {
 	return fmt.Sprintf("%s.%s", subdomain, domain)
 }
@@ -132,19 +138,19 @@ func ResolvePeerContainerName(domain string, subdomain string) string {
 }
 
 func ResolvePeerDockerComposeFile(output string, domain string, subdomain string) string {
-	return fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s/%[3]s.yml", output, domain, subdomain)
+	return fmt.Sprintf("%[1]s/%[2]s/%[3]s.yml", output, domain, ResolvePeerDomain(subdomain, domain))
 }
 
 func ResolvePeerCouchDBDockerComposeFile(output string, domain string, subdomain string) string {
-	return fmt.Sprintf("%[1]s/%[2]s/peers/%[3]s/couchdb.yml", output, domain, subdomain)
+	return fmt.Sprintf("%[1]s/%[2]s/%[3]s.yml", output, domain, ResolveCouchDBDomain(subdomain, domain))
 }
 
 func ResolveCertificateAuthorityDockerComposeFile(output string, domain string) string {
-	return fmt.Sprintf("%s/%s/certificate-authority/certificate-authority.yml", output, domain)
+	return fmt.Sprintf("%s/%s/%s.yml", output, domain, ResolveCertificateAuthorityDomain(domain))
 }
 
 func ResolveOrdererDockerComposeFile(output string, domain string, subdomain string) string {
-	return fmt.Sprintf("%[1]s/%[2]s/orderers/%[3]s/%[3]s.yml", output, domain, subdomain)
+	return fmt.Sprintf("%[1]s/%[2]s/%[3]s.yml", output, domain, ResolveOrdererDomain(subdomain, domain))
 }
 
 func ResolveToolsDockerComposeFile(output string, domain string) string {
