@@ -127,6 +127,10 @@ func setUpDefaultValues(config *Config) {
 }
 
 func validateConfig(config Config) error {
+	if config.Output == "" {
+		return fmt.Errorf("the output directory cannot be empty")
+	}
+
 	if len(config.Organizations) == 0 {
 		return fmt.Errorf("at least one organization must be defined")
 	}
@@ -150,6 +154,14 @@ func validateConfig(config Config) error {
 	for i := range config.Organizations {
 		organization := &config.Organizations[i]
 
+		if organization.Name == "" {
+			return fmt.Errorf("name of the organization index %d is undefined", i)
+		}
+
+		if organization.Domain == "" {
+			return fmt.Errorf("domain of the organization index %d is undefined", i)
+		}
+
 		if _, exists := organizationNames[organization.Name]; exists {
 			return fmt.Errorf("duplicate organization name: %s", organization.Name)
 		}
@@ -164,16 +176,60 @@ func validateConfig(config Config) error {
 			hasOrderer = true
 		}
 
-		for _, peer := range organization.Peers {
+		if organization.CertificateAuthority.ExposePort <= 0 {
+			return fmt.Errorf("expose port of the certificate authority of the organization %s should be greater than zero", organization.Name)
+		}
+
+		for j, peer := range organization.Peers {
 			if err := validateBinary(peer.Version, MinBinaryVersion[config.Capabilities.Channel]); err != nil {
 				return fmt.Errorf("peer version of org %s invalid: %w", organization.Name, err)
 			}
+
+			if peer.Name == "" {
+				return fmt.Errorf("name of the peer index %d of the organization %s is undefined", j, organization.Name)
+			}
+
+			if peer.Subdomain == "" {
+				return fmt.Errorf("subdomain of the peer %s of the organization %s is undefined", peer.Name, organization.Name)
+			}
+
+			if peer.ExposePort <= 0 {
+				return fmt.Errorf("expose port of the peer %s of the organization %s should be greater than zero", peer.Name, organization.Name)
+			}
 		}
 
-		for _, orderer := range organization.Orderers {
+		for j, orderer := range organization.Orderers {
 			if err := validateBinary(orderer.Version, MinBinaryVersion[config.Capabilities.Channel]); err != nil {
 				return fmt.Errorf("orderer version of org %s invalid: %w", organization.Name, err)
 			}
+
+			if orderer.Name == "" {
+				return fmt.Errorf("name of the orderer index %d of the organization %s is undefined", j, organization.Name)
+			}
+
+			if orderer.Subdomain == "" {
+				return fmt.Errorf("subdomain of the orderer %s of the organization %s is undefined", orderer.Name, organization.Name)
+			}
+
+			if orderer.ExposePort <= 0 {
+				return fmt.Errorf("expose port of the orderer %s of the organization %s should be greater than zero", orderer.Name, organization.Name)
+			}
+		}
+	}
+
+	for i := range config.Chaincodes {
+		chaincode := &config.Chaincodes[i]
+
+		if chaincode.Name == "" {
+			return fmt.Errorf("name of the chaincode %d is empty", i)
+		}
+
+		if chaincode.Path == "" {
+			return fmt.Errorf("path of the chaincode %d is empty", i)
+		}
+
+		if chaincode.Version == "" {
+			return fmt.Errorf("path of the chaincode %d is empty", i)
 		}
 	}
 
@@ -186,6 +242,12 @@ func validateConfig(config Config) error {
 	}
 
 	for _, profile := range config.Profiles {
+		consensusType := profile.Consensus.Type
+
+		if consensusType != "" && consensusType != "etcdraft" && consensusType != "BFT" {
+			return fmt.Errorf("invalid consensus type for the profile %s", profile.Name)
+		}
+
 		if len(profile.Organizations) == 0 {
 			return fmt.Errorf("profile %s must include at least one organization", profile.Name)
 		}
