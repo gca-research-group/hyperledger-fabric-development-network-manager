@@ -1,0 +1,34 @@
+﻿output: output/sm-08-multiple-bootstrap-orgs
+network: sm-08-multiple-bootstrap-orgs
+capabilities:
+  channel: V2_0
+  orderer: V2_0
+  application: V2_5
+organizations:
+  - name: Org1
+    domain: org1.sm-08-multiple-bootstrap-orgs.com
+    bootstrap: true
+    orderers:
+      - name: Orderer1
+        subdomain: orderer1
+    peers:
+      - name: Peer0
+        subdomain: peer0
+  - name: Org2
+    domain: org2.sm-08-multiple-bootstrap-orgs.com
+    bootstrap: true
+    orderers:
+      - name: Orderer2
+        subdomain: orderer2
+    peers:
+      - name: Peer0
+        subdomain: peer0
+profiles:
+  - name: DefaultProfile
+    organizations:
+      - Org1
+      - Org2
+channels:
+  - name: defaultchannel
+    profile:
+      name: DefaultProfile

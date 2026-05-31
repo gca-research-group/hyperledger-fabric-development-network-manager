@@ -1,0 +1,26 @@
+﻿output: output/sm-11-exposed-port-conflict
+network: sm-11-exposed-port-conflict
+capabilities:
+  channel: V2_0
+  orderer: V2_0
+  application: V2_5
+organizations:
+  - name: Org1
+    domain: org1.sm-11-exposed-port-conflict.com
+    certificateAuthority:
+      exposePort: 7054
+    orderers:
+      - name: Orderer
+        subdomain: orderer
+        exposePort: 7054
+    peers:
+      - name: Peer0
+        subdomain: peer0
+profiles:
+  - name: DefaultProfile
+    organizations:
+      - Org1
+channels:
+  - name: defaultchannel
+    profile:
+      name: DefaultProfile

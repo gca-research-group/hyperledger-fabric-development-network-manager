@@ -1,0 +1,22 @@
+﻿output: output/sc-15-empty-profile-orgs
+network: sc-15-empty-profile-orgs
+capabilities:
+  channel: V2_0
+  orderer: V2_0
+  application: V2_5
+organizations:
+  - name: Org1
+    domain: org1.sc-15-empty-profile-orgs.com
+    orderers:
+      - name: Orderer
+        subdomain: orderer
+    peers:
+      - name: Peer0
+        subdomain: peer0
+profiles:
+  - name: DefaultProfile
+    organizations: []
+channels:
+  - name: defaultchannel
+    profile:
+      name: DefaultProfile

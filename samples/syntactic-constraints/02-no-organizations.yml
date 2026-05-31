@@ -1,0 +1,15 @@
+﻿output: output/sc-02-no-organizations
+network: sc-02-no-organizations
+capabilities:
+  channel: V2_0
+  orderer: V2_0
+  application: V2_5
+organizations: []
+profiles:
+  - name: DefaultProfile
+    organizations:
+      - Org1
+channels:
+  - name: defaultchannel
+    profile:
+      name: DefaultProfile

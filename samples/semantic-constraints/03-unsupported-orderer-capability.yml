@@ -1,0 +1,23 @@
+﻿output: output/sm-03-unsupported-orderer-capability
+network: sm-03-unsupported-orderer-capability
+capabilities:
+  channel: V2_0
+  orderer: V1_4
+  application: V2_5
+organizations:
+  - name: Org1
+    domain: org1.sm-03-unsupported-orderer-capability.com
+    orderers:
+      - name: Orderer
+        subdomain: orderer
+    peers:
+      - name: Peer0
+        subdomain: peer0
+profiles:
+  - name: DefaultProfile
+    organizations:
+      - Org1
+channels:
+  - name: defaultchannel
+    profile:
+      name: DefaultProfile

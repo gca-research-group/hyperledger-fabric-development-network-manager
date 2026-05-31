@@ -1,0 +1,23 @@
+﻿output: output/sc-04-empty-org-domain
+network: sc-04-empty-org-domain
+capabilities:
+  channel: V2_0
+  orderer: V2_0
+  application: V2_5
+organizations:
+  - name: Org1
+    domain: ""
+    orderers:
+      - name: Orderer
+        subdomain: orderer
+    peers:
+      - name: Peer0
+        subdomain: peer0
+profiles:
+  - name: DefaultProfile
+    organizations:
+      - Org1
+channels:
+  - name: defaultchannel
+    profile:
+      name: DefaultProfile

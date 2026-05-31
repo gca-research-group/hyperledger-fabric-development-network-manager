@@ -1,0 +1,23 @@
+﻿output: output/sm-02-unsupported-application-capability
+network: sm-02-unsupported-application-capability
+capabilities:
+  channel: V2_0
+  orderer: V2_0
+  application: V1_4
+organizations:
+  - name: Org1
+    domain: org1.sm-02-unsupported-application-capability.com
+    orderers:
+      - name: Orderer
+        subdomain: orderer
+    peers:
+      - name: Peer0
+        subdomain: peer0
+profiles:
+  - name: DefaultProfile
+    organizations:
+      - Org1
+channels:
+  - name: defaultchannel
+    profile:
+      name: DefaultProfile

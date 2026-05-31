@@ -1,0 +1,27 @@
+﻿output: output/sc-14-empty-chaincode-version
+network: sc-14-empty-chaincode-version
+capabilities:
+  channel: V2_0
+  orderer: V2_0
+  application: V2_5
+chaincodes:
+  - name: mycc
+    path: github.com/chaincode
+    version: ""
+organizations:
+  - name: Org1
+    domain: org1.sc-14-empty-chaincode-version.com
+    orderers:
+      - name: Orderer
+        subdomain: orderer
+    peers:
+      - name: Peer0
+        subdomain: peer0
+profiles:
+  - name: DefaultProfile
+    organizations:
+      - Org1
+channels:
+  - name: defaultchannel
+    profile:
+      name: DefaultProfile

@@ -1,0 +1,23 @@
+﻿output: output/sm-10-profile-references-undefined-org
+network: sm-10-profile-references-undefined-org
+capabilities:
+  channel: V2_0
+  orderer: V2_0
+  application: V2_5
+organizations:
+  - name: Org1
+    domain: org1.sm-10-profile-references-undefined-org.com
+    orderers:
+      - name: Orderer
+        subdomain: orderer
+    peers:
+      - name: Peer0
+        subdomain: peer0
+profiles:
+  - name: DefaultProfile
+    organizations:
+      - UndefinedOrg
+channels:
+  - name: defaultchannel
+    profile:
+      name: DefaultProfile

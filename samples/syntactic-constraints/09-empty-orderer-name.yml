@@ -1,0 +1,23 @@
+﻿output: output/sc-09-empty-orderer-name
+network: sc-09-empty-orderer-name
+capabilities:
+  channel: V2_0
+  orderer: V2_0
+  application: V2_5
+organizations:
+  - name: Org1
+    domain: org1.sc-09-empty-orderer-name.com
+    orderers:
+      - name: ""
+        subdomain: orderer
+    peers:
+      - name: Peer0
+        subdomain: peer0
+profiles:
+  - name: DefaultProfile
+    organizations:
+      - Org1
+channels:
+  - name: defaultchannel
+    profile:
+      name: DefaultProfile

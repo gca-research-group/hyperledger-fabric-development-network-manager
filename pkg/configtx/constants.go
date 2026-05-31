@@ -35,7 +35,7 @@ const (
 	LeaderHeartbeatCountKey      = "LeaderHeartbeatCount"
 	LeaderHeartbeatTimeoutKey    = "LeaderHeartbeatTimeout"
 	LifecycleEndorsementKey      = "LifecycleEndorsement"
-	MAJORITYKey                  = "MAJORITY"
+	MAJORITYKey                  = "ANY"
 	MaxMessageCountKey           = "MaxMessageCount"
 	memberKey                    = "member"
 	MSPDirKey                    = "MSPDir"

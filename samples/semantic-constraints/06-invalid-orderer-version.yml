@@ -1,0 +1,24 @@
+﻿output: output/sm-06-invalid-orderer-version
+network: sm-06-invalid-orderer-version
+capabilities:
+  channel: V2_5
+  orderer: V2_5
+  application: V2_5
+organizations:
+  - name: Org1
+    domain: org1.sm-06-invalid-orderer-version.com
+    orderers:
+      - name: Orderer
+        subdomain: orderer
+        version: 2.4.0
+    peers:
+      - name: Peer0
+        subdomain: peer0
+profiles:
+  - name: DefaultProfile
+    organizations:
+      - Org1
+channels:
+  - name: defaultchannel
+    profile:
+      name: DefaultProfile

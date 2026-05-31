@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -126,7 +127,16 @@ func setUpDefaultValues(config *Config) {
 	}
 }
 
+var channelNameRegex = regexp.MustCompile(`^[a-z][a-z0-9.-]{0,248}$`)
+
 func validateConfig(config Config) error {
+	if err := ValidateSyntactic(config); err != nil {
+		return err
+	}
+	return ValidateSemantic(config)
+}
+
+func ValidateSyntactic(config Config) error {
 	if config.Output == "" {
 		return fmt.Errorf("the output directory cannot be empty")
 	}
@@ -134,22 +144,6 @@ func validateConfig(config Config) error {
 	if len(config.Organizations) == 0 {
 		return fmt.Errorf("at least one organization must be defined")
 	}
-
-	if _, ok := CapabilityMap[config.Capabilities.Channel]; !ok {
-		return fmt.Errorf("unsupported channel capability: %s", config.Capabilities.Channel)
-	}
-
-	if _, ok := CapabilityMap[config.Capabilities.Application]; !ok {
-		return fmt.Errorf("unsupported application capability: %s", config.Capabilities.Application)
-	}
-
-	if _, ok := CapabilityMap[config.Capabilities.Orderer]; !ok {
-		return fmt.Errorf("unsupported orderer capability: %s", config.Capabilities.Orderer)
-	}
-
-	organizationNames := make(map[string]struct{})
-	bootstrapCount := 0
-	hasOrderer := false
 
 	for i := range config.Organizations {
 		organization := &config.Organizations[i]
@@ -162,29 +156,11 @@ func validateConfig(config Config) error {
 			return fmt.Errorf("domain of the organization index %d is undefined", i)
 		}
 
-		if _, exists := organizationNames[organization.Name]; exists {
-			return fmt.Errorf("duplicate organization name: %s", organization.Name)
-		}
-
-		organizationNames[organization.Name] = struct{}{}
-
-		if organization.Bootstrap {
-			bootstrapCount++
-		}
-
-		if len(organization.Orderers) > 0 {
-			hasOrderer = true
-		}
-
-		if organization.CertificateAuthority.ExposePort <= 0 {
+		if organization.CertificateAuthority.ExposePort < 0 {
 			return fmt.Errorf("expose port of the certificate authority of the organization %s should be greater than zero", organization.Name)
 		}
 
 		for j, peer := range organization.Peers {
-			if err := validateBinary(peer.Version, MinBinaryVersion[config.Capabilities.Channel]); err != nil {
-				return fmt.Errorf("peer version of org %s invalid: %w", organization.Name, err)
-			}
-
 			if peer.Name == "" {
 				return fmt.Errorf("name of the peer index %d of the organization %s is undefined", j, organization.Name)
 			}
@@ -193,16 +169,12 @@ func validateConfig(config Config) error {
 				return fmt.Errorf("subdomain of the peer %s of the organization %s is undefined", peer.Name, organization.Name)
 			}
 
-			if peer.ExposePort <= 0 {
+			if peer.ExposePort < 0 {
 				return fmt.Errorf("expose port of the peer %s of the organization %s should be greater than zero", peer.Name, organization.Name)
 			}
 		}
 
 		for j, orderer := range organization.Orderers {
-			if err := validateBinary(orderer.Version, MinBinaryVersion[config.Capabilities.Channel]); err != nil {
-				return fmt.Errorf("orderer version of org %s invalid: %w", organization.Name, err)
-			}
-
 			if orderer.Name == "" {
 				return fmt.Errorf("name of the orderer index %d of the organization %s is undefined", j, organization.Name)
 			}
@@ -211,7 +183,7 @@ func validateConfig(config Config) error {
 				return fmt.Errorf("subdomain of the orderer %s of the organization %s is undefined", orderer.Name, organization.Name)
 			}
 
-			if orderer.ExposePort <= 0 {
+			if orderer.ExposePort < 0 {
 				return fmt.Errorf("expose port of the orderer %s of the organization %s should be greater than zero", orderer.Name, organization.Name)
 			}
 		}
@@ -233,6 +205,94 @@ func validateConfig(config Config) error {
 		}
 	}
 
+	for _, profile := range config.Profiles {
+		if len(profile.Organizations) == 0 {
+			return fmt.Errorf("profile %s must include at least one organization", profile.Name)
+		}
+	}
+
+	for _, ch := range config.Channels {
+		if ch.Name == "" {
+			return fmt.Errorf("channel name cannot be empty")
+		}
+		if ch.Profile.Name == "" {
+			return fmt.Errorf("channel %s must reference a profile", ch.Name)
+		}
+	}
+
+	return nil
+}
+
+func ValidateSemantic(config Config) error {
+	if _, ok := CapabilityMap[config.Capabilities.Channel]; !ok {
+		return fmt.Errorf("unsupported channel capability: %s", config.Capabilities.Channel)
+	}
+
+	if _, ok := CapabilityMap[config.Capabilities.Application]; !ok {
+		return fmt.Errorf("unsupported application capability: %s", config.Capabilities.Application)
+	}
+
+	if _, ok := CapabilityMap[config.Capabilities.Orderer]; !ok {
+		return fmt.Errorf("unsupported orderer capability: %s", config.Capabilities.Orderer)
+	}
+
+	organizationNames := make(map[string]struct{})
+	exposedPorts := make(map[int]string)
+	bootstrapCount := 0
+	hasOrderer := false
+
+	for i := range config.Organizations {
+		organization := &config.Organizations[i]
+
+		if _, exists := organizationNames[organization.Name]; exists {
+			return fmt.Errorf("duplicate organization name: %s", organization.Name)
+		}
+
+		organizationNames[organization.Name] = struct{}{}
+
+		if organization.Bootstrap {
+			bootstrapCount++
+		}
+
+		if len(organization.Orderers) > 0 {
+			hasOrderer = true
+		}
+
+		caPort := organization.CertificateAuthority.ExposePort
+		if caPort > 0 {
+			if existingService, exists := exposedPorts[caPort]; exists {
+				return fmt.Errorf("port conflict: expose port %d is configured for Certificate Authority of org %s and %s", caPort, organization.Name, existingService)
+			}
+			exposedPorts[caPort] = fmt.Sprintf("Certificate Authority of org %s", organization.Name)
+		}
+
+		for _, peer := range organization.Peers {
+			if err := validateBinary(peer.Version, MinBinaryVersion[config.Capabilities.Channel]); err != nil {
+				return fmt.Errorf("peer version of org %s invalid: %w", organization.Name, err)
+			}
+
+			if peer.ExposePort > 0 {
+				if existingService, exists := exposedPorts[peer.ExposePort]; exists {
+					return fmt.Errorf("port conflict: expose port %d is configured for peer %s of org %s and %s", peer.ExposePort, peer.Name, organization.Name, existingService)
+				}
+				exposedPorts[peer.ExposePort] = fmt.Sprintf("peer %s of org %s", peer.Name, organization.Name)
+			}
+		}
+
+		for _, orderer := range organization.Orderers {
+			if err := validateBinary(orderer.Version, MinBinaryVersion[config.Capabilities.Channel]); err != nil {
+				return fmt.Errorf("orderer version of org %s invalid: %w", organization.Name, err)
+			}
+
+			if orderer.ExposePort > 0 {
+				if existingService, exists := exposedPorts[orderer.ExposePort]; exists {
+					return fmt.Errorf("port conflict: expose port %d is configured for orderer %s of org %s and %s", orderer.ExposePort, orderer.Name, organization.Name, existingService)
+				}
+				exposedPorts[orderer.ExposePort] = fmt.Sprintf("orderer %s of org %s", orderer.Name, organization.Name)
+			}
+		}
+	}
+
 	if !hasOrderer {
 		return fmt.Errorf("at least one orderer must be configured")
 	}
@@ -248,10 +308,6 @@ func validateConfig(config Config) error {
 			return fmt.Errorf("invalid consensus type for the profile %s", profile.Name)
 		}
 
-		if len(profile.Organizations) == 0 {
-			return fmt.Errorf("profile %s must include at least one organization", profile.Name)
-		}
-
 		for _, orgName := range profile.Organizations {
 			if _, ok := organizationNames[orgName]; !ok {
 				return fmt.Errorf("organization not defined: %s", orgName)
@@ -260,8 +316,8 @@ func validateConfig(config Config) error {
 	}
 
 	for _, ch := range config.Channels {
-		if ch.Profile.Name == "" {
-			return fmt.Errorf("channel %s must reference a profile", ch.Name)
+		if !channelNameRegex.MatchString(ch.Name) {
+			return fmt.Errorf("invalid channel name: %s (must be lowercase alphanumeric, start with a letter, and contain only '.', '-', or alphanumeric characters, max 249 characters)", ch.Name)
 		}
 	}
 

@@ -1,0 +1,20 @@
+﻿output: output/sm-07-no-orderer-topology
+network: sm-07-no-orderer-topology
+capabilities:
+  channel: V2_0
+  orderer: V2_0
+  application: V2_5
+organizations:
+  - name: Org1
+    domain: org1.sm-07-no-orderer-topology.com
+    peers:
+      - name: Peer0
+        subdomain: peer0
+profiles:
+  - name: DefaultProfile
+    organizations:
+      - Org1
+channels:
+  - name: defaultchannel
+    profile:
+      name: DefaultProfile
