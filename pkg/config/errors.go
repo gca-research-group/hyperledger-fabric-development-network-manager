@@ -3,15 +3,13 @@ package config
 import "fmt"
 
 type ValidationError struct {
-	Layer  string
 	RuleID string
 	Rule   string
 	Detail string
 }
 
 func (e *ValidationError) Error() string {
-	return fmt.Sprintf("[FATAL] Configuration validation failed!\n[LAYER] %s\n[RULE]  %s - %s\nDetail: %s",
-		e.Layer, e.RuleID, e.Rule, e.Detail)
+	return fmt.Sprintf("[FATAL] Configuration validation failed!\n[RULE]  %s - %s\nDetail: %s", e.RuleID, e.Rule, e.Detail)
 }
 
 type portOwner struct {

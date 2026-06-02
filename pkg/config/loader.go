@@ -35,18 +35,11 @@ func LoadConfigFromPath(path string) (*Config, error) {
 		return nil, fmt.Errorf("parsing config file: %w", err)
 	}
 
-	if err := validateConfig(config); err != nil {
+	if err := ValidateConfig(config); err != nil {
 		return nil, err
 	}
 
 	setUpDefaultValues(&config)
 
 	return &config, nil
-}
-
-func validateConfig(config Config) error {
-	if err := ValidateSyntactic(config); err != nil {
-		return err
-	}
-	return ValidateSemantic(config)
 }
