@@ -11,8 +11,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var force bool
-
 var artifactsGenerateCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "Generate artifacts from a configuration file",
@@ -23,10 +21,6 @@ var artifactsGenerateCmd = &cobra.Command{
 
 		if config, err = LoadConfig(); err != nil {
 			return err
-		}
-
-		if force {
-			directory.RemoveFolderIfExists(config.Output)
 		}
 
 		if value, _ := directory.IsDirEmpty((*config).Output); value == false {
@@ -51,14 +45,6 @@ var artifactsGenerateCmd = &cobra.Command{
 
 func init() {
 	AddConfigCommand(artifactsGenerateCmd)
-
-	artifactsGenerateCmd.Flags().BoolVarP(
-		&force,
-		"force",
-		"f",
-		false,
-		"Remove existing files from the output folder",
-	)
 
 	artifactsCmd.AddCommand(artifactsGenerateCmd)
 }
