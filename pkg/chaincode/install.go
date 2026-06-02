@@ -2,12 +2,16 @@ package chaincode
 
 import (
 	"fmt"
+
+	"github.com/gca-research-group/fabric-network-orchestrator/pkg/config"
 )
 
 func (c *Chaincode) Install() error {
 
+	chaincodes := config.ResolveAllChaincodes(*c.config)
+
 	for _, organization := range c.config.Organizations {
-		for _, chaincode := range c.config.Chaincodes {
+		for _, chaincode := range chaincodes {
 			name := chaincode.Name
 			tarfile := ResolveChaincodeTar(chaincode)
 

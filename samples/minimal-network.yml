@@ -23,12 +23,11 @@ organizations:
         subdomain: peer0
 
 profiles:
-  - &DefaultProfile
-    name: DefaultProfile
+  - name: DefaultProfile
     organizations:
       - Org1
       - Org2
 
 channels:
   - name: defaultchannel
-    profile: *DefaultProfile
+    profile: DefaultProfile

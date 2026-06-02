@@ -1,22 +1,6 @@
 output: output/network-with-chaincode
 network: network-with-chaincode
 
-chaincodes:
-  - &asset
-    name: Asset
-    path: samples/chaincodes/asset/asset.go
-
-  - &product
-    name: Product
-    path: samples/chaincodes/product/product.go
-    signaturePolicy: AND("Org1MSP.peer", "Org2MSP.peer", "Org3MSP.peer")
-
-  - &privateagreement
-    name: PrivateAgreement
-    path: samples/chaincodes/private-agreement/private-agreement.go
-    channelConfigPolicy: Channel/Application/Endorsement
-    collectionsConfig: samples/chaincodes/private-agreement/collections_config.json
-
 capabilities:
   channel: V2_0
   orderer: V2_0
@@ -48,8 +32,7 @@ organizations:
         exposePort: 9051
 
 profiles:
-  - &DefaultProfile
-    name: DefaultProfile
+  - name: DefaultProfile
     organizations:
       - Org1
       - Org2
@@ -57,8 +40,21 @@ profiles:
 
 channels:
   - name: defaultchannel
-    profile: *DefaultProfile
+    profile: DefaultProfile
     chaincodes:
-      - *asset
-      - *product
-      - *privateagreement
+      - name: Asset
+        version: "1.0"
+        path: samples/chaincodes/asset
+        language:
+          name: golang
+          version: "1.26"
+
+      - name: Product
+        version: "1.0"
+        path: samples/chaincodes/product
+
+      - name: PrivateAgreement
+        version: "1.0"
+        path: samples/chaincodes/private-agreement
+        channelConfigPolicy: Channel/Application/Endorsement
+        collectionsConfig: samples/chaincodes/private-agreement/collections_config.json

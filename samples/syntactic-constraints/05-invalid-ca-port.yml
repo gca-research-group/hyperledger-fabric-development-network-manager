@@ -1,12 +1,12 @@
-﻿output: output/sc-05-invalid-ca-port
-network: sc-05-invalid-ca-port
+﻿output: output/syn-05-invalid-ca-port
+network: syn-05-invalid-ca-port
 capabilities:
   channel: V2_0
   orderer: V2_0
   application: V2_5
 organizations:
   - name: Org1
-    domain: org1.sc-05-invalid-ca-port.com
+    domain: org1.syn-05-invalid-ca-port.com
     certificateAuthority:
       exposePort: -1
     orderers:

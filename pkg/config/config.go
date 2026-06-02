@@ -60,7 +60,7 @@ type Organization struct {
 
 type Channel struct {
 	Name       string      `yaml:"name" json:"name" toml:"name"`
-	Profile    Profile     `yaml:"profile" json:"profile" toml:"profile"`
+	Profile    string      `yaml:"profile" json:"profile" toml:"profile"`
 	Chaincodes []Chaincode `yaml:"chaincodes" json:"chaincodes" toml:"chaincodes"`
 }
 
@@ -97,7 +97,6 @@ type Chaincode struct {
 
 type Config struct {
 	Output        string         `yaml:"output" json:"output" toml:"output"`
-	Chaincodes    []Chaincode    `yaml:"chaincodes" json:"chaincodes" toml:"chaincodes"`
 	Network       string         `yaml:"network" json:"network" toml:"network"`
 	Capabilities  Capabilities   `yaml:"capabilities" json:"capabilities" toml:"capabilities"`
 	Organizations []Organization `yaml:"organizations" json:"organizations" toml:"organizations"`

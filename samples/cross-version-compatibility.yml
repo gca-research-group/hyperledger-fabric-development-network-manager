@@ -30,12 +30,11 @@ organizations:
       version: 1.5.8
 
 profiles:
-  - &DefaultProfile
-    name: DefaultProfile
+  - name: DefaultProfile
     organizations:
       - Org1
       - Org2
 
 channels:
   - name: defaultchannel
-    profile: *DefaultProfile
+    profile: DefaultProfile

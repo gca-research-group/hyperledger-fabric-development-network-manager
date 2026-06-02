@@ -1,12 +1,12 @@
 ﻿output: ""
-network: sc-01-empty-output
+network: syn-01-empty-output
 capabilities:
   channel: V2_0
   orderer: V2_0
   application: V2_5
 organizations:
   - name: Org1
-    domain: org1.sc-01-empty-output.com
+    domain: org1.syn-01-empty-output.com
     orderers:
       - name: Orderer
         subdomain: orderer

@@ -3,13 +3,16 @@ package chaincode
 import (
 	"fmt"
 	"log/slog"
+
+	"github.com/gca-research-group/fabric-network-orchestrator/pkg/config"
 )
 
 func (c *Chaincode) Package() error {
 
 	organization := c.config.Organizations[0]
+	chaincodes := config.ResolveAllChaincodes(*c.config)
 
-	for _, chaincode := range c.config.Chaincodes {
+	for _, chaincode := range chaincodes {
 
 		name := chaincode.Name
 		label := ResolveLabel(chaincode)

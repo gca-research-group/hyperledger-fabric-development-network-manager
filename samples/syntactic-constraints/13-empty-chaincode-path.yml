@@ -1,5 +1,5 @@
-﻿output: output/sc-13-empty-chaincode-path
-network: sc-13-empty-chaincode-path
+﻿output: output/syn-13-empty-chaincode-path
+network: syn-13-empty-chaincode-path
 capabilities:
   channel: V2_0
   orderer: V2_0
@@ -10,7 +10,7 @@ chaincodes:
     version: "1.0"
 organizations:
   - name: Org1
-    domain: org1.sc-13-empty-chaincode-path.com
+    domain: org1.syn-13-empty-chaincode-path.com
     orderers:
       - name: Orderer
         subdomain: orderer

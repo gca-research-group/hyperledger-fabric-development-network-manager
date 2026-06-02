@@ -49,13 +49,7 @@
   "channels": [
     {
       "name": "defaultchannel",
-      "profile": {
-        "name": "DefaultProfile",
-        "organizations": [
-          "Org1",
-          "Org2"
-        ]
-      }
+      "profile": "DefaultProfile"
     }
   ]
 }

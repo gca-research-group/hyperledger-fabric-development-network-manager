@@ -29,14 +29,12 @@ organizations:
         subdomain: peer0
 
 profiles:
-  - &TwoOrgsProfile
-    name: TwoOrgsProfile
+  - name: TwoOrgsProfile
     organizations:
       - Org1
       - Org2
 
-  - &AllOrgsProfile
-    name: AllOrgsProfile
+  - name: AllOrgsProfile
     organizations:
       - Org1
       - Org2
@@ -44,10 +42,10 @@ profiles:
 
 channels:
   - name: channel1
-    profile: *TwoOrgsProfile
+    profile: TwoOrgsProfile
 
   - name: channel2
-    profile: *TwoOrgsProfile
+    profile: TwoOrgsProfile
 
   - name: channel3
-    profile: *AllOrgsProfile
+    profile: AllOrgsProfile

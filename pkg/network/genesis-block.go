@@ -24,7 +24,7 @@ func (f *Network) GenerateGenesisBlock() error {
 					[]string{
 						"configtxgen",
 						"-outputBlock", fmt.Sprintf("%s/channels/%s.block", constants.DEFAULT_FABRIC_DIRECTORY, ResolveChannelID(channel)),
-						"-profile", channel.Profile.Name,
+						"-profile", channel.Profile,
 						"-channelID", ResolveChannelID(channel),
 						"-configPath", fmt.Sprintf("%s/", constants.DEFAULT_FABRIC_DIRECTORY),
 					}, " ",
@@ -44,6 +44,7 @@ func (f *Network) GenerateGenesisBlock() error {
 
 func (f *Network) FetchGenesisBlock() error {
 	ordererAddress, caFile := ResolveOrdererTLSConnection(f.config.Organizations)
+	profilesMap := config.ProfilesMap(f.config)
 
 	for _, organization := range f.config.Organizations {
 		if organization.Bootstrap {
@@ -53,7 +54,8 @@ func (f *Network) FetchGenesisBlock() error {
 		var channels []config.Channel
 
 		for _, channel := range f.config.Channels {
-			for _, organizationName := range channel.Profile.Organizations {
+			profile, _ := profilesMap[channel.Profile]
+			for _, organizationName := range profile.Organizations {
 				if organizationName == organization.Name {
 					channels = append(channels, channel)
 					break

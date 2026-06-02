@@ -1,12 +1,12 @@
-﻿output: output/sc-06-empty-peer-name
-network: sc-06-empty-peer-name
+﻿output: output/syn-06-empty-peer-name
+network: syn-06-empty-peer-name
 capabilities:
   channel: V2_0
   orderer: V2_0
   application: V2_5
 organizations:
   - name: Org1
-    domain: org1.sc-06-empty-peer-name.com
+    domain: org1.syn-06-empty-peer-name.com
     orderers:
       - name: Orderer
         subdomain: orderer

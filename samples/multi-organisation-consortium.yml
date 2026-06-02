@@ -51,8 +51,7 @@ organizations:
         subdomain: peer1
 
 profiles:
-  - &DefaultProfile
-    name: DefaultProfile
+  - name: DefaultProfile
     organizations:
       - Org1
       - Org2
@@ -62,4 +61,4 @@ profiles:
 
 channels:
   - name: defaultchannel
-    profile: *DefaultProfile
+    profile: DefaultProfile

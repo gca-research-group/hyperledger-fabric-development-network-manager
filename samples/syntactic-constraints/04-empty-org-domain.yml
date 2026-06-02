@@ -1,5 +1,5 @@
-﻿output: output/sc-04-empty-org-domain
-network: sc-04-empty-org-domain
+﻿output: output/syn-04-empty-org-domain
+network: syn-04-empty-org-domain
 capabilities:
   channel: V2_0
   orderer: V2_0

@@ -48,13 +48,16 @@ func (f *Network) JoinOrdererToTheChannel() error {
 }
 
 func (f *Network) JoinPeersToTheChannels() error {
+	profilesMap := config.ProfilesMap(f.config)
+
 	for _, organization := range f.config.Organizations {
 
 		containerName := compose.ResolveToolsContainerName(organization)
 		var channels []config.Channel
 
 		for _, channel := range f.config.Channels {
-			for _, organizationName := range channel.Profile.Organizations {
+			profile, _ := profilesMap[channel.Profile]
+			for _, organizationName := range profile.Organizations {
 				if organizationName == organization.Name {
 					channels = append(channels, channel)
 					break

@@ -141,12 +141,14 @@ func (r *Renderer) RenderOrganizations() error {
 }
 
 func (r *Renderer) RenderTools(organization config.Organization, domains []string) error {
+	chaincodes := config.ResolveAllChaincodes(*r.config)
+
 	return yaml.MappingNode(
 		yaml.ScalarNode("services"),
 		NewTools(
 			organization,
 			r.config.Organizations,
-			r.config.Chaincodes,
+			chaincodes,
 			r.config.Network,
 			r.config.Capabilities).Build(),
 	).ToFile(ResolveToolsDockerComposeFile(r.config.Output, organization.Domain))

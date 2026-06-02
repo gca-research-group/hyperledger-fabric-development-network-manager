@@ -203,5 +203,6 @@ func ResolveChaincodeVersion(chaincode config.Chaincode) string {
 	if version == "" {
 		version = "1.0"
 	}
+
 	return version
 }

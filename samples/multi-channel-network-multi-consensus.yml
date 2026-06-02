@@ -29,16 +29,14 @@ organizations:
         subdomain: peer0
 
 profiles:
-  - &BFTProfile
-    name: BFTProfile
+  - name: BFTProfile
     organizations:
       - Org1
       - Org2
     consensus:
       type: BFT
 
-  - &RAFTProfile
-    name: RAFTProfile
+  - name: RAFTProfile
     organizations:
       - Org1
       - Org2
@@ -47,6 +45,6 @@ profiles:
 
 channels:
   - name: bftchannel
-    profile: *BFTProfile
+    profile: BFTProfile
   - name: raftchannel
-    profile: *RAFTProfile
+    profile: RAFTProfile
