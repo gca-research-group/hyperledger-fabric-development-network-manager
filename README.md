@@ -1,142 +1,120 @@
-<h1 align="center">
-  <br>
-    <img src="assets/logo.svg" height="256px" alt="Fabric Network Orchestrator">
-  <br>
-  Fabric Network Orchestrator
-  <br>
-</h1>
-
-<p align="center">
-    <img alt="Docker" src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
-    <img alt="Hyperledger Fabric" src="https://img.shields.io/badge/Hyperledger_Fabric-2.0-ff69b4?style=for-the-badge&logo=hyperledger&logoColor=white" />
-    <img alt="Go" src="https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white" />
-</p>
-
-<div align="center">
-
-🚧 **This project is currently under development.** 🚧  
-Expect frequent updates and changes. Your feedback is appreciated!
-
-</div>
+# Fabric Network Orchestrator (FNO)
 
 ## Overview
 
-The **Fabric Network Orchestrator** is a CLI-based orchestration tool designed to simplify the configuration, generation, and deployment of local Hyperledger Fabric networks.
+Fabric Network Orchestrator (FNO) is a command-line tool and supporting domain-specific language (DSL) for specifying, validating, and deploying local Hyperledger Fabric networks.
 
-It automates:
+FNO enables developers and researchers to describe Hyperledger Fabric topologies using a declarative specification rather than manually managing configuration files, certificates, deployment scripts, and chaincode lifecycle operations. Before deployment, specifications are validated against a set of formal validation constraints to detect configuration errors early.
 
-- Docker Compose generation  
-- `configtx.yml` generation  
-- MSP identity generation  
-- Certificate authority setup  
-- Network bootstrapping  
-- Chaincode lifecycle management  
+The tool supports:
 
-The tool is intended for:
+- Network specification through YAML, JSON, and TOML files
+- Configuration validation
+- Hyperledger Fabric artefact generation
+- Certificate and MSP generation
+- Network deployment and management
+- Chaincode lifecycle management
 
-- Researchers  
-- Developers  
-- Academic experimentation  
-- Rapid prototyping of Fabric networks 
+FNO is primarily intended for:
 
-## Table of contents
+- Research and experimentation
+- Rapid prototyping
+- Educational environments
+- Local Hyperledger Fabric deployments
 
-- [Overview](#overview)
-- [Table of contents](#table-of-contents)
-- [Getting Started](#getting-started)
-  - [Executing with Binaries](#executing-with-binaries)
-    - [Commands Workflow](#commands-workflow)
-  - [Executing From Source Code](#executing-from-source-code)
-    - [Prerequisites](#prerequisites)
-    - [Clone the repository](#clone-the-repository)
-    - [Install the dependencies](#install-the-dependencies)
-    - [Commands Workflow](#commands-workflow-1)
-- [Configuration File](#configuration-file)
-- [Network Samples](#network-samples)
-- [Chaincode Samples](#chaincode-samples)
-- [Project repositories](#project-repositories)
-- [Related Publications](#related-publications)
-- [License](#license)
-- [Contact](#contact)
+## Key Features
 
-## Getting Started
+- Declarative network specification
+- Validation of network configurations before deployment
+- Support for channels, organisations, peers, orderers, and chaincodes
+- Automated generation of Hyperledger Fabric artefacts
+- Automated network provisioning
+- Cross-platform execution
+- No dependency on external Hyperledger Fabric CLI scripts
 
-### Executing with Binaries
+## Installation
 
-Compiled binaries are available on the [GitHub release page](https://github.com/gca-research-group/fabric-network-orchestrator/releases). Download the binary that matches your OS:
+### Using Prebuilt Binaries
 
-- **Windows:** `fno_windows_amd64.exe`
-- **Linux:** `fno_linux_arm64`
-- **macOS:** `fno_darwin_arm64`
+Download the latest release from:
 
-> **Note:** Replace `<binary>` in the commands below with your specific file name (e.g., `./fno_linux_arm64`). Use a configuration file from the [samples](./samples/) folder.
+https://github.com/gca-research-group/fabric-network-orchestrator/releases
 
-#### Commands Workflow
+### Building from Source
 
-1. Generate configuration files (configtx.yml), Docker Compose files, and MSP directories.
+Requirements:
 
-```bash
-  <binary> artifacts generate --config=samples/minimal-network.yml
-```
-
-2. Complete network setup including starting certificate authorities, generating identities, creating genesis block, establishing channels, and joining orderers and peers.
-
-```bash
-  <binary> network deploy --config=samples/minimal-network.yml
-```
-
-3. Control the runtime state of the network containers.
-
-```bash
-  # Start network
-  <binary> network up --config=samples/minimal-network.yml
-
-  # Stop and remove containers
-  <binary> network down --config=samples/minimal-network.yml
-```
-
-4. Install, approve, and commit chaincode to channels in the network.
-
-```bash
-  <binary> chaincode deploy --config=samples/minimal-network.yml
-```
-
-5. Removes all generated files, ledger state, and identities. Use with caution.
-
-```bash
-  <binary> artifacts clean --config=samples/minimal-network.yml
-```
-
-### Executing From Source Code
-
-#### Prerequisites
-
-- **Docker** & **Docker Compose**
-- **Go** (version 1.26 or higher)
-
-#### Clone the repository
+- Docker
+- Go 1.26 or later
 
 ```bash
 git clone https://github.com/gca-research-group/fabric-network-orchestrator
-```
+cd fabric-network-orchestrator
 
-#### Install the dependencies
-
-```bash
 go mod tidy
 ```
 
-#### Commands Workflow
+## Command Workflow
 
-Run the same commands from the "Executing with Binaries" section by replacing the <binary> placeholder with `go run cmd/cli/main.go` (for development/testing).
+### Validate a Configuration
 
-## Configuration File
+```bash
+fno configuration validate --config samples/minimal-network.yml
+```
 
-```yml
+### Generate Artefacts
+
+```bash
+fno artifacts generate --config samples/minimal-network.yml
+```
+
+Generates:
+
+- Cryptographic material
+- MSP structures
+- TLS certificates
+- Channel configuration artefacts
+- Docker Compose descriptors
+
+### Deploy a Network
+
+```bash
+fno network deploy --config samples/minimal-network.yml
+```
+
+This command performs:
+
+1. Configuration validation
+2. Identity generation
+3. Artefact generation
+4. Network provisioning
+5. Channel creation and joining
+6. Chaincode deployment (when configured)
+
+### Manage Network Lifecycle
+
+```bash
+fno network up --config samples/minimal-network.yml
+fno network down --config samples/minimal-network.yml
+```
+
+### Deploy Chaincodes
+
+```bash
+fno chaincode deploy --config samples/minimal-network.yml
+```
+
+### Clean Generated Artefacts
+
+```bash
+fno artifacts clean --config samples/minimal-network.yml
+```
+
+## Configuration Example
+
+```yaml
 output: output/minimal-network
 network: minimal-network
-chaincodes:
-  - samples/chaincodes
 
 capabilities:
   channel: V2_0
@@ -146,10 +124,10 @@ capabilities:
 organizations:
   - name: Org1
     domain: org1.minimal-network.com
+    bootstrap: true
     orderers:
       - name: Orderer
         subdomain: orderer
-    bootstrap: true
     peers:
       - name: Peer0
         subdomain: peer0
@@ -163,47 +141,35 @@ organizations:
         isAnchor: true
 
 profiles:
-  - &DefaultProfile
-    name: DefaultProfile
+  - name: DefaultProfile
     organizations:
       - Org1
       - Org2
 
 channels:
   - name: defaultchannel
-    profile: *DefaultProfile
+    profile: DefaultProfile
 ```
 
-## Network Samples
+## Validation Constraints
 
-You will find network samples in the directory [samples](./samples/)
+FNO validates specifications before deployment. Validation includes:
 
+- Mandatory attributes
+- Valid parameter values
+- Version compatibility checks
+- Reference consistency checks
+- Port conflict detection
+- Consensus configuration validation
 
-## Chaincode Samples
+Invalid configurations are rejected before artefacts are generated or infrastructure is provisioned.
 
-You will find chaincode samples in the directory [samples](./samples/chaincodes)
+## Samples
 
-## Project repositories
+Network and chaincode samples are available in:
 
-- [Jabuti Monitoring System](https://github.com/gca-research-group/jabuti-monitoring-system)
-- [Fabric Network Orchestrator](https://github.com/gca-research-group/fabric-network-orchestrator)
-- [Transformation Engine](https://github.com/gca-research-group/jabuti-ce-transformation-engine)
-- [Jabuti CE (VSCode Plug-in)](https://github.com/gca-research-group/jabuti-ce-vscode-plugin)
-- [Jabuti DSL Grammar](https://github.com/gca-research-group/jabuti-ce-jabuti-dsl-grammar)
-- [Jabuti XText/Xtend implementation](https://github.com/gca-research-group/dsl-smart-contract-eai)
-
-## Related Publications
-
-- 2025
-  - [Proposing a Tool to Monitor Smart Contract Execution in Integration Processes](https://sol.sbc.org.br/index.php/sbsi_estendido/article/view/34617)
-  - [Towards a Smart Contract Toolkit for Application Integration](#)
- 
-- 2024
-  - [Jabuti CE: A Tool for Specifying Smart Contracts in the Domain of Enterprise Application Integration](https://www.scitepress.org/Link.aspx?doi=10.5220/0012413300003645)
-
-- 2022
-  - [Advances in a DSL to Specify Smart Contracts for Application Integration Processes](https://sol.sbc.org.br/index.php/cibse/article/view/20962)
-  - [On the Need to Use Smart Contracts in Enterprise Application Integration](https://idus.us.es/handle/11441/140199)
+- [samples](./samples/)
+- [chaincodes](./samples/chaincodes)
 
 ## License
 
