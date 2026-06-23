@@ -8,7 +8,7 @@ import (
 
 func (c *Chaincode) Install() error {
 
-	chaincodes := config.ResolveAllChaincodes(*c.config)
+	chaincodes := config.ResolveChaincodes(*c.config)
 
 	for _, organization := range c.config.Organizations {
 		for _, chaincode := range chaincodes {

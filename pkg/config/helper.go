@@ -10,20 +10,26 @@ func ResolveOrdererMSPID(organization Organization) string {
 	return fmt.Sprintf("%sOrdererMSP", organization.Name)
 }
 
-func ResolveAllChaincodes(config Config) []Chaincode {
-	chaincodesMap := make(map[string]Chaincode)
+func ResolveChaincodes(config Config) []Chaincode {
+	items := ChaincodesMap(config)
+	chaincodes := make([]Chaincode, 0, len(items))
+
+	for _, chaincode := range items {
+		chaincodes = append(chaincodes, chaincode)
+	}
+
+	return chaincodes
+}
+
+func ChaincodesMap(config Config) map[string]Chaincode {
+	chaincodes := make(map[string]Chaincode)
 
 	for _, channel := range config.Channels {
 		for _, chaincode := range channel.Chaincodes {
-			if _, exists := chaincodesMap[chaincode.Name]; !exists {
-				chaincodesMap[chaincode.Name] = chaincode
+			if _, exists := chaincodes[chaincode.Name]; !exists {
+				chaincodes[chaincode.Name] = chaincode
 			}
 		}
-	}
-
-	chaincodes := make([]Chaincode, 0, len(chaincodesMap))
-	for _, chaincode := range chaincodesMap {
-		chaincodes = append(chaincodes, chaincode)
 	}
 
 	return chaincodes

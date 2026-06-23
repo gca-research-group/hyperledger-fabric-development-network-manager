@@ -10,7 +10,7 @@ import (
 func (c *Chaincode) Package() error {
 
 	organization := c.config.Organizations[0]
-	chaincodes := config.ResolveAllChaincodes(*c.config)
+	chaincodes := config.ResolveChaincodes(*c.config)
 
 	for _, chaincode := range chaincodes {
 

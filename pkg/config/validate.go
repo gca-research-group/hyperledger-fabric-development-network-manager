@@ -132,6 +132,14 @@ func ValidateConfig(config Config) error {
 			}
 		}
 
+		if !channelNameRegex.MatchString(ch.Name) {
+			return &ValidationError{
+				RuleID: "R29",
+				Rule:   "Invalid Channel Name",
+				Detail: fmt.Sprintf("invalid channel name: %s (must be lowercase alphanumeric, start with a letter, and contain only '.', '-', or alphanumeric characters, max 249 characters)", ch.Name),
+			}
+		}
+
 		for i := range ch.Chaincodes {
 			chaincode := &ch.Chaincodes[i]
 
@@ -303,16 +311,6 @@ func ValidateConfig(config Config) error {
 					Rule:   "Profile References Undefined Org",
 					Detail: fmt.Sprintf("organization not defined: %s", orgName),
 				}
-			}
-		}
-	}
-
-	for _, ch := range config.Channels {
-		if !channelNameRegex.MatchString(ch.Name) {
-			return &ValidationError{
-				RuleID: "R29",
-				Rule:   "Invalid Channel Name",
-				Detail: fmt.Sprintf("invalid channel name: %s (must be lowercase alphanumeric, start with a letter, and contain only '.', '-', or alphanumeric characters, max 249 characters)", ch.Name),
 			}
 		}
 	}
