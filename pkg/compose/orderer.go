@@ -19,8 +19,6 @@ func NewOrderer(orderer config.Orderer, currentOrganization config.Organization,
 
 	cas := "/var/hyperledger/orderer/tls/ca.crt"
 
-	version := ResolveOrdererVersion(orderer.Version)
-
 	environment := []*yaml.Node{
 		yaml.ScalarNode("ORDERER_GENERAL_LOGLEVEL=INFO"),
 		yaml.ScalarNode("ORDERER_GENERAL_LISTENADDRESS=0.0.0.0"),
@@ -43,7 +41,7 @@ func NewOrderer(orderer config.Orderer, currentOrganization config.Organization,
 		yaml.ScalarNode(ordererDomain),
 		yaml.MappingNode(
 			yaml.ScalarNode("image"),
-			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-orderer:%s", version)),
+			yaml.ScalarNode(ResolveOrdererImage(orderer)),
 			yaml.ScalarNode("container_name"),
 			yaml.ScalarNode(ordererDomain),
 			yaml.ScalarNode("working_dir"),

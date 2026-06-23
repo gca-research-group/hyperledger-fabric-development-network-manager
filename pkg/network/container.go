@@ -44,13 +44,9 @@ func (cm *ContainerManager) RunPeerContainers() error {
 	slog.Info("Executing peer containers")
 	for _, organization := range cm.config.Organizations {
 		for _, peer := range organization.Peers {
-			couchDBFile := compose.ResolvePeerCouchDBDockerComposeFile(cm.config.Output, organization.Domain, peer.Subdomain)
 			peerFile := compose.ResolvePeerDockerComposeFile(cm.config.Output, organization.Domain, peer.Subdomain)
-
-			for _, config := range []string{couchDBFile, peerFile} {
-				if err := compose.RunContainerFromTheDockerComposeFile(cm.network, config); err != nil {
-					return fmt.Errorf("Error when executing the container for the organization %s, peer %s: %v\n", organization.Name, peer.Name, err)
-				}
+			if err := compose.RunContainerFromTheDockerComposeFile(cm.network, peerFile); err != nil {
+				return fmt.Errorf("Error when executing the container for the organization %s, peer %s: %v\n", organization.Name, peer.Name, err)
 			}
 		}
 	}

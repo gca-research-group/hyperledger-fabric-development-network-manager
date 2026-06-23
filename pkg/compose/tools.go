@@ -96,11 +96,7 @@ func NewTools(currentOrganization config.Organization, organizations []config.Or
 		yaml.ScalarNode(fmt.Sprintf("CORE_PEER_MSPCONFIGPATH=%[1]s/%[2]s/peerOrganizations/%[2]s/users/Admin@%[2]s/msp", constants.DEFAULT_FABRIC_DIRECTORY, domain)),
 	}
 
-	version := ResolvePeerVersion(config.DefaultVersionByCapability[capabilities.Application])
-	image := fmt.Sprintf("hyperledger/fabric-tools:%s", version)
-
 	if capabilities.Channel == "V3_0" {
-		image = "ghcr.io/gca-research-group/fabric-tools:3.1.4"
 		environment = append(environment, yaml.ScalarNode("FABRIC_CFG_PATH=/etc/hyperledger/fabric"))
 	}
 
@@ -110,7 +106,7 @@ func NewTools(currentOrganization config.Organization, organizations []config.Or
 			yaml.ScalarNode("container_name"),
 			yaml.ScalarNode(ResolveToolsContainerName(currentOrganization)),
 			yaml.ScalarNode("image"),
-			yaml.ScalarNode(image),
+			yaml.ScalarNode(ResolveToolsImage(capabilities)),
 			yaml.ScalarNode("tty"),
 			yaml.ScalarNode("true"),
 			yaml.ScalarNode("stdin_open"),

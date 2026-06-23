@@ -80,6 +80,44 @@ func ResolveCertificateAuthorityVersion(version string) string {
 	return version
 }
 
+func ResolveCertificateAuthorityImage(certificateAuthority config.CertificateAuthority) string {
+	return fmt.Sprintf("hyperledger/fabric-ca:%s", certificateAuthority.Version)
+}
+
+func ResolvePeerImage(peer config.Peer) string {
+	return fmt.Sprintf("hyperledger/fabric-peer:%s", ResolvePeerVersion(peer.Version))
+}
+
+func ResolveChaincodeCompilerImage(peer config.Peer) string {
+	peerVersion := ResolvePeerVersion(peer.Version)
+
+	parts := strings.Split(peerVersion, ".")
+
+	if len(parts) < 2 {
+		return fmt.Sprintf("hyperledger/fabric-ccenv:%s", peerVersion)
+	}
+
+	return fmt.Sprintf("hyperledger/fabric-ccenv:%s", strings.Join(parts[:2], "."))
+}
+
+func ResolveCouchDBImage() string {
+	return "couchdb:latest"
+}
+
+func ResolveOrdererImage(orderer config.Orderer) string {
+	return fmt.Sprintf("hyperledger/fabric-orderer:%s", orderer.Version)
+}
+
+func ResolveToolsImage(capabilities config.Capabilities) string {
+	if capabilities.Channel == "V3_0" {
+		return "ghcr.io/gca-research-group/fabric-tools:3.1.4"
+	}
+
+	version := ResolvePeerVersion(config.DefaultVersionByCapability[capabilities.Application])
+
+	return fmt.Sprintf("hyperledger/fabric-tools:%s", version)
+}
+
 func ResolveDockerNetworkName(network string) string {
 	if network == "" {
 		return constants.DEFAULT_NETWORK
@@ -139,10 +177,6 @@ func ResolvePeerContainerName(domain string, subdomain string) string {
 
 func ResolvePeerDockerComposeFile(output string, domain string, subdomain string) string {
 	return fmt.Sprintf("%[1]s/%[2]s/%[3]s.yml", output, domain, ResolvePeerDomain(subdomain, domain))
-}
-
-func ResolvePeerCouchDBDockerComposeFile(output string, domain string, subdomain string) string {
-	return fmt.Sprintf("%[1]s/%[2]s/%[3]s.yml", output, domain, ResolveCouchDBDomain(subdomain, domain))
 }
 
 func ResolveCertificateAuthorityDockerComposeFile(output string, domain string) string {

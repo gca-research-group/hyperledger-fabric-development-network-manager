@@ -89,6 +89,11 @@ func (n *Node) WithFolderStyle() *Node {
 	return n
 }
 
+func (n *Node) WithFlowStyle() *Node {
+	n.WithStyle(yaml.FlowStyle)
+	return n
+}
+
 func (n *Node) WithLiteralStyle() *Node {
 	n.WithStyle(yaml.LiteralStyle)
 	return n

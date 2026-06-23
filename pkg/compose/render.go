@@ -64,7 +64,7 @@ func (r *Renderer) RenderCertificateAuthority(organization config.Organization) 
 }
 
 func (r *Renderer) RenderPeer(organization config.Organization, corePeerGossipBootstrap string, peer config.Peer) error {
-	node := NewPeer(
+	peerNode := NewPeer(
 		peer,
 		organization,
 		corePeerGossipBootstrap,
@@ -72,17 +72,17 @@ func (r *Renderer) RenderPeer(organization config.Organization, corePeerGossipBo
 		r.config.Organizations,
 	).ExposePort().WithVolumes().Build()
 
-	if err := yaml.MappingNode(
-		yaml.ScalarNode("services"),
-		node,
-	).ToFile(ResolvePeerDockerComposeFile(r.config.Output, organization.Domain, peer.Subdomain)); err != nil {
-		return err
-	}
+	couchdbNode := NewCouchDB(organization.Domain, peer.Subdomain, r.config.Network).Build()
 
 	return yaml.MappingNode(
 		yaml.ScalarNode("services"),
-		NewCouchDB(organization.Domain, peer.Subdomain, r.config.Network).Build(),
-	).ToFile(ResolvePeerCouchDBDockerComposeFile(r.config.Output, organization.Domain, peer.Subdomain))
+		yaml.MappingNode(
+			yaml.ScalarNode(ResolvePeerDomain(peer.Subdomain, organization.Domain)),
+			peerNode,
+			yaml.ScalarNode(ResolveCouchDBDomain(peer.Subdomain, organization.Domain)),
+			couchdbNode,
+		),
+	).ToFile(ResolvePeerDockerComposeFile(r.config.Output, organization.Domain, peer.Subdomain))
 }
 
 func (r *Renderer) RenderPeers(organization config.Organization) error {
@@ -141,7 +141,7 @@ func (r *Renderer) RenderOrganizations() error {
 }
 
 func (r *Renderer) RenderTools(organization config.Organization, domains []string) error {
-	chaincodes := config.ResolveAllChaincodes(*r.config)
+	chaincodes := config.ResolveChaincodes(*r.config)
 
 	return yaml.MappingNode(
 		yaml.ScalarNode("services"),

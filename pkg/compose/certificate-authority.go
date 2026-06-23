@@ -20,13 +20,11 @@ func NewCertificateAuthority(organization config.Organization) *CertificateAutho
 	certificateAuthority := organization.CertificateAuthority
 	certificateAuthorityDomain := ResolveCertificateAuthorityDomain(domain)
 
-	version := ResolveCertificateAuthorityVersion(organization.CertificateAuthority.Version)
-
 	node := yaml.MappingNode(
 		yaml.ScalarNode(certificateAuthorityDomain),
 		yaml.MappingNode(
 			yaml.ScalarNode("image"),
-			yaml.ScalarNode(fmt.Sprintf("hyperledger/fabric-ca:%s", version)),
+			yaml.ScalarNode(ResolveCertificateAuthorityImage(certificateAuthority)),
 			yaml.ScalarNode("container_name"),
 			yaml.ScalarNode(certificateAuthorityDomain),
 			yaml.ScalarNode("tty"),
