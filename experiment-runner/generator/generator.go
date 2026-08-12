@@ -117,6 +117,44 @@ var operators = [][]MutationOperator{
 	organizationsRequiredOperators,
 }
 
+var incompatibilities = IncompatibilityPolicy{
+	validate.RuleOrganizationsRequired: {
+		validate.RuleOrganizationNameRequired,
+		validate.RuleOrganizationDomainRequired,
+		validate.RuleCertificateAuthorityPortInvalid,
+		validate.RulePeerNameRequired,
+		validate.RulePeerSubdomainRequired,
+		validate.RulePeerPortInvalid,
+		validate.RuleOrdererNameRequired,
+		validate.RuleOrdererSubdomainRequired,
+		validate.RuleOrdererPortInvalid,
+		validate.RuleOrganizationNameDuplicate,
+		validate.RulePeerVersionInvalid,
+		validate.RuleOrdererVersionInvalid,
+		validate.RuleBootstrapOrganizationsMultiple,
+		validate.RuleExposedPortConflict,
+	},
+	validate.RuleOrdererTopologyRequired: {
+		validate.RuleOrdererNameRequired,
+		validate.RuleOrdererSubdomainRequired,
+		validate.RuleOrdererPortInvalid,
+		validate.RuleOrdererVersionInvalid,
+	},
+	validate.RuleChannelCapabilityUnsupported: {
+		validate.RulePeerVersionInvalid,
+		validate.RuleOrdererVersionInvalid,
+	},
+	validate.RuleProfileOrganizationsRequired: {
+		validate.RuleProfileOrganizationUndefined,
+	},
+	validate.RulePeerPortInvalid: {
+		validate.RuleExposedPortConflict,
+	},
+	validate.RuleOrganizationNameRequired: {
+		validate.RuleOrganizationNameDuplicate,
+	},
+}
+
 const DefaultMutationCount = 3
 
 func Generate(outputDirectory string, mutationCount int) ([]ScenarioRules, error) {
@@ -125,7 +163,7 @@ func Generate(outputDirectory string, mutationCount int) ([]ScenarioRules, error
 		return nil, fmt.Errorf("parse seed configuration: %w", err)
 	}
 
-	scenarios := GenerateCombinations(operators, mutationCount)
+	scenarios := GenerateCombinations(operators, mutationCount, incompatibilities)
 	configDirectory := filepath.Join(outputDirectory, "config")
 	if err := os.MkdirAll(configDirectory, 0755); err != nil {
 		return nil, fmt.Errorf("create config directory: %w", err)

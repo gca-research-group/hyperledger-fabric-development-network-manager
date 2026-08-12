@@ -113,13 +113,89 @@ func TestOperatorRegistryCoversEveryRuleOnce(t *testing.T) {
 }
 
 func TestGenerateCombinationsUsesAtMostOneOperatorPerRule(t *testing.T) {
-	for _, combination := range GenerateCombinations(operators, 3) {
+	for _, combination := range GenerateCombinations(operators, 3, incompatibilities) {
 		seen := make(map[validate.RuleID]bool)
 		for _, operator := range combination {
 			if seen[operator.RuleID] {
 				t.Fatalf("combination contains rule %s more than once", operator.RuleID)
 			}
 			seen[operator.RuleID] = true
+		}
+	}
+}
+
+func TestIncompatibilitiesAreSymmetric(t *testing.T) {
+	for first, incompatibleRules := range incompatibilities {
+		for _, second := range incompatibleRules {
+			if !rulesConflict(first, second, incompatibilities) || !rulesConflict(second, first, incompatibilities) {
+				t.Fatalf("rules %s and %s must conflict in both directions", first, second)
+			}
+
+			firstOperator := MutationOperator{RuleID: first}
+			secondOperator := MutationOperator{RuleID: second}
+			for _, groups := range [][][]MutationOperator{
+				{{firstOperator}, {secondOperator}},
+				{{secondOperator}, {firstOperator}},
+			} {
+				if combinations := GenerateCombinations(groups, 2, incompatibilities); len(combinations) != 0 {
+					t.Fatalf("generated rules %s and %s in an incompatible order", first, second)
+				}
+			}
+		}
+	}
+}
+
+func TestGeneratedCombinationsExcludeIncompatibleRules(t *testing.T) {
+	combinations := GenerateCombinations(operators, DefaultMutationCount, incompatibilities)
+	represented := make(map[validate.RuleID]bool)
+
+	for _, combination := range combinations {
+		for i, first := range combination {
+			represented[first.RuleID] = true
+			for _, second := range combination[i+1:] {
+				if rulesConflict(first.RuleID, second.RuleID, incompatibilities) {
+					t.Fatalf("generated incompatible rules %s and %s", first.RuleID, second.RuleID)
+				}
+			}
+		}
+	}
+
+	for _, ruleID := range allRuleIDs {
+		if !represented[ruleID] {
+			t.Errorf("rule %s is not represented by any generated combination", ruleID)
+		}
+	}
+}
+
+func TestGeneratedCombinationsTriggerEveryDeclaredRule(t *testing.T) {
+	for index, combination := range GenerateCombinations(operators, DefaultMutationCount, incompatibilities) {
+		node := seedNode(t)
+		for _, operator := range combination {
+			operator.Apply(node.Document())
+		}
+
+		actual := make(map[validate.RuleID]bool)
+		for _, validationError := range validate.Errors(validate.Config(decodeConfig(t, node))) {
+			actual[validationError.RuleID] = true
+		}
+		for _, operator := range combination {
+			if !actual[operator.RuleID] {
+				t.Fatalf("combination %d did not trigger declared rule %s", index, operator.RuleID)
+			}
+		}
+	}
+}
+
+func TestOrganizationsRequiredExcludesOrganizationDomainRequired(t *testing.T) {
+	for _, combination := range GenerateCombinations(operators, DefaultMutationCount, incompatibilities) {
+		hasOrganizationsRequired := false
+		hasOrganizationDomainRequired := false
+		for _, operator := range combination {
+			hasOrganizationsRequired = hasOrganizationsRequired || operator.RuleID == validate.RuleOrganizationsRequired
+			hasOrganizationDomainRequired = hasOrganizationDomainRequired || operator.RuleID == validate.RuleOrganizationDomainRequired
+		}
+		if hasOrganizationsRequired && hasOrganizationDomainRequired {
+			t.Fatal("generated organizations.required with organization.domain.required")
 		}
 	}
 }

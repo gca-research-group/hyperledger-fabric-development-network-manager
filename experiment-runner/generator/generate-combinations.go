@@ -1,6 +1,10 @@
 package generator
 
-func GenerateCombinations(groups [][]MutationOperator, combinationSize int) [][]MutationOperator {
+import "github.com/gca-research-group/fabric-network-orchestrator/pkg/validate"
+
+type IncompatibilityPolicy map[validate.RuleID][]validate.RuleID
+
+func GenerateCombinations(groups [][]MutationOperator, combinationSize int, policy IncompatibilityPolicy) [][]MutationOperator {
 	var result [][]MutationOperator
 
 	if combinationSize <= 0 || len(groups) == 0 {
@@ -47,6 +51,9 @@ func GenerateCombinations(groups [][]MutationOperator, combinationSize int) [][]
 
 		for i := startGroup; i < len(nonEmptyGroups); i++ {
 			for _, element := range nonEmptyGroups[i] {
+				if conflictsWithCurrent(element, current, policy) {
+					continue
+				}
 				current = append(current, element)
 
 				combine(i + 1)
@@ -60,4 +67,26 @@ func GenerateCombinations(groups [][]MutationOperator, combinationSize int) [][]
 	combine(0)
 
 	return result
+}
+
+func conflictsWithCurrent(candidate MutationOperator, current []MutationOperator, policy IncompatibilityPolicy) bool {
+	for _, selected := range current {
+		if rulesConflict(candidate.RuleID, selected.RuleID, policy) {
+			return true
+		}
+	}
+	return false
+}
+
+func rulesConflict(first, second validate.RuleID, policy IncompatibilityPolicy) bool {
+	return containsRule(policy[first], second) || containsRule(policy[second], first)
+}
+
+func containsRule(rules []validate.RuleID, target validate.RuleID) bool {
+	for _, rule := range rules {
+		if rule == target {
+			return true
+		}
+	}
+	return false
 }

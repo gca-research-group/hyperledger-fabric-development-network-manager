@@ -193,7 +193,7 @@ Invalid configurations are rejected before artefacts are generated or infrastruc
 
 The [experiment runner](./experiment-runner/) contains two reusable packages:
 
-- `generator` contains mutation operators for all 29 validation rules. Each operator starts from a valid seed configuration, introduces a targeted fault, and records the expected rule ID. Scenarios combine three different rule groups, with at most one mutation selected from each group.
+- `generator` contains mutation operators for all 29 validation rules. Each operator starts from a valid seed configuration, introduces a targeted fault, and records the expected rule ID. Scenarios combine three compatible rule groups, with at most one mutation selected from each group; structurally incompatible mutations are explicitly excluded.
 - `runner` loads the generated manifest, validates every scenario configuration, and checks that the reported validation rule is one of the mutations expected for that scenario.
 
 Run its verification tests with:
