@@ -191,12 +191,15 @@ Invalid configurations are rejected before artefacts are generated or infrastruc
 
 ## Experiment Runner
 
-The [experiment runner](./experiment-runner/) contains mutation operators for all 29 validation rules. Each operator starts from a valid seed configuration, introduces a targeted fault, and records the expected rule ID. Scenarios combine three different rule groups, with at most one mutation selected from each group.
+The [experiment runner](./experiment-runner/) contains two reusable packages:
+
+- `generator` contains mutation operators for all 29 validation rules. Each operator starts from a valid seed configuration, introduces a targeted fault, and records the expected rule ID. Scenarios combine three different rule groups, with at most one mutation selected from each group.
+- `runner` loads the generated manifest, validates every scenario configuration, and checks that the reported validation rule is one of the mutations expected for that scenario.
 
 Run its verification tests with:
 
 ```bash
-go test ./experiment-runner
+go test ./experiment-runner/...
 ```
 
 Generate the scenario corpus with:
@@ -205,7 +208,7 @@ Generate the scenario corpus with:
 go run ./experiment-runner
 ```
 
-The generator writes mutated configurations to `output/config/` and the scenario-to-rule mapping to `output/scenarios.json`.
+The command generates and runs the complete scenario corpus. It writes mutated configurations to `output/config/`, the scenario-to-rule mapping to `output/scenarios.json`, and execution results to `output/results.json`. It exits with a non-zero status if any scenario does not report an expected rule.
 
 ## Samples
 
