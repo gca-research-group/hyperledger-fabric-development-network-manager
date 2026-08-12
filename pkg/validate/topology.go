@@ -1,17 +1,26 @@
 package validate
 
-import "github.com/gca-research-group/fabric-network-orchestrator/pkg/spec"
+import (
+	"errors"
+
+	"github.com/gca-research-group/fabric-network-orchestrator/pkg/spec"
+)
 
 func ValidateTopologyFn(configuration spec.Config) error {
+	var validationErrors []error
+	collect := func(err error) {
+		if err != nil {
+			validationErrors = append(validationErrors, err)
+		}
+	}
+
 	organizationNames := make(map[string]struct{})
 	exposedPorts := make(map[int]portOwner)
 	bootstrapCount := 0
 	hasOrderer := false
 
 	for _, organization := range configuration.Organizations {
-		if err := DuplicateOrganizationNameFn(organization, organizationNames); err != nil {
-			return err
-		}
+		collect(DuplicateOrganizationNameFn(organization, organizationNames))
 
 		organizationNames[organization.Name] = struct{}{}
 
@@ -23,47 +32,26 @@ func ValidateTopologyFn(configuration spec.Config) error {
 			hasOrderer = true
 		}
 
-		if err := ExposedPortConflictFn(organization.CertificateAuthority.ExposePort, portOwner{ownerType: "Certificate Authority", name: organization.Name}, exposedPorts); err != nil {
-			return err
-		}
+		collect(ExposedPortConflictFn(organization.CertificateAuthority.ExposePort, portOwner{ownerType: "Certificate Authority", name: organization.Name}, exposedPorts))
 
 		for _, peer := range organization.Peers {
-			if err := InvalidPeerVersionFn(peer, organization.Name, configuration.Capabilities.Channel); err != nil {
-				return err
-			}
-
-			if err := ExposedPortConflictFn(peer.ExposePort, portOwner{ownerType: "peer", name: peer.Name}, exposedPorts); err != nil {
-				return err
-			}
+			collect(InvalidPeerVersionFn(peer, organization.Name, configuration.Capabilities.Channel))
+			collect(ExposedPortConflictFn(peer.ExposePort, portOwner{ownerType: "peer", name: peer.Name}, exposedPorts))
 		}
 
 		for _, orderer := range organization.Orderers {
-			if err := InvalidOrdererVersionFn(orderer, organization.Name, configuration.Capabilities.Channel); err != nil {
-				return err
-			}
-
-			if err := ExposedPortConflictFn(orderer.ExposePort, portOwner{ownerType: "orderer", name: orderer.Name}, exposedPorts); err != nil {
-				return err
-			}
+			collect(InvalidOrdererVersionFn(orderer, organization.Name, configuration.Capabilities.Channel))
+			collect(ExposedPortConflictFn(orderer.ExposePort, portOwner{ownerType: "orderer", name: orderer.Name}, exposedPorts))
 		}
 	}
 
-	if err := NoOrdererTopologyFn(hasOrderer); err != nil {
-		return err
-	}
-
-	if err := MultipleBootstrapOrganizationsFn(bootstrapCount); err != nil {
-		return err
-	}
+	collect(NoOrdererTopologyFn(hasOrderer))
+	collect(MultipleBootstrapOrganizationsFn(bootstrapCount))
 
 	for _, profile := range configuration.Profiles {
-		if err := InvalidConsensusTypeFn(profile); err != nil {
-			return err
-		}
-
-		if err := UndefinedProfileOrganizationFn(profile, organizationNames); err != nil {
-			return err
-		}
+		collect(InvalidConsensusTypeFn(profile))
+		collect(UndefinedProfileOrganizationFn(profile, organizationNames))
 	}
-	return nil
+
+	return errors.Join(validationErrors...)
 }

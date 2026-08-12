@@ -2,7 +2,6 @@ package runner
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,7 +14,7 @@ import (
 type Result struct {
 	Scenario string            `json:"scenario"`
 	Expected []validate.RuleID `json:"expectedRules"`
-	Actual   validate.RuleID   `json:"actualRule,omitempty"`
+	Actual   []validate.RuleID `json:"actualRules,omitempty"`
 	Passed   bool              `json:"passed"`
 	Error    string            `json:"error,omitempty"`
 }
@@ -52,10 +51,12 @@ func Run(outputDirectory string, scenarios []generator.ScenarioRules) (Summary, 
 		path := filepath.Join(outputDirectory, "config", scenario.Scenario+".yaml")
 		_, err := config.LoadConfigFromPath(path)
 
-		var validationError *validate.ValidationError
-		if errors.As(err, &validationError) {
-			result.Actual = validationError.RuleID
-			result.Passed = containsRule(scenario.Rules, validationError.RuleID)
+		validationErrors := validate.Errors(err)
+		if len(validationErrors) > 0 {
+			for _, validationError := range validationErrors {
+				result.Actual = append(result.Actual, validationError.RuleID)
+			}
+			result.Passed = containsAllRules(result.Actual, scenario.Rules)
 		} else if err == nil {
 			result.Error = "configuration unexpectedly passed validation"
 		} else {
@@ -81,11 +82,18 @@ func Run(outputDirectory string, scenarios []generator.ScenarioRules) (Summary, 
 	return summary, nil
 }
 
-func containsRule(rules []validate.RuleID, target validate.RuleID) bool {
-	for _, rule := range rules {
-		if rule == target {
-			return true
+func containsAllRules(actual, expected []validate.RuleID) bool {
+	for _, expectedRule := range expected {
+		found := false
+		for _, actualRule := range actual {
+			if actualRule == expectedRule {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
 		}
 	}
-	return false
+	return true
 }

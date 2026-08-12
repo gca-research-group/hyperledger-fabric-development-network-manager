@@ -1,108 +1,60 @@
 package validate
 
-import "github.com/gca-research-group/fabric-network-orchestrator/pkg/spec"
+import (
+	"errors"
+
+	"github.com/gca-research-group/fabric-network-orchestrator/pkg/spec"
+)
 
 func Config(configuration spec.Config) error {
-
-	if err := InvalidOutputDirectoryNameFn(configuration); err != nil {
-		return err
+	var validationErrors []error
+	collect := func(err error) {
+		if err != nil {
+			validationErrors = append(validationErrors, err)
+		}
 	}
 
-	if err := NoOrganizationFn(configuration); err != nil {
-		return err
-	}
+	collect(InvalidOutputDirectoryNameFn(configuration))
+	collect(NoOrganizationFn(configuration))
 
 	for i, organization := range configuration.Organizations {
-		if err := EmptyOrganizationNameFn(organization, i); err != nil {
-			return err
-		}
-
-		if err := EmptyOrganizationDomainFn(organization, i); err != nil {
-			return err
-		}
-
-		if err := InvalidCertificateAuthorityPortFn(organization); err != nil {
-			return err
-		}
+		collect(EmptyOrganizationNameFn(organization, i))
+		collect(EmptyOrganizationDomainFn(organization, i))
+		collect(InvalidCertificateAuthorityPortFn(organization))
 
 		for j, peer := range organization.Peers {
-			if err := EmptyPeerNameFn(peer, j, organization.Name); err != nil {
-				return err
-			}
-
-			if err := EmptyPeerSubdomainFn(peer, organization.Name); err != nil {
-				return err
-			}
-
-			if err := InvalidPeerPortFn(peer, organization.Name); err != nil {
-				return err
-			}
+			collect(EmptyPeerNameFn(peer, j, organization.Name))
+			collect(EmptyPeerSubdomainFn(peer, organization.Name))
+			collect(InvalidPeerPortFn(peer, organization.Name))
 		}
 
 		for j, orderer := range organization.Orderers {
-			if err := EmptyOrdererNameFn(orderer, j, organization.Name); err != nil {
-				return err
-			}
-
-			if err := EmptyOrdererSubdomainFn(orderer, organization.Name); err != nil {
-				return err
-			}
-
-			if err := InvalidOrdererPortFn(orderer, organization.Name); err != nil {
-				return err
-			}
+			collect(EmptyOrdererNameFn(orderer, j, organization.Name))
+			collect(EmptyOrdererSubdomainFn(orderer, organization.Name))
+			collect(InvalidOrdererPortFn(orderer, organization.Name))
 		}
 	}
 
 	for _, profile := range configuration.Profiles {
-		if err := EmptyProfileOrganizationsFn(profile); err != nil {
-			return err
-		}
+		collect(EmptyProfileOrganizationsFn(profile))
 	}
 
 	for _, channel := range configuration.Channels {
-		if err := EmptyChannelNameFn(channel); err != nil {
-			return err
-		}
-
-		if err := EmptyChannelProfileFn(channel); err != nil {
-			return err
-		}
-
-		if err := InvalidChannelNameFn(channel); err != nil {
-			return err
-		}
+		collect(EmptyChannelNameFn(channel))
+		collect(EmptyChannelProfileFn(channel))
+		collect(InvalidChannelNameFn(channel))
 
 		for i, chaincode := range channel.Chaincodes {
-			if err := EmptyChaincodeNameFn(chaincode, i); err != nil {
-				return err
-			}
-
-			if err := EmptyChaincodePathFn(chaincode, i); err != nil {
-				return err
-			}
-
-			if err := EmptyChaincodeVersionFn(chaincode, i); err != nil {
-				return err
-			}
+			collect(EmptyChaincodeNameFn(chaincode, i))
+			collect(EmptyChaincodePathFn(chaincode, i))
+			collect(EmptyChaincodeVersionFn(chaincode, i))
 		}
 	}
 
-	if err := UnsupportedChannelCapabilityFn(configuration); err != nil {
-		return err
-	}
+	collect(UnsupportedChannelCapabilityFn(configuration))
+	collect(UnsupportedApplicationCapabilityFn(configuration))
+	collect(UnsupportedOrdererCapabilityFn(configuration))
+	collect(ValidateTopologyFn(configuration))
 
-	if err := UnsupportedApplicationCapabilityFn(configuration); err != nil {
-		return err
-	}
-
-	if err := UnsupportedOrdererCapabilityFn(configuration); err != nil {
-		return err
-	}
-
-	if err := ValidateTopologyFn(configuration); err != nil {
-		return err
-	}
-
-	return nil
+	return errors.Join(validationErrors...)
 }

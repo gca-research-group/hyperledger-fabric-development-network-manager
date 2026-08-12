@@ -1,6 +1,7 @@
 package config
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -324,8 +325,8 @@ func TestInvalidConfigurations(t *testing.T) {
 			} else {
 				if err == nil {
 					t.Errorf("expected error, got nil")
-				} else if err.Error() != tt.expectError {
-					t.Errorf("expected error:\n%s\n\ngot:\n%s", tt.expectError, err.Error())
+				} else if !strings.Contains(err.Error(), tt.expectError) {
+					t.Errorf("expected aggregate to contain error:\n%s\n\ngot:\n%s", tt.expectError, err.Error())
 				}
 			}
 		})
