@@ -8,6 +8,7 @@ dist
 output
 tmp
 .bin
+*.cache
 
 # Go Modules & Dependencies
 /vendor/

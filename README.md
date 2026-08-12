@@ -153,16 +153,59 @@ channels:
 
 ## Validation Constraints
 
-FNO validates specifications before deployment. Validation includes:
+FNO validates specifications before deployment using the following 29 rules. The rule ID is included in each validation error and is also used by the experiment runner to identify the mutation applied to a scenario.
 
-- Mandatory attributes
-- Valid parameter values
-- Version compatibility checks
-- Reference consistency checks
-- Port conflict detection
-- Consensus configuration validation
+| Area | Rule ID | Constraint |
+| --- | --- | --- |
+| Output | `output.directory-name.invalid` | The output path must contain valid directory names. |
+| Organizations | `organizations.required` | At least one organization must be defined. |
+| Organizations | `organization.name.required` | Every organization must have a name. |
+| Organizations | `organization.domain.required` | Every organization must have a domain. |
+| Organizations | `organization.name.duplicate` | Organization names must be unique. |
+| Organizations | `organization.bootstrap.multiple` | At most one organization may be marked as bootstrap. |
+| Certificate authorities | `certificate-authority.port.invalid` | CA exposed ports cannot be negative. |
+| Peers | `peer.name.required` | Every peer must have a name. |
+| Peers | `peer.subdomain.required` | Every peer must have a subdomain. |
+| Peers | `peer.port.invalid` | Peer exposed ports cannot be negative. |
+| Peers | `peer.version.invalid` | A configured peer version must satisfy the channel capability's minimum binary version. |
+| Orderers | `orderer.name.required` | Every orderer must have a name. |
+| Orderers | `orderer.subdomain.required` | Every orderer must have a subdomain. |
+| Orderers | `orderer.port.invalid` | Orderer exposed ports cannot be negative. |
+| Orderers | `orderer.version.invalid` | A configured orderer version must satisfy the channel capability's minimum binary version. |
+| Orderers | `orderer.topology.required` | The topology must contain at least one orderer. |
+| Chaincodes | `chaincode.name.required` | Every chaincode must have a name. |
+| Chaincodes | `chaincode.path.required` | Every chaincode must have a source path. |
+| Chaincodes | `chaincode.version.required` | Every chaincode must have a version. |
+| Profiles | `profile.organizations.required` | Every profile must reference at least one organization. |
+| Profiles | `profile.consensus-type.invalid` | Consensus type must be empty, `etcdraft`, or `BFT`. |
+| Profiles | `profile.organization.undefined` | Every organization referenced by a profile must be defined. |
+| Channels | `channel.name.required` | Every channel must have a name. |
+| Channels | `channel.name.invalid` | Channel names must follow Hyperledger Fabric naming restrictions. |
+| Channels | `channel.profile.required` | Every channel must reference a profile. |
+| Capabilities | `capability.channel.unsupported` | Channel capability must be `V2_0`, `V2_5`, or `V3_0`. |
+| Capabilities | `capability.application.unsupported` | Application capability must be `V2_0`, `V2_5`, or `V3_0`. |
+| Capabilities | `capability.orderer.unsupported` | Orderer capability must be `V2_0`, `V2_5`, or `V3_0`. |
+| Networking | `exposed-port.conflict` | Positive exposed ports must be unique across CAs, peers, and orderers. |
 
 Invalid configurations are rejected before artefacts are generated or infrastructure is provisioned.
+
+## Experiment Runner
+
+The [experiment runner](./experiment-runner/) contains mutation operators for all 29 validation rules. Each operator starts from a valid seed configuration, introduces a targeted fault, and records the expected rule ID. Scenarios combine three different rule groups, with at most one mutation selected from each group.
+
+Run its verification tests with:
+
+```bash
+go test ./experiment-runner
+```
+
+Generate the scenario corpus with:
+
+```bash
+go run ./experiment-runner
+```
+
+The generator writes mutated configurations to `output/config/` and the scenario-to-rule mapping to `output/scenarios.json`.
 
 ## Samples
 

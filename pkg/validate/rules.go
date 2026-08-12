@@ -1,0 +1,35 @@
+package validate
+
+type RuleID string
+
+const (
+	RuleOutputDirectoryNameInvalid       RuleID = "output.directory-name.invalid"
+	RuleOrganizationsRequired            RuleID = "organizations.required"
+	RuleOrganizationNameRequired         RuleID = "organization.name.required"
+	RuleOrganizationDomainRequired       RuleID = "organization.domain.required"
+	RuleCertificateAuthorityPortInvalid  RuleID = "certificate-authority.port.invalid"
+	RulePeerNameRequired                 RuleID = "peer.name.required"
+	RulePeerSubdomainRequired            RuleID = "peer.subdomain.required"
+	RulePeerPortInvalid                  RuleID = "peer.port.invalid"
+	RuleOrdererNameRequired              RuleID = "orderer.name.required"
+	RuleOrdererSubdomainRequired         RuleID = "orderer.subdomain.required"
+	RuleOrdererPortInvalid               RuleID = "orderer.port.invalid"
+	RuleChaincodeNameRequired            RuleID = "chaincode.name.required"
+	RuleChaincodePathRequired            RuleID = "chaincode.path.required"
+	RuleChaincodeVersionRequired         RuleID = "chaincode.version.required"
+	RuleProfileOrganizationsRequired     RuleID = "profile.organizations.required"
+	RuleChannelProfileRequired           RuleID = "channel.profile.required"
+	RuleChannelNameRequired              RuleID = "channel.name.required"
+	RuleChannelNameInvalid               RuleID = "channel.name.invalid"
+	RuleChannelCapabilityUnsupported     RuleID = "capability.channel.unsupported"
+	RuleApplicationCapabilityUnsupported RuleID = "capability.application.unsupported"
+	RuleOrdererCapabilityUnsupported     RuleID = "capability.orderer.unsupported"
+	RuleOrganizationNameDuplicate        RuleID = "organization.name.duplicate"
+	RulePeerVersionInvalid               RuleID = "peer.version.invalid"
+	RuleOrdererVersionInvalid            RuleID = "orderer.version.invalid"
+	RuleOrdererTopologyRequired          RuleID = "orderer.topology.required"
+	RuleBootstrapOrganizationsMultiple   RuleID = "organization.bootstrap.multiple"
+	RuleConsensusTypeInvalid             RuleID = "profile.consensus-type.invalid"
+	RuleProfileOrganizationUndefined     RuleID = "profile.organization.undefined"
+	RuleExposedPortConflict              RuleID = "exposed-port.conflict"
+)

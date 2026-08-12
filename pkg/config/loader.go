@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
+	"github.com/gca-research-group/fabric-network-orchestrator/pkg/validate"
 	"gopkg.in/yaml.v3"
 )
 
@@ -35,7 +36,7 @@ func LoadConfigFromPath(path string) (*Config, error) {
 		return nil, fmt.Errorf("parsing config file: %w", err)
 	}
 
-	if err := ValidateConfig(config); err != nil {
+	if err := validate.Config(config); err != nil {
 		return nil, err
 	}
 

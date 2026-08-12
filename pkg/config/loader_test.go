@@ -62,7 +62,7 @@ func getValidBaseConfig() Config {
 
 func formatError(ruleID, rule, detail string) string {
 	return (&ValidationError{
-		RuleID: ruleID,
+		RuleID: RuleID(ruleID),
 		Rule:   rule,
 		Detail: detail,
 	}).Error()
@@ -80,81 +80,74 @@ func TestInvalidConfigurations(t *testing.T) {
 			expectError: "",
 		},
 		{
-			name: "Empty output",
-			modify: func(c *Config) {
-				c.Output = ""
-			},
-			expectError: formatError("R01", "Empty Output", "the output directory cannot be empty"),
-		},
-		{
 			name: "No organizations",
 			modify: func(c *Config) {
 				c.Organizations = []Organization{}
 			},
-			expectError: formatError("R02", "No Organizations", "at least one organization must be defined"),
+			expectError: formatError("organizations.required", "No Organization", "at least one organization must be defined"),
 		},
 		{
 			name: "Organization name empty",
 			modify: func(c *Config) {
 				c.Organizations[0].Name = ""
 			},
-			expectError: formatError("R03", "Empty Org Name", "name of the organization index 0 is undefined"),
+			expectError: formatError("organization.name.required", "Empty Organization Name", "name of the organization index 0 is undefined"),
 		},
 		{
 			name: "Organization domain empty",
 			modify: func(c *Config) {
 				c.Organizations[0].Domain = ""
 			},
-			expectError: formatError("R04", "Empty Org Domain", "domain of the organization index 0 is undefined"),
+			expectError: formatError("organization.domain.required", "Empty Organization Domain", "domain of the organization index 0 is undefined"),
 		},
 		{
 			name: "CA expose port negative",
 			modify: func(c *Config) {
 				c.Organizations[0].CertificateAuthority.ExposePort = -1
 			},
-			expectError: formatError("R05", "Invalid CA Port", "expose port of the certificate authority of the organization Org1 should be greater than zero"),
+			expectError: formatError("certificate-authority.port.invalid", "Invalid Certificate Authority Port", "expose port of the certificate authority of the organization Org1 should be greater than zero"),
 		},
 		{
 			name: "Peer name empty",
 			modify: func(c *Config) {
 				c.Organizations[0].Peers[0].Name = ""
 			},
-			expectError: formatError("R06", "Empty Peer Name", "name of the peer index 0 of the organization Org1 is undefined"),
+			expectError: formatError("peer.name.required", "Empty Peer Name", "name of the peer index 0 of the organization Org1 is undefined"),
 		},
 		{
 			name: "Peer subdomain empty",
 			modify: func(c *Config) {
 				c.Organizations[0].Peers[0].Subdomain = ""
 			},
-			expectError: formatError("R07", "Empty Peer Subdomain", "subdomain of the peer peer0 of the organization Org1 is undefined"),
+			expectError: formatError("peer.subdomain.required", "Empty Peer Subdomain", "subdomain of the peer peer0 of the organization Org1 is undefined"),
 		},
 		{
 			name: "Peer expose port invalid",
 			modify: func(c *Config) {
 				c.Organizations[0].Peers[0].ExposePort = -10
 			},
-			expectError: formatError("R08", "Invalid Peer Port", "expose port of the peer peer0 of the organization Org1 should be greater than zero"),
+			expectError: formatError("peer.port.invalid", "Invalid Peer Port", "expose port of the peer peer0 of the organization Org1 should be greater than zero"),
 		},
 		{
 			name: "Orderer name empty",
 			modify: func(c *Config) {
 				c.Organizations[0].Orderers[0].Name = ""
 			},
-			expectError: formatError("R09", "Empty Orderer Name", "name of the orderer index 0 of the organization Org1 is undefined"),
+			expectError: formatError("orderer.name.required", "Empty Orderer Name", "name of the orderer index 0 of the organization Org1 is undefined"),
 		},
 		{
 			name: "Orderer subdomain empty",
 			modify: func(c *Config) {
 				c.Organizations[0].Orderers[0].Subdomain = ""
 			},
-			expectError: formatError("R10", "Empty Orderer Subdomain", "subdomain of the orderer orderer0 of the organization Org1 is undefined"),
+			expectError: formatError("orderer.subdomain.required", "Empty Orderer Subdomain", "subdomain of the orderer orderer0 of the organization Org1 is undefined"),
 		},
 		{
 			name: "Orderer expose port negative",
 			modify: func(c *Config) {
 				c.Organizations[0].Orderers[0].ExposePort = -1
 			},
-			expectError: formatError("R11", "Invalid Orderer Port", "expose port of the orderer orderer0 of the organization Org1 should be greater than zero"),
+			expectError: formatError("orderer.port.invalid", "Invalid Orderer Port", "expose port of the orderer orderer0 of the organization Org1 should be greater than zero"),
 		},
 		{
 			name: "Chaincode name empty",
@@ -163,7 +156,7 @@ func TestInvalidConfigurations(t *testing.T) {
 					{Path: "some/path", Version: "1.0"},
 				}
 			},
-			expectError: formatError("R12", "Empty Chaincode Name", "name of the chaincode 0 is empty"),
+			expectError: formatError("chaincode.name.required", "Empty Chaincode Name", "name of the chaincode 0 is empty"),
 		},
 		{
 			name: "Chaincode path empty",
@@ -172,7 +165,7 @@ func TestInvalidConfigurations(t *testing.T) {
 					{Name: "mycc", Version: "1.0"},
 				}
 			},
-			expectError: formatError("R13", "Empty Chaincode Path", "path of the chaincode 0 is empty"),
+			expectError: formatError("chaincode.path.required", "Empty Chaincode Path", "path of the chaincode 0 is empty"),
 		},
 		{
 			name: "Chaincode version empty",
@@ -181,28 +174,28 @@ func TestInvalidConfigurations(t *testing.T) {
 					{Name: "mycc", Path: "some/path"},
 				}
 			},
-			expectError: formatError("R14", "Empty Chaincode Version", "version of the chaincode 0 is empty"),
+			expectError: formatError("chaincode.version.required", "Empty Chaincode Version", "version of the chaincode 0 is empty"),
 		},
 		{
 			name: "Profile organizations empty",
 			modify: func(c *Config) {
 				c.Profiles[0].Organizations = []string{}
 			},
-			expectError: formatError("R15", "Empty Profile Orgs", "profile TwoOrgsChannel must include at least one organization"),
+			expectError: formatError("profile.organizations.required", "Empty Profile Orgs", "profile TwoOrgsChannel must include at least one organization"),
 		},
 		{
 			name: "Channel name empty",
 			modify: func(c *Config) {
 				c.Channels[0].Name = ""
 			},
-			expectError: formatError("R17", "Empty Channel Name", "channel name cannot be empty"),
+			expectError: formatError("channel.name.required", "Empty Channel Name", "channel name cannot be empty"),
 		},
 		{
 			name: "Channel profile empty",
 			modify: func(c *Config) {
 				c.Channels[0].Profile = ""
 			},
-			expectError: formatError("R16", "Empty Channel Profile", "channel mychannel must reference a profile"),
+			expectError: formatError("channel.profile.required", "Empty Channel Profile", "channel mychannel must reference a profile"),
 		},
 		{
 			name:        "Valid base config",
@@ -214,21 +207,21 @@ func TestInvalidConfigurations(t *testing.T) {
 			modify: func(c *Config) {
 				c.Capabilities.Channel = "V1_4"
 			},
-			expectError: formatError("R18", "Unsupported Channel Capability", "unsupported channel capability: V1_4"),
+			expectError: formatError("capability.channel.unsupported", "Unsupported Channel Capability", "unsupported channel capability: V1_4"),
 		},
 		{
 			name: "Invalid application capability",
 			modify: func(c *Config) {
 				c.Capabilities.Application = "V1_4"
 			},
-			expectError: formatError("R19", "Unsupported Application Capability", "unsupported application capability: V1_4"),
+			expectError: formatError("capability.application.unsupported", "Unsupported Application Capability", "unsupported application capability: V1_4"),
 		},
 		{
 			name: "Invalid orderer capability",
 			modify: func(c *Config) {
 				c.Capabilities.Orderer = "V1_4"
 			},
-			expectError: formatError("R20", "Unsupported Orderer Capability", "unsupported orderer capability: V1_4"),
+			expectError: formatError("capability.orderer.unsupported", "Unsupported Orderer Capability", "unsupported orderer capability: V1_4"),
 		},
 		{
 			name: "Duplicate organization name",
@@ -238,7 +231,7 @@ func TestInvalidConfigurations(t *testing.T) {
 					Domain: "org1.sample.com",
 				})
 			},
-			expectError: formatError("R21", "Duplicate Org Name", "duplicate organization name: Org1"),
+			expectError: formatError("organization.name.duplicate", "Duplicate Org Name", "duplicate organization name: Org1"),
 		},
 		{
 			name: "Peer version below capability",
@@ -246,7 +239,7 @@ func TestInvalidConfigurations(t *testing.T) {
 				c.Capabilities.Channel = "V2_5"
 				c.Organizations[0].Peers[0].Version = "2.4.0"
 			},
-			expectError: formatError("R22", "Invalid Peer Version", "peer version of org Org1 invalid: version 2.4.0 is lower than required 2.5.0"),
+			expectError: formatError("peer.version.invalid", "Invalid Peer Version", "peer version of org Org1 invalid: version 2.4.0 is lower than required 2.5.0"),
 		},
 		{
 			name: "Orderer version below capability",
@@ -254,14 +247,14 @@ func TestInvalidConfigurations(t *testing.T) {
 				c.Capabilities.Channel = "V2_5"
 				c.Organizations[0].Orderers[0].Version = "2.4.0"
 			},
-			expectError: formatError("R23", "Invalid Orderer Version", "orderer version of org Org1 invalid: version 2.4.0 is lower than required 2.5.0"),
+			expectError: formatError("orderer.version.invalid", "Invalid Orderer Version", "orderer version of org Org1 invalid: version 2.4.0 is lower than required 2.5.0"),
 		},
 		{
 			name: "No orderers configured",
 			modify: func(c *Config) {
 				c.Organizations[0].Orderers = []Orderer{}
 			},
-			expectError: formatError("R24", "No Orderer Topology", "at least one orderer must be configured"),
+			expectError: formatError("orderer.topology.required", "No Orderer Topology", "at least one orderer must be configured"),
 		},
 		{
 			name: "Multiple bootstrap organizations",
@@ -271,21 +264,21 @@ func TestInvalidConfigurations(t *testing.T) {
 					{Name: "Org2", Domain: "org2.sample.com", Bootstrap: true},
 				}
 			},
-			expectError: formatError("R25", "Multiple Bootstrap Orgs", "exactly one bootstrap organization must be defined"),
+			expectError: formatError("organization.bootstrap.multiple", "Multiple Bootstrap Orgs", "exactly one bootstrap organization must be defined"),
 		},
 		{
 			name: "Invalid consensus type",
 			modify: func(c *Config) {
 				c.Profiles[0].Consensus.Type = "raft"
 			},
-			expectError: formatError("R26", "Invalid Consensus Type", "invalid consensus type for the profile TwoOrgsChannel"),
+			expectError: formatError("profile.consensus-type.invalid", "Invalid Consensus Type", "invalid consensus type for the profile TwoOrgsChannel"),
 		},
 		{
 			name: "Profile references undefined organization",
 			modify: func(c *Config) {
 				c.Profiles[0].Organizations = []string{"UndefinedOrg"}
 			},
-			expectError: formatError("R27", "Profile References Undefined Org", "organization not defined: UndefinedOrg"),
+			expectError: formatError("profile.organization.undefined", "Profile References Undefined Org", "organization not defined: UndefinedOrg"),
 		},
 		{
 			name: "Conflict port CA and peer",
@@ -293,7 +286,7 @@ func TestInvalidConfigurations(t *testing.T) {
 				c.Organizations[0].CertificateAuthority.ExposePort = 7051
 				c.Organizations[0].Peers[0].ExposePort = 7051
 			},
-			expectError: formatError("R28", "Exposed Port Conflict", "Port 7051 is assigned to both Certificate Authority of org 'Org1' and peer 'peer0'."),
+			expectError: formatError("exposed-port.conflict", "Exposed Port Conflict", "Port 7051 is assigned to both Certificate Authority of org 'Org1' and peer 'peer0'."),
 		},
 		{
 			name: "Conflict port peer and orderer",
@@ -301,21 +294,21 @@ func TestInvalidConfigurations(t *testing.T) {
 				c.Organizations[0].Peers[0].ExposePort = 7051
 				c.Organizations[0].Orderers[0].ExposePort = 7051
 			},
-			expectError: formatError("R28", "Exposed Port Conflict", "Port 7051 is assigned to both peer 'peer0' and orderer 'orderer0'."),
+			expectError: formatError("exposed-port.conflict", "Exposed Port Conflict", "Port 7051 is assigned to both peer 'peer0' and orderer 'orderer0'."),
 		},
 		{
 			name: "Invalid channel name with uppercase",
 			modify: func(c *Config) {
 				c.Channels[0].Name = "MYCHANNEL"
 			},
-			expectError: formatError("R29", "Invalid Channel Name", "invalid channel name: MYCHANNEL (must be lowercase alphanumeric, start with a letter, and contain only '.', '-', or alphanumeric characters, max 249 characters)"),
+			expectError: formatError("channel.name.invalid", "Invalid Channel Name", "invalid channel name: MYCHANNEL (must be lowercase alphanumeric, start with a letter, and contain only '.', '-', or alphanumeric characters, max 249 characters)"),
 		},
 		{
 			name: "Invalid channel name with spaces",
 			modify: func(c *Config) {
 				c.Channels[0].Name = "my channel"
 			},
-			expectError: formatError("R29", "Invalid Channel Name", "invalid channel name: my channel (must be lowercase alphanumeric, start with a letter, and contain only '.', '-', or alphanumeric characters, max 249 characters)"),
+			expectError: formatError("channel.name.invalid", "Invalid Channel Name", "invalid channel name: my channel (must be lowercase alphanumeric, start with a letter, and contain only '.', '-', or alphanumeric characters, max 249 characters)"),
 		},
 	}
 

@@ -9,6 +9,101 @@ import (
 
 type Node yaml.Node
 
+type ScalarType string
+
+const (
+	StringType ScalarType = "string"
+	IntType    ScalarType = "int"
+	FloatType  ScalarType = "float"
+	BoolType   ScalarType = "bool"
+)
+
+func FromBytes(data []byte) (*Node, error) {
+	var root yaml.Node
+	err := yaml.Unmarshal(data, &root)
+
+	return (*Node)(&root), err
+}
+
+func (n *Node) SetScalar(value string, scalarType ScalarType) *Node {
+	n.Kind = yaml.ScalarNode
+	n.Value = value
+	n.Style = 0
+
+	switch scalarType {
+	case StringType:
+		n.Tag = "!!str"
+		n.Style = yaml.DoubleQuotedStyle
+
+	case IntType:
+		n.Tag = "!!int"
+
+	case FloatType:
+		n.Tag = "!!float"
+
+	case BoolType:
+		n.Tag = "!!bool"
+	}
+
+	return n
+}
+
+func (n *Node) Clone() *Node {
+	if n == nil {
+		return nil
+	}
+
+	clone := *n
+
+	clone.Content = make(
+		[]*yaml.Node,
+		len(n.Content),
+	)
+
+	for i, child := range n.Content {
+		clonedChild := (*Node)(child).Clone()
+		clone.Content[i] = (*yaml.Node)(clonedChild)
+	}
+
+	if n.Alias != nil {
+		clone.Alias = (*yaml.Node)(
+			(*Node)(n.Alias).Clone(),
+		)
+	}
+
+	return &clone
+}
+
+func (n *Node) FindByValue(
+	key string,
+	value string,
+) *Node {
+
+	for _, content := range n.Content {
+		item := (*Node)(content)
+
+		if item.Kind != yaml.MappingNode {
+			continue
+		}
+
+		property := item.GetValue(key)
+
+		if property != nil && property.Value == value {
+			return item
+		}
+	}
+
+	return nil
+}
+
+func (n *Node) Document() *Node {
+	if n == nil || len(n.Content) == 0 {
+		return nil
+	}
+
+	return (*Node)(n.Content[0])
+}
+
 func ScalarNode(value string) *Node {
 	return (*Node)(&yaml.Node{Kind: yaml.ScalarNode, Value: value})
 }
