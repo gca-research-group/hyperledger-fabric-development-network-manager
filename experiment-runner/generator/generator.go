@@ -119,7 +119,6 @@ var operators = [][]MutationOperator{
 
 const DefaultMutationCount = 3
 
-// Generate creates the mutated configuration corpus and its scenario manifest.
 func Generate(outputDirectory string, mutationCount int) ([]ScenarioRules, error) {
 	seed, err := yaml.FromBytes([]byte(seedYAML))
 	if err != nil {

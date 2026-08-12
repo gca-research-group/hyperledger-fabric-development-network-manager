@@ -208,7 +208,7 @@ Generate the scenario corpus with:
 go run ./experiment-runner
 ```
 
-The command generates and runs the complete scenario corpus. It writes mutated configurations to `output/config/`, the scenario-to-rule mapping to `output/scenarios.json`, and execution results to `output/results.json`. It exits with a non-zero status if any scenario does not report an expected rule.
+The command generates and runs the complete scenario corpus. It writes mutated configurations to `output/config/`, the scenario-to-rule mapping to `output/scenarios.json`, and execution results to `output/results.json`. Each result is `passed` when all expected rules are reported, `partial` when only some are reported, or `failed` when none are reported or the configuration cannot be processed. Missing rules are included in the result. The command exits with a non-zero status when any scenario is partial or failed.
 
 ## Samples
 

@@ -21,8 +21,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("generated %d scenarios; %d passed, %d failed\n", summary.Total, summary.Passed, summary.Failed)
-	if summary.Failed > 0 {
-		log.Fatalf("%d scenarios did not produce an expected validation rule", summary.Failed)
+	fmt.Printf("generated %d scenarios; %d passed, %d partial, %d failed\n", summary.Total, summary.Passed, summary.Partial, summary.Failed)
+	if summary.Partial > 0 || summary.Failed > 0 {
+		log.Fatalf("%d scenarios did not produce all expected validation rules", summary.Partial+summary.Failed)
 	}
 }

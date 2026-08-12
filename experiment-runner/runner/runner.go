@@ -11,22 +11,31 @@ import (
 	"github.com/gca-research-group/fabric-network-orchestrator/pkg/validate"
 )
 
+type Status string
+
+const (
+	StatusPassed  Status = "passed"
+	StatusPartial Status = "partial"
+	StatusFailed  Status = "failed"
+)
+
 type Result struct {
 	Scenario string            `json:"scenario"`
 	Expected []validate.RuleID `json:"expectedRules"`
 	Actual   []validate.RuleID `json:"actualRules,omitempty"`
-	Passed   bool              `json:"passed"`
+	Missing  []validate.RuleID `json:"missingRules,omitempty"`
+	Status   Status            `json:"status"`
 	Error    string            `json:"error,omitempty"`
 }
 
 type Summary struct {
 	Total   int      `json:"total"`
 	Passed  int      `json:"passed"`
+	Partial int      `json:"partial"`
 	Failed  int      `json:"failed"`
 	Results []Result `json:"results"`
 }
 
-// RunDirectory reads the generated manifest and runs its complete corpus.
 func RunDirectory(outputDirectory string) (Summary, error) {
 	data, err := os.ReadFile(filepath.Join(outputDirectory, "scenarios.json"))
 	if err != nil {
@@ -41,8 +50,6 @@ func RunDirectory(outputDirectory string) (Summary, error) {
 	return Run(outputDirectory, scenarios)
 }
 
-// Run validates every generated configuration and checks that the reported rule
-// is one of the mutations recorded for that scenario.
 func Run(outputDirectory string, scenarios []generator.ScenarioRules) (Summary, error) {
 	summary := Summary{Total: len(scenarios), Results: make([]Result, 0, len(scenarios))}
 
@@ -54,18 +61,26 @@ func Run(outputDirectory string, scenarios []generator.ScenarioRules) (Summary, 
 		validationErrors := validate.Errors(err)
 		if len(validationErrors) > 0 {
 			for _, validationError := range validationErrors {
-				result.Actual = append(result.Actual, validationError.RuleID)
+				result.Actual = appendRuleOnce(result.Actual, validationError.RuleID)
 			}
-			result.Passed = containsAllRules(result.Actual, scenario.Rules)
+			result.Missing = missingRules(result.Actual, scenario.Rules)
+			result.Status = classify(len(scenario.Rules), len(result.Missing))
 		} else if err == nil {
+			result.Status = StatusFailed
+			result.Missing = append(result.Missing, scenario.Rules...)
 			result.Error = "configuration unexpectedly passed validation"
 		} else {
+			result.Status = StatusFailed
+			result.Missing = append(result.Missing, scenario.Rules...)
 			result.Error = err.Error()
 		}
 
-		if result.Passed {
+		switch result.Status {
+		case StatusPassed:
 			summary.Passed++
-		} else {
+		case StatusPartial:
+			summary.Partial++
+		case StatusFailed:
 			summary.Failed++
 		}
 		summary.Results = append(summary.Results, result)
@@ -82,7 +97,8 @@ func Run(outputDirectory string, scenarios []generator.ScenarioRules) (Summary, 
 	return summary, nil
 }
 
-func containsAllRules(actual, expected []validate.RuleID) bool {
+func missingRules(actual, expected []validate.RuleID) []validate.RuleID {
+	var missing []validate.RuleID
 	for _, expectedRule := range expected {
 		found := false
 		for _, actualRule := range actual {
@@ -92,8 +108,27 @@ func containsAllRules(actual, expected []validate.RuleID) bool {
 			}
 		}
 		if !found {
-			return false
+			missing = append(missing, expectedRule)
 		}
 	}
-	return true
+	return missing
+}
+
+func classify(expected, missing int) Status {
+	if missing == 0 {
+		return StatusPassed
+	}
+	if missing < expected {
+		return StatusPartial
+	}
+	return StatusFailed
+}
+
+func appendRuleOnce(rules []validate.RuleID, ruleID validate.RuleID) []validate.RuleID {
+	for _, existing := range rules {
+		if existing == ruleID {
+			return rules
+		}
+	}
+	return append(rules, ruleID)
 }
