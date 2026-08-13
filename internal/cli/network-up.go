@@ -1,12 +1,9 @@
 package cli
 
 import (
-	"fmt"
 	"log/slog"
 
-	"github.com/gca-research-group/fabric-network-orchestrator/internal/executor"
-	"github.com/gca-research-group/fabric-network-orchestrator/pkg/config"
-	"github.com/gca-research-group/fabric-network-orchestrator/pkg/network"
+	"github.com/gca-research-group/fabric-network-orchestrator/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -23,10 +20,8 @@ var networkUpCmd = &cobra.Command{
 			return err
 		}
 
-		instance := network.NewContainerManager(*config, &executor.DefaultExecutor{})
-
-		if err := instance.Start(); err != nil {
-			return fmt.Errorf("Network starting failed: %v", err)
+		if err := workflows.StartNetwork(config); err != nil {
+			return err
 		}
 
 		slog.Info("Started successfully.")

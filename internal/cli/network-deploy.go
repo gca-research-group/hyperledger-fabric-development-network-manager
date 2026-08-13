@@ -1,12 +1,9 @@
 package cli
 
 import (
-	"fmt"
 	"log/slog"
 
-	"github.com/gca-research-group/fabric-network-orchestrator/internal/executor"
-	"github.com/gca-research-group/fabric-network-orchestrator/pkg/config"
-	"github.com/gca-research-group/fabric-network-orchestrator/pkg/network"
+	"github.com/gca-research-group/fabric-network-orchestrator/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -23,10 +20,8 @@ var networkDeployCmd = &cobra.Command{
 			return err
 		}
 
-		instance := network.NewNetwork(*config, &executor.DefaultExecutor{})
-
-		if err := instance.Deploy(); err != nil {
-			return fmt.Errorf("Network deployment failed: %v", err)
+		if err := workflows.DeployNetwork(config); err != nil {
+			return err
 		}
 
 		slog.Info("Deployed successfully.")

@@ -3,11 +3,13 @@ package cli
 import (
 	"errors"
 
-	"github.com/gca-research-group/fabric-network-orchestrator/pkg/config"
+	"github.com/gca-research-group/fabric-network-orchestrator/internal/application"
+	"github.com/gca-research-group/fabric-network-orchestrator/internal/config"
 	"github.com/spf13/cobra"
 )
 
 var configPath string
+var workflows = application.NewWorkflows(nil)
 
 func LoadConfig() (*config.Config, error) {
 	if configPath == "" {

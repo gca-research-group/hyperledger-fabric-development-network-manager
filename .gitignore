@@ -1,5 +1,4 @@
 # Binaries & Build Artifacts
-/my-gin-api
 *.out
 *.test
 *.so
@@ -12,7 +11,7 @@ tmp
 
 # Go Modules & Dependencies
 /vendor/
-go.sum
+/samples/chaincodes/**/go.sum
 
 # Editor & OS Files
 *.swp

@@ -1,12 +1,9 @@
 package cli
 
 import (
-	"fmt"
 	"log/slog"
 
-	"github.com/gca-research-group/fabric-network-orchestrator/internal/executor"
-	"github.com/gca-research-group/fabric-network-orchestrator/pkg/config"
-	"github.com/gca-research-group/fabric-network-orchestrator/pkg/network"
+	"github.com/gca-research-group/fabric-network-orchestrator/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -23,19 +20,7 @@ var identityGenerateCmd = &cobra.Command{
 			return err
 		}
 
-		containerManager := network.NewContainerManager(*config, &executor.DefaultExecutor{})
-
-		if err := containerManager.RunCAContainers(); err != nil {
-			return err
-		}
-
-		instance := network.NewIdentityManager(*config, &executor.DefaultExecutor{})
-
-		if err := instance.GenerateAll(); err != nil {
-			return fmt.Errorf("Generation of identities have failed: %v", err)
-		}
-
-		if err := containerManager.StopCertificateAuthorities(); err != nil {
+		if err := workflows.GenerateIdentities(config); err != nil {
 			return err
 		}
 

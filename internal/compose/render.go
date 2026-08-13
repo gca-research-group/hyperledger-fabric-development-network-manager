@@ -1,0 +1,168 @@
+package compose
+
+import (
+	"fmt"
+
+	"github.com/gca-research-group/fabric-network-orchestrator/internal/config"
+	"github.com/gca-research-group/fabric-network-orchestrator/internal/yaml"
+)
+
+type Renderer struct {
+	config *config.Config
+}
+
+func NewRenderer(config *config.Config) *Renderer {
+	config.Network = ResolveDockerNetworkName(config.Network)
+
+	return &Renderer{
+		config: config,
+	}
+}
+
+func (r *Renderer) RenderNetwork(networkName string, path string) error {
+	return yaml.MappingNode(
+		yaml.ScalarNode("networks"),
+		NewBridgeNetwork(networkName),
+	).ToFile(ResolveNetworkDockerComposeFile(path))
+}
+
+func (r *Renderer) RenderOrderers(organization config.Organization) error {
+	for _, orderer := range organization.Orderers {
+		node := NewOrderer(orderer, organization, r.config.Organizations, r.config.Capabilities).
+			WithNetworks([]*yaml.Node{yaml.ScalarNode(r.config.Network)}).
+			WithVolumes().
+			ExposePort()
+
+		err := yaml.MappingNode(
+			yaml.ScalarNode("services"),
+			node.Build(),
+		).ToFile(ResolveOrdererDockerComposeFile(r.config.Output, organization.Domain, orderer.Subdomain))
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (r *Renderer) RenderCertificateAuthority(organization config.Organization) error {
+	var nodes []*yaml.Node
+
+	node := NewCertificateAuthority(organization).
+		ExposePort().
+		WithNetworks([]*yaml.Node{yaml.ScalarNode(r.config.Network)})
+
+	for _, n := range node.Content {
+		nodes = append(nodes, (*yaml.Node)(n))
+	}
+
+	return yaml.MappingNode(
+		yaml.ScalarNode("services"),
+		yaml.MappingNode(nodes...),
+	).ToFile(ResolveCertificateAuthorityDockerComposeFile(r.config.Output, organization.Domain))
+}
+
+func (r *Renderer) RenderPeer(organization config.Organization, corePeerGossipBootstrap string, peer config.Peer) error {
+	peerNode := NewPeer(
+		peer,
+		organization,
+		corePeerGossipBootstrap,
+		r.config.Network,
+		r.config.Organizations,
+	).ExposePort().WithVolumes().Build()
+
+	couchdbNode := NewCouchDB(organization.Domain, peer.Subdomain, r.config.Network).Build()
+
+	return yaml.MappingNode(
+		yaml.ScalarNode("services"),
+		yaml.MappingNode(
+			yaml.ScalarNode(ResolvePeerDomain(peer.Subdomain, organization.Domain)),
+			peerNode,
+			yaml.ScalarNode(ResolveCouchDBDomain(peer.Subdomain, organization.Domain)),
+			couchdbNode,
+		),
+	).ToFile(ResolvePeerDockerComposeFile(r.config.Output, organization.Domain, peer.Subdomain))
+}
+
+func (r *Renderer) RenderPeers(organization config.Organization) error {
+
+	for i, peer := range organization.Peers {
+		gossipPeerIndex := 0
+
+		if len(organization.Peers) != 1 && i == 0 {
+			gossipPeerIndex = 1
+		}
+
+		gossipPeer := organization.Peers[gossipPeerIndex]
+
+		gossipPeerPort := ResolvePeerPort(gossipPeer.Port)
+
+		corePeerGossipBootstrap := fmt.Sprintf("%s.%s:%d", gossipPeer.Subdomain, organization.Domain, gossipPeerPort)
+
+		if err := r.RenderPeer(organization, corePeerGossipBootstrap, peer); err != nil {
+			return fmt.Errorf("Error when rendering the peer %d for the organization %s: %w", i, organization.Name, err)
+		}
+	}
+
+	return nil
+}
+
+func (r *Renderer) RenderOrganizations() error {
+	for _, organization := range r.config.Organizations {
+		if err := r.RenderCertificateAuthority(organization); err != nil {
+			return fmt.Errorf("Error when rendering the certificate authority for the organization %s: %w", organization.Name, err)
+		}
+
+		if len(organization.Orderers) > 0 {
+			if err := r.RenderOrderers(organization); err != nil {
+				return fmt.Errorf("Error when rendering the orderers: %w", err)
+			}
+		}
+
+		if err := r.RenderPeers(organization); err != nil {
+			return err
+		}
+
+		var domains []string
+
+		for _, o := range r.config.Organizations {
+			if o.Domain != organization.Domain {
+				domains = append(domains, o.Domain)
+			}
+		}
+
+		if err := r.RenderTools(organization, domains); err != nil {
+			return fmt.Errorf("Error when rendering the cryptomaterial.yml file for the organization %s: %w", organization.Name, err)
+		}
+	}
+
+	return nil
+}
+
+func (r *Renderer) RenderTools(organization config.Organization, domains []string) error {
+	chaincodes := config.ResolveChaincodes(*r.config)
+
+	return yaml.MappingNode(
+		yaml.ScalarNode("services"),
+		NewTools(
+			organization,
+			r.config.Organizations,
+			chaincodes,
+			r.config.Network,
+			r.config.Capabilities).Build(),
+	).ToFile(ResolveToolsDockerComposeFile(r.config.Output, organization.Domain))
+}
+
+func (r *Renderer) Render() error {
+
+	if err := r.RenderNetwork(r.config.Network, r.config.Output); err != nil {
+		return fmt.Errorf("Error when rendering the network: %w", err)
+	}
+
+	if err := r.RenderOrganizations(); err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -1,0 +1,121 @@
+Capabilities:
+  Application: &ApplicationCapabilities
+    V2_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Channel: &ChannelCapabilities
+    V2_0: true
+Organizations:
+  - &Org1Orderer
+    Name: Org1Orderer
+    ID: Org1OrdererMSP
+    MSPDir: ./org1.example.org/ordererOrganizations/org1.example.org/msp
+    OrdererEndpoints:
+      - orderer.org1.example.org:7050
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('Org1OrdererMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('Org1OrdererMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('Org1OrdererMSP.admin')"
+  - &Org1
+    Name: Org1
+    ID: Org1MSP
+    MSPDir: ./org1.example.org/peerOrganizations/org1.example.org/msp
+    AnchorPeers:
+      - Host: peer0.org1.example.org
+        Port: 7051
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('Org1MSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('Org1MSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('Org1MSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('Org1MSP.peer')"
+Orderer: &OrdererDefaults
+  Addresses:
+    - orderer.org1.example.org:7050
+  Capabilities:
+    <<: *OrdererCapabilities
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "ANY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+  Organizations:
+    - *Org1Orderer
+Application: &ApplicationDefaults
+  Policies:
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "ANY Endorsement"
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "ANY Endorsement"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "ANY Admins"
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+  Capabilities:
+    <<: *ApplicationCapabilities
+  Organizations:
+    - *Org1
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "ANY Admins"
+  Capabilities:
+    <<: *ChannelCapabilities
+Profiles:
+  Default:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      OrdererType: etcdraft
+      BatchTimeout: 2s
+      BatchSize:
+        MaxMessageCount: 10
+        AbsoluteMaxBytes: 99 MB
+        PreferredMaxBytes: 512 KB
+      etcdraft:
+        Consenters:
+          - Host: orderer.org1.example.org
+            Port: 7050
+            ClientTLSCert: ./org1.example.org/ordererOrganizations/org1.example.org/orderers/orderer.org1.example.org/tls/server.crt
+            ServerTLSCert: ./org1.example.org/ordererOrganizations/org1.example.org/orderers/orderer.org1.example.org/tls/server.crt
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *Org1
+      Capabilities:
+        <<: *ApplicationCapabilities

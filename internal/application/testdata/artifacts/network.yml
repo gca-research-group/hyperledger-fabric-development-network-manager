@@ -1,0 +1,4 @@
+networks:
+  example:
+    name: example
+    driver: bridge

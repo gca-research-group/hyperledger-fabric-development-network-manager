@@ -3,8 +3,7 @@ package cli
 import (
 	"log/slog"
 
-	"github.com/gca-research-group/fabric-network-orchestrator/internal/directory"
-	"github.com/gca-research-group/fabric-network-orchestrator/pkg/config"
+	"github.com/gca-research-group/fabric-network-orchestrator/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -20,7 +19,9 @@ var artifactsCleanCmd = &cobra.Command{
 			return err
 		}
 
-		directory.RemoveFolderIfExists(config.Output)
+		if err := workflows.CleanArtifacts(config); err != nil {
+			return err
+		}
 
 		slog.Info("Artifacts removed successfully.")
 		return nil

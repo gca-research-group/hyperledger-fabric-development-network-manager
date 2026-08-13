@@ -3,8 +3,7 @@ package cli
 import (
 	"log/slog"
 
-	"github.com/gca-research-group/fabric-network-orchestrator/pkg/compose"
-	"github.com/gca-research-group/fabric-network-orchestrator/pkg/config"
+	"github.com/gca-research-group/fabric-network-orchestrator/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -21,9 +20,7 @@ var networkDownCmd = &cobra.Command{
 			return err
 		}
 
-		network := compose.ResolveDockerNetworkName(config.Network)
-
-		if err = compose.RemoveContainersInNetwork(network); err != nil {
+		if err = workflows.StopNetwork(config); err != nil {
 			return err
 		}
 

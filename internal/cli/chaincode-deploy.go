@@ -1,12 +1,9 @@
 package cli
 
 import (
-	"fmt"
 	"log/slog"
 
-	"github.com/gca-research-group/fabric-network-orchestrator/internal/executor"
-	"github.com/gca-research-group/fabric-network-orchestrator/pkg/chaincode"
-	"github.com/gca-research-group/fabric-network-orchestrator/pkg/config"
+	"github.com/gca-research-group/fabric-network-orchestrator/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -23,10 +20,8 @@ var chaincodeDeployCmd = &cobra.Command{
 			return err
 		}
 
-		c := chaincode.NewChaincode(config, &executor.DefaultExecutor{})
-
-		if err := c.Publish(); err != nil {
-			return fmt.Errorf("Chaincode deployment failed: %v", err)
+		if err := workflows.DeployChaincodes(config); err != nil {
+			return err
 		}
 
 		slog.Info("Chaincodes deployed successfully.")

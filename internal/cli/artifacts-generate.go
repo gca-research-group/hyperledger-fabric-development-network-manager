@@ -1,13 +1,9 @@
 package cli
 
 import (
-	"fmt"
 	"log/slog"
 
-	"github.com/gca-research-group/fabric-network-orchestrator/internal/directory"
-	"github.com/gca-research-group/fabric-network-orchestrator/pkg/compose"
-	"github.com/gca-research-group/fabric-network-orchestrator/pkg/config"
-	"github.com/gca-research-group/fabric-network-orchestrator/pkg/configtx"
+	"github.com/gca-research-group/fabric-network-orchestrator/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -23,18 +19,7 @@ var artifactsGenerateCmd = &cobra.Command{
 			return err
 		}
 
-		if value, _ := directory.IsDirEmpty((*config).Output); value == false {
-			return fmt.Errorf("The directory is not empty: %s\n", (*config).Output)
-		}
-
-		configTxRenderer := configtx.NewRenderer(config)
-		dockerRenderer := compose.NewRenderer(config)
-
-		if err := configTxRenderer.Render(); err != nil {
-			return err
-		}
-
-		if err := dockerRenderer.Render(); err != nil {
+		if err := workflows.GenerateArtifacts(config); err != nil {
 			return err
 		}
 
