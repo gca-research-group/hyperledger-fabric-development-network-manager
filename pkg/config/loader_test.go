@@ -7,7 +7,8 @@ import (
 
 func getValidBaseConfig() Config {
 	return Config{
-		Output: "./output",
+		Output:  "./output",
+		Network: "test-network",
 		Capabilities: Capabilities{
 			Channel:     "V2_5",
 			Application: "V2_5",
@@ -106,7 +107,7 @@ func TestInvalidConfigurations(t *testing.T) {
 			modify: func(c *Config) {
 				c.Organizations[0].CertificateAuthority.ExposePort = -1
 			},
-			expectError: formatError("certificate-authority.port.invalid", "Invalid Certificate Authority Port", "expose port of the certificate authority of the organization Org1 should be greater than zero"),
+			expectError: formatError("certificate-authority.port.invalid", "Invalid Certificate Authority Port", "expose port of the certificate authority of the organization Org1 must be between 1 and 65535 when set"),
 		},
 		{
 			name: "Peer name empty",
@@ -127,7 +128,7 @@ func TestInvalidConfigurations(t *testing.T) {
 			modify: func(c *Config) {
 				c.Organizations[0].Peers[0].ExposePort = -10
 			},
-			expectError: formatError("peer.port.invalid", "Invalid Peer Port", "expose port of the peer peer0 of the organization Org1 should be greater than zero"),
+			expectError: formatError("peer.port.invalid", "Invalid Peer Port", "expose port of the peer peer0 of the organization Org1 must be between 1 and 65535 when set"),
 		},
 		{
 			name: "Orderer name empty",
@@ -148,7 +149,7 @@ func TestInvalidConfigurations(t *testing.T) {
 			modify: func(c *Config) {
 				c.Organizations[0].Orderers[0].ExposePort = -1
 			},
-			expectError: formatError("orderer.port.invalid", "Invalid Orderer Port", "expose port of the orderer orderer0 of the organization Org1 should be greater than zero"),
+			expectError: formatError("orderer.port.invalid", "Invalid Orderer Port", "expose port of the orderer orderer0 of the organization Org1 must be between 1 and 65535 when set"),
 		},
 		{
 			name: "Chaincode name empty",

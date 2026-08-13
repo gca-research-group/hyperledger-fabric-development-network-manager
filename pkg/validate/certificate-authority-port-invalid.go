@@ -7,11 +7,11 @@ import (
 )
 
 func InvalidCertificateAuthorityPortFn(organization spec.Organization) error {
-	if organization.CertificateAuthority.ExposePort < 0 {
+	if !validOptionalTCPPort(organization.CertificateAuthority.ExposePort) {
 		return &ValidationError{
 			RuleID: RuleCertificateAuthorityPortInvalid,
 			Rule:   "Invalid Certificate Authority Port",
-			Detail: fmt.Sprintf("expose port of the certificate authority of the organization %s should be greater than zero", organization.Name),
+			Detail: fmt.Sprintf("expose port of the certificate authority of the organization %s must be between 1 and 65535 when set", organization.Name),
 		}
 	}
 

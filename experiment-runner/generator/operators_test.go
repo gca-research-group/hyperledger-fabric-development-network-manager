@@ -16,23 +16,38 @@ import (
 
 var allRuleIDs = []validate.RuleID{
 	validate.RuleOutputDirectoryNameInvalid,
+	validate.RuleNetworkNameRequired,
+	validate.RuleNetworkNameInvalid,
 	validate.RuleOrganizationsRequired,
 	validate.RuleOrganizationNameRequired,
 	validate.RuleOrganizationDomainRequired,
+	validate.RuleOrganizationDomainDuplicate,
+	validate.RuleOrganizationUsersInvalid,
+	validate.RuleDomainInvalid,
 	validate.RuleCertificateAuthorityPortInvalid,
 	validate.RulePeerNameRequired,
 	validate.RulePeerSubdomainRequired,
 	validate.RulePeerPortInvalid,
+	validate.RulePeerInternalPortInvalid,
+	validate.RulePeerNameDuplicate,
+	validate.RulePeerSubdomainDuplicate,
 	validate.RuleOrdererNameRequired,
 	validate.RuleOrdererSubdomainRequired,
 	validate.RuleOrdererPortInvalid,
+	validate.RuleOrdererInternalPortInvalid,
+	validate.RuleOrdererNameDuplicate,
 	validate.RuleChaincodeNameRequired,
 	validate.RuleChaincodePathRequired,
 	validate.RuleChaincodeVersionRequired,
+	validate.RuleChaincodeNameDuplicate,
 	validate.RuleProfileOrganizationsRequired,
+	validate.RuleProfileNameRequired,
+	validate.RuleProfileNameDuplicate,
 	validate.RuleChannelProfileRequired,
 	validate.RuleChannelNameRequired,
 	validate.RuleChannelNameInvalid,
+	validate.RuleChannelNameDuplicate,
+	validate.RuleChannelProfileUndefined,
 	validate.RuleChannelCapabilityUnsupported,
 	validate.RuleApplicationCapabilityUnsupported,
 	validate.RuleOrdererCapabilityUnsupported,
@@ -240,7 +255,7 @@ func TestGeneratedCombinationsTriggerEveryDeclaredRule(t *testing.T) {
 		}
 		for _, operator := range combination {
 			if !actual[operator.RuleID] {
-				return fmt.Errorf("combination %d did not trigger declared rule %s", index, operator.RuleID)
+				return fmt.Errorf("combination %d (%v) did not trigger declared rule %s", index, combinationRuleIDs(combination), operator.RuleID)
 			}
 		}
 		index++
@@ -249,6 +264,14 @@ func TestGeneratedCombinationsTriggerEveryDeclaredRule(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func combinationRuleIDs(combination []MutationOperator) []validate.RuleID {
+	rules := make([]validate.RuleID, 0, len(combination))
+	for _, operator := range combination {
+		rules = append(rules, operator.RuleID)
+	}
+	return rules
 }
 
 func TestOrganizationsRequiredExcludesOrganizationDomainRequired(t *testing.T) {

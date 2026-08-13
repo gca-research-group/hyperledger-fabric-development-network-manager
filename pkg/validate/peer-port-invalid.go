@@ -7,11 +7,11 @@ import (
 )
 
 func InvalidPeerPortFn(peer spec.Peer, organizationName string) error {
-	if peer.ExposePort < 0 {
+	if !validOptionalTCPPort(peer.ExposePort) {
 		return &ValidationError{
 			RuleID: RulePeerPortInvalid,
 			Rule:   "Invalid Peer Port",
-			Detail: fmt.Sprintf("expose port of the peer %s of the organization %s should be greater than zero", peer.Name, organizationName),
+			Detail: fmt.Sprintf("expose port of the peer %s of the organization %s must be between 1 and 65535 when set", peer.Name, organizationName),
 		}
 	}
 

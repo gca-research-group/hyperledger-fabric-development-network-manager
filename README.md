@@ -153,35 +153,50 @@ channels:
 
 ## Validation Constraints
 
-FNO validates specifications before deployment using the following 29 rules. The rule ID is included in each validation error and is also used by the experiment runner to identify the mutation applied to a scenario.
+FNO validates specifications before deployment using the following 44 rules. The rule ID is included in each validation error and is also used by the experiment runner to identify the mutation applied to a scenario.
 
 | Area | Rule ID | Constraint |
 | --- | --- | --- |
 | Output | `output.directory-name.invalid` | The output path must contain valid directory names. |
+| Network | `network.name.required` | A network name is required. |
+| Network | `network.name.invalid` | Network names must be compatible with generated Docker resources. |
 | Organizations | `organizations.required` | At least one organization must be defined. |
 | Organizations | `organization.name.required` | Every organization must have a name. |
 | Organizations | `organization.domain.required` | Every organization must have a domain. |
+| Organizations | `organization.domain.duplicate` | Organization domains must be unique. |
+| Organizations | `organization.users.invalid` | Organization user counts cannot be negative. |
+| Organizations | `domain.invalid` | Organization domains must be valid DNS domain names. |
 | Organizations | `organization.name.duplicate` | Organization names must be unique. |
 | Organizations | `organization.bootstrap.multiple` | At most one organization may be marked as bootstrap. |
-| Certificate authorities | `certificate-authority.port.invalid` | CA exposed ports cannot be negative. |
+| Certificate authorities | `certificate-authority.port.invalid` | Explicit CA exposed ports must be in the TCP range. |
 | Peers | `peer.name.required` | Every peer must have a name. |
 | Peers | `peer.subdomain.required` | Every peer must have a subdomain. |
-| Peers | `peer.port.invalid` | Peer exposed ports cannot be negative. |
+| Peers | `peer.name.duplicate` | Peer names must be unique within an organization. |
+| Peers | `peer.subdomain.duplicate` | Peer subdomains must be unique within an organization. |
+| Peers | `peer.port.invalid` | Explicit peer exposed ports must be in the TCP range. |
+| Peers | `peer.internal-port.invalid` | Explicit peer internal ports must be in the TCP range. |
 | Peers | `peer.version.invalid` | A configured peer version must satisfy the channel capability's minimum binary version. |
 | Orderers | `orderer.name.required` | Every orderer must have a name. |
 | Orderers | `orderer.subdomain.required` | Every orderer must have a subdomain. |
-| Orderers | `orderer.port.invalid` | Orderer exposed ports cannot be negative. |
+| Orderers | `orderer.name.duplicate` | Orderer names must be unique within an organization. |
+| Orderers | `orderer.port.invalid` | Explicit orderer exposed ports must be in the TCP range. |
+| Orderers | `orderer.internal-port.invalid` | Explicit orderer internal ports must be in the TCP range. |
 | Orderers | `orderer.version.invalid` | A configured orderer version must satisfy the channel capability's minimum binary version. |
 | Orderers | `orderer.topology.required` | The topology must contain at least one orderer. |
 | Chaincodes | `chaincode.name.required` | Every chaincode must have a name. |
 | Chaincodes | `chaincode.path.required` | Every chaincode must have a source path. |
 | Chaincodes | `chaincode.version.required` | Every chaincode must have a version. |
+| Chaincodes | `chaincode.name.duplicate` | Chaincode names must be unique within a channel. |
+| Profiles | `profile.name.required` | Every profile must have a name. |
+| Profiles | `profile.name.duplicate` | Profile names must be unique. |
 | Profiles | `profile.organizations.required` | Every profile must reference at least one organization. |
 | Profiles | `profile.consensus-type.invalid` | Consensus type must be empty, `etcdraft`, or `BFT`. |
 | Profiles | `profile.organization.undefined` | Every organization referenced by a profile must be defined. |
 | Channels | `channel.name.required` | Every channel must have a name. |
 | Channels | `channel.name.invalid` | Channel names must follow Hyperledger Fabric naming restrictions. |
+| Channels | `channel.name.duplicate` | Channel names must be unique. |
 | Channels | `channel.profile.required` | Every channel must reference a profile. |
+| Channels | `channel.profile.undefined` | Every referenced channel profile must be defined. |
 | Capabilities | `capability.channel.unsupported` | Channel capability must be `V2_0`, `V2_5`, or `V3_0`. |
 | Capabilities | `capability.application.unsupported` | Application capability must be `V2_0`, `V2_5`, or `V3_0`. |
 | Capabilities | `capability.orderer.unsupported` | Orderer capability must be `V2_0`, `V2_5`, or `V3_0`. |
@@ -193,7 +208,7 @@ Invalid configurations are rejected before artefacts are generated or infrastruc
 
 The [experiment runner](./experiment-runner/) contains two reusable packages:
 
-- `generator` contains mutation operators for all 29 validation rules. Each operator starts from a valid seed configuration, introduces a targeted fault, and records the expected rule ID. Scenarios combine three compatible rule groups, with at most one mutation selected from each group; structurally incompatible mutations are explicitly excluded.
+- `generator` contains mutation operators for all 44 validation rules. Each operator starts from a valid seed configuration, introduces a targeted fault, and records the expected rule ID. Scenarios combine three compatible rule groups, with at most one mutation selected from each group; structurally incompatible mutations are explicitly excluded.
 - `runner` streams the generated manifest, validates every scenario configuration, and checks that the reported validation rules include all mutations expected for that scenario.
 
 Run its verification tests with:

@@ -15,12 +15,14 @@ func ValidateTopologyFn(configuration spec.Config) error {
 	}
 
 	organizationNames := make(map[string]struct{})
+	organizationDomains := make(map[string]struct{})
 	exposedPorts := make(map[int]portOwner)
 	bootstrapCount := 0
 	hasOrderer := false
 
 	for _, organization := range configuration.Organizations {
 		collect(DuplicateOrganizationNameFn(organization, organizationNames))
+		collect(DuplicateOrganizationDomainFn(organization, organizationDomains))
 
 		organizationNames[organization.Name] = struct{}{}
 
@@ -34,12 +36,18 @@ func ValidateTopologyFn(configuration spec.Config) error {
 
 		collect(ExposedPortConflictFn(organization.CertificateAuthority.ExposePort, portOwner{ownerType: "Certificate Authority", name: organization.Name}, exposedPorts))
 
+		peerNames := make(map[string]struct{})
+		peerSubdomains := make(map[string]struct{})
 		for _, peer := range organization.Peers {
+			collect(DuplicatePeerNameFn(peer, organization.Name, peerNames))
+			collect(DuplicatePeerSubdomainFn(peer, organization.Name, peerSubdomains))
 			collect(InvalidPeerVersionFn(peer, organization.Name, configuration.Capabilities.Channel))
 			collect(ExposedPortConflictFn(peer.ExposePort, portOwner{ownerType: "peer", name: peer.Name}, exposedPorts))
 		}
 
+		ordererNames := make(map[string]struct{})
 		for _, orderer := range organization.Orderers {
+			collect(DuplicateOrdererNameFn(orderer, organization.Name, ordererNames))
 			collect(InvalidOrdererVersionFn(orderer, organization.Name, configuration.Capabilities.Channel))
 			collect(ExposedPortConflictFn(orderer.ExposePort, portOwner{ownerType: "orderer", name: orderer.Name}, exposedPorts))
 		}

@@ -92,6 +92,19 @@ channels:
 
 var operators = [][]MutationOperator{
 	outputDirectoryOperators,
+	networkNameInvalidOperators,
+	organizationDomainDuplicateOperators,
+	domainInvalidOperators,
+	organizationUsersInvalidOperators,
+	peerNameDuplicateOperators,
+	peerSubdomainDuplicateOperators,
+	peerInternalPortInvalidOperators,
+	ordererNameDuplicateOperators,
+	ordererInternalPortInvalidOperators,
+	profileNameDuplicateOperators,
+	channelProfileUndefinedOperators,
+	channelNameDuplicateOperators,
+	chaincodeNameDuplicateOperators,
 	organizationDomainRequiredOperators,
 	certificateAuthorityPortInvalidOperators,
 	peerSubdomainRequiredOperators,
@@ -119,11 +132,16 @@ var operators = [][]MutationOperator{
 	ordererTopologyRequiredOperators,
 	organizationNameRequiredOperators,
 	profileOrganizationsRequiredOperators,
+	profileNameRequiredOperators,
+	networkNameRequiredOperators,
 	organizationsRequiredOperators,
 }
 
 var incompatibilities = IncompatibilityPolicy{
 	validate.RuleOrganizationsRequired: {
+		validate.RuleOrganizationDomainDuplicate,
+		validate.RuleDomainInvalid,
+		validate.RuleOrganizationUsersInvalid,
 		validate.RuleOrganizationNameRequired,
 		validate.RuleOrganizationDomainRequired,
 		validate.RuleCertificateAuthorityPortInvalid,
@@ -138,11 +156,18 @@ var incompatibilities = IncompatibilityPolicy{
 		validate.RuleOrdererVersionInvalid,
 		validate.RuleBootstrapOrganizationsMultiple,
 		validate.RuleExposedPortConflict,
+		validate.RulePeerNameDuplicate,
+		validate.RulePeerSubdomainDuplicate,
+		validate.RulePeerInternalPortInvalid,
+		validate.RuleOrdererNameDuplicate,
+		validate.RuleOrdererInternalPortInvalid,
 	},
 	validate.RuleOrdererTopologyRequired: {
 		validate.RuleOrdererNameRequired,
+		validate.RuleOrdererNameDuplicate,
 		validate.RuleOrdererSubdomainRequired,
 		validate.RuleOrdererPortInvalid,
+		validate.RuleOrdererInternalPortInvalid,
 		validate.RuleOrdererVersionInvalid,
 	},
 	validate.RuleChannelCapabilityUnsupported: {
@@ -157,6 +182,39 @@ var incompatibilities = IncompatibilityPolicy{
 	},
 	validate.RuleOrganizationNameRequired: {
 		validate.RuleOrganizationNameDuplicate,
+	},
+	validate.RuleProfileNameRequired: {
+		validate.RuleProfileNameDuplicate,
+		validate.RuleChannelProfileUndefined,
+	},
+	validate.RuleChannelNameRequired: {
+		validate.RuleChannelNameDuplicate,
+		validate.RuleChannelNameInvalid,
+	},
+	validate.RuleChannelProfileUndefined: {
+		validate.RuleChannelProfileRequired,
+	},
+	validate.RuleNetworkNameRequired: {
+		validate.RuleNetworkNameInvalid,
+	},
+	validate.RuleOrganizationDomainRequired: {
+		validate.RuleDomainInvalid,
+		validate.RuleOrganizationDomainDuplicate,
+	},
+	validate.RuleOrganizationDomainDuplicate: {
+		validate.RuleDomainInvalid,
+	},
+	validate.RulePeerNameDuplicate: {
+		validate.RulePeerNameRequired,
+	},
+	validate.RulePeerSubdomainDuplicate: {
+		validate.RulePeerSubdomainRequired,
+	},
+	validate.RuleOrdererNameDuplicate: {
+		validate.RuleOrdererNameRequired,
+	},
+	validate.RuleChaincodeNameDuplicate: {
+		validate.RuleChaincodeNameRequired,
 	},
 }
 
