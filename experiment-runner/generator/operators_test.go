@@ -1,7 +1,11 @@
 package generator
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/gca-research-group/fabric-network-orchestrator/internal/yaml"
@@ -113,13 +117,62 @@ func TestOperatorRegistryCoversEveryRuleOnce(t *testing.T) {
 }
 
 func TestGenerateCombinationsUsesAtMostOneOperatorPerRule(t *testing.T) {
-	for _, combination := range GenerateCombinations(operators, 3, incompatibilities) {
+	err := WalkCombinations(operators, 3, incompatibilities, func(combination []MutationOperator) error {
 		seen := make(map[validate.RuleID]bool)
 		for _, operator := range combination {
 			if seen[operator.RuleID] {
-				t.Fatalf("combination contains rule %s more than once", operator.RuleID)
+				return fmt.Errorf("combination contains rule %s more than once", operator.RuleID)
 			}
 			seen[operator.RuleID] = true
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestWalkCombinationsStreamsOneHundredThousandCombinations(t *testing.T) {
+	groups := make([][]MutationOperator, 5)
+	for groupIndex := range groups {
+		for operatorIndex := 0; operatorIndex < 10; operatorIndex++ {
+			groups[groupIndex] = append(groups[groupIndex], MutationOperator{RuleID: validate.RuleID(fmt.Sprintf("rule-%d-%d", groupIndex, operatorIndex))})
+		}
+	}
+
+	count := 0
+	if err := WalkCombinations(groups, 5, nil, func([]MutationOperator) error {
+		count++
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if count != 100_000 {
+		t.Fatalf("visited %d combinations, expected 100000", count)
+	}
+}
+
+func TestGenerateStreamsValidManifest(t *testing.T) {
+	outputDirectory := t.TempDir()
+	summary, err := Generate(outputDirectory, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	data, err := os.ReadFile(filepath.Join(outputDirectory, "scenarios.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var scenarios []ScenarioRules
+	if err := json.Unmarshal(data, &scenarios); err != nil {
+		t.Fatalf("decode generated manifest: %v", err)
+	}
+	if summary.Total != len(scenarios) || summary.Total == 0 {
+		t.Fatalf("summary total %d does not match manifest length %d", summary.Total, len(scenarios))
+	}
+	for _, scenario := range scenarios {
+		if _, err := os.Stat(filepath.Join(outputDirectory, "config", scenario.Scenario+".yaml")); err != nil {
+			t.Fatalf("scenario %s was not written: %v", scenario.Scenario, err)
 		}
 	}
 }
@@ -137,7 +190,11 @@ func TestIncompatibilitiesAreSymmetric(t *testing.T) {
 				{{firstOperator}, {secondOperator}},
 				{{secondOperator}, {firstOperator}},
 			} {
-				if combinations := GenerateCombinations(groups, 2, incompatibilities); len(combinations) != 0 {
+				count := 0
+				if err := WalkCombinations(groups, 2, incompatibilities, func([]MutationOperator) error { count++; return nil }); err != nil {
+					t.Fatal(err)
+				}
+				if count != 0 {
 					t.Fatalf("generated rules %s and %s in an incompatible order", first, second)
 				}
 			}
@@ -146,18 +203,20 @@ func TestIncompatibilitiesAreSymmetric(t *testing.T) {
 }
 
 func TestGeneratedCombinationsExcludeIncompatibleRules(t *testing.T) {
-	combinations := GenerateCombinations(operators, DefaultMutationCount, incompatibilities)
 	represented := make(map[validate.RuleID]bool)
-
-	for _, combination := range combinations {
+	err := WalkCombinations(operators, DefaultMutationCount, incompatibilities, func(combination []MutationOperator) error {
 		for i, first := range combination {
 			represented[first.RuleID] = true
 			for _, second := range combination[i+1:] {
 				if rulesConflict(first.RuleID, second.RuleID, incompatibilities) {
-					t.Fatalf("generated incompatible rules %s and %s", first.RuleID, second.RuleID)
+					return fmt.Errorf("generated incompatible rules %s and %s", first.RuleID, second.RuleID)
 				}
 			}
 		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	for _, ruleID := range allRuleIDs {
@@ -168,7 +227,8 @@ func TestGeneratedCombinationsExcludeIncompatibleRules(t *testing.T) {
 }
 
 func TestGeneratedCombinationsTriggerEveryDeclaredRule(t *testing.T) {
-	for index, combination := range GenerateCombinations(operators, DefaultMutationCount, incompatibilities) {
+	index := 0
+	err := WalkCombinations(operators, DefaultMutationCount, incompatibilities, func(combination []MutationOperator) error {
 		node := seedNode(t)
 		for _, operator := range combination {
 			operator.Apply(node.Document())
@@ -180,14 +240,19 @@ func TestGeneratedCombinationsTriggerEveryDeclaredRule(t *testing.T) {
 		}
 		for _, operator := range combination {
 			if !actual[operator.RuleID] {
-				t.Fatalf("combination %d did not trigger declared rule %s", index, operator.RuleID)
+				return fmt.Errorf("combination %d did not trigger declared rule %s", index, operator.RuleID)
 			}
 		}
+		index++
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 }
 
 func TestOrganizationsRequiredExcludesOrganizationDomainRequired(t *testing.T) {
-	for _, combination := range GenerateCombinations(operators, DefaultMutationCount, incompatibilities) {
+	err := WalkCombinations(operators, DefaultMutationCount, incompatibilities, func(combination []MutationOperator) error {
 		hasOrganizationsRequired := false
 		hasOrganizationDomainRequired := false
 		for _, operator := range combination {
@@ -195,7 +260,11 @@ func TestOrganizationsRequiredExcludesOrganizationDomainRequired(t *testing.T) {
 			hasOrganizationDomainRequired = hasOrganizationDomainRequired || operator.RuleID == validate.RuleOrganizationDomainRequired
 		}
 		if hasOrganizationsRequired && hasOrganizationDomainRequired {
-			t.Fatal("generated organizations.required with organization.domain.required")
+			return errors.New("generated organizations.required with organization.domain.required")
 		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 }

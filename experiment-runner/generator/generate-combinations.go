@@ -4,15 +4,12 @@ import "github.com/gca-research-group/fabric-network-orchestrator/pkg/validate"
 
 type IncompatibilityPolicy map[validate.RuleID][]validate.RuleID
 
-func GenerateCombinations(groups [][]MutationOperator, combinationSize int, policy IncompatibilityPolicy) [][]MutationOperator {
-	var result [][]MutationOperator
-
+func WalkCombinations(groups [][]MutationOperator, combinationSize int, policy IncompatibilityPolicy, visit func([]MutationOperator) error) error {
 	if combinationSize <= 0 || len(groups) == 0 {
-		return result
+		return nil
 	}
 
 	nonEmptyGroups := make([][]MutationOperator, 0, len(groups))
-
 	for _, group := range groups {
 		if len(group) > 0 {
 			nonEmptyGroups = append(nonEmptyGroups, group)
@@ -20,53 +17,44 @@ func GenerateCombinations(groups [][]MutationOperator, combinationSize int, poli
 	}
 
 	if len(nonEmptyGroups) == 0 {
-		return result
+		return nil
 	}
 
-	effectiveSize := combinationSize
-
-	if effectiveSize > len(nonEmptyGroups) {
-		effectiveSize = len(nonEmptyGroups)
-	}
-
+	effectiveSize := min(combinationSize, len(nonEmptyGroups))
 	current := make([]MutationOperator, 0, effectiveSize)
 
-	var combine func(startGroup int)
-
-	combine = func(startGroup int) {
-
+	var combine func(int) error
+	combine = func(startGroup int) error {
 		if len(current) == effectiveSize {
-			combination := make([]MutationOperator, len(current))
-			copy(combination, current)
-
-			result = append(result, combination)
-			return
+			combination := append([]MutationOperator(nil), current...)
+			return visit(combination)
 		}
 
 		remaining := effectiveSize - len(current)
-
 		if len(nonEmptyGroups)-startGroup < remaining {
-			return
+			return nil
 		}
 
 		for i := startGroup; i < len(nonEmptyGroups); i++ {
-			for _, element := range nonEmptyGroups[i] {
-				if conflictsWithCurrent(element, current, policy) {
+			for _, operator := range nonEmptyGroups[i] {
+				if conflictsWithCurrent(operator, current, policy) {
 					continue
 				}
-				current = append(current, element)
 
-				combine(i + 1)
+				current = append(current, operator)
 
-				// Backtracking.
+				if err := combine(i + 1); err != nil {
+					return err
+				}
+
 				current = current[:len(current)-1]
 			}
 		}
+
+		return nil
 	}
 
-	combine(0)
-
-	return result
+	return combine(0)
 }
 
 func conflictsWithCurrent(candidate MutationOperator, current []MutationOperator, policy IncompatibilityPolicy) bool {
@@ -88,5 +76,6 @@ func containsRule(rules []validate.RuleID, target validate.RuleID) bool {
 			return true
 		}
 	}
+
 	return false
 }

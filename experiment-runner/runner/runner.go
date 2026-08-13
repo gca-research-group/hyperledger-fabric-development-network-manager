@@ -1,6 +1,7 @@
 package runner
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -29,52 +30,64 @@ type Result struct {
 }
 
 type Summary struct {
-	Total   int      `json:"total"`
-	Passed  int      `json:"passed"`
-	Partial int      `json:"partial"`
-	Failed  int      `json:"failed"`
-	Results []Result `json:"results"`
+	Total   int `json:"total"`
+	Passed  int `json:"passed"`
+	Partial int `json:"partial"`
+	Failed  int `json:"failed"`
 }
 
 func RunDirectory(outputDirectory string) (Summary, error) {
-	data, err := os.ReadFile(filepath.Join(outputDirectory, "scenarios.json"))
+	manifest, err := os.Open(filepath.Join(outputDirectory, "scenarios.json"))
 	if err != nil {
-		return Summary{}, fmt.Errorf("read scenario manifest: %w", err)
+		return Summary{}, fmt.Errorf("open scenario manifest: %w", err)
 	}
+	defer manifest.Close()
 
-	var scenarios []generator.ScenarioRules
-	if err := json.Unmarshal(data, &scenarios); err != nil {
+	decoder := json.NewDecoder(bufio.NewReader(manifest))
+	token, err := decoder.Token()
+	if err != nil {
 		return Summary{}, fmt.Errorf("decode scenario manifest: %w", err)
 	}
+	if delimiter, ok := token.(json.Delim); !ok || delimiter != '[' {
+		return Summary{}, fmt.Errorf("decode scenario manifest: expected JSON array")
+	}
 
-	return Run(outputDirectory, scenarios)
-}
+	resultsFile, err := os.Create(filepath.Join(outputDirectory, "results.json"))
+	if err != nil {
+		return Summary{}, fmt.Errorf("create result document: %w", err)
+	}
+	writer := bufio.NewWriter(resultsFile)
+	if _, err := writer.WriteString("{\n  \"results\": [\n"); err != nil {
+		resultsFile.Close()
+		return Summary{}, fmt.Errorf("write result document: %w", err)
+	}
 
-func Run(outputDirectory string, scenarios []generator.ScenarioRules) (Summary, error) {
-	summary := Summary{Total: len(scenarios), Results: make([]Result, 0, len(scenarios))}
-
-	for _, scenario := range scenarios {
-		result := Result{Scenario: scenario.Scenario, Expected: scenario.Rules}
-		path := filepath.Join(outputDirectory, "config", scenario.Scenario+".yaml")
-		_, err := config.LoadConfigFromPath(path)
-
-		validationErrors := validate.Errors(err)
-		if len(validationErrors) > 0 {
-			for _, validationError := range validationErrors {
-				result.Actual = appendRuleOnce(result.Actual, validationError.RuleID)
-			}
-			result.Missing = missingRules(result.Actual, scenario.Rules)
-			result.Status = classify(len(scenario.Rules), len(result.Missing))
-		} else if err == nil {
-			result.Status = StatusFailed
-			result.Missing = append(result.Missing, scenario.Rules...)
-			result.Error = "configuration unexpectedly passed validation"
-		} else {
-			result.Status = StatusFailed
-			result.Missing = append(result.Missing, scenario.Rules...)
-			result.Error = err.Error()
+	summary := Summary{}
+	for decoder.More() {
+		var scenario generator.ScenarioRules
+		if err := decoder.Decode(&scenario); err != nil {
+			resultsFile.Close()
+			return summary, fmt.Errorf("decode scenario manifest entry: %w", err)
 		}
 
+		result := evaluate(outputDirectory, scenario)
+		data, err := json.Marshal(result)
+		if err != nil {
+			resultsFile.Close()
+			return summary, fmt.Errorf("encode result for scenario %s: %w", scenario.Scenario, err)
+		}
+		if summary.Total > 0 {
+			if _, err := writer.WriteString(",\n"); err != nil {
+				resultsFile.Close()
+				return summary, fmt.Errorf("write result document: %w", err)
+			}
+		}
+		if _, err := writer.WriteString("    " + string(data)); err != nil {
+			resultsFile.Close()
+			return summary, fmt.Errorf("write result document: %w", err)
+		}
+
+		summary.Total++
 		switch result.Status {
 		case StatusPassed:
 			summary.Passed++
@@ -83,18 +96,50 @@ func Run(outputDirectory string, scenarios []generator.ScenarioRules) (Summary, 
 		case StatusFailed:
 			summary.Failed++
 		}
-		summary.Results = append(summary.Results, result)
+	}
+	if _, err := decoder.Token(); err != nil {
+		resultsFile.Close()
+		return summary, fmt.Errorf("decode scenario manifest: %w", err)
 	}
 
-	data, err := json.MarshalIndent(summary, "", "  ")
-	if err != nil {
-		return summary, fmt.Errorf("encode run summary: %w", err)
+	footer := fmt.Sprintf("\n  ],\n  \"total\": %d,\n  \"passed\": %d,\n  \"partial\": %d,\n  \"failed\": %d\n}\n", summary.Total, summary.Passed, summary.Partial, summary.Failed)
+	if _, err := writer.WriteString(footer); err != nil {
+		resultsFile.Close()
+		return summary, fmt.Errorf("write result document: %w", err)
 	}
-	if err := os.WriteFile(filepath.Join(outputDirectory, "results.json"), data, 0644); err != nil {
-		return summary, fmt.Errorf("write run summary: %w", err)
+	if err := writer.Flush(); err != nil {
+		resultsFile.Close()
+		return summary, fmt.Errorf("flush result document: %w", err)
+	}
+	if err := resultsFile.Close(); err != nil {
+		return summary, fmt.Errorf("close result document: %w", err)
 	}
 
 	return summary, nil
+}
+
+func evaluate(outputDirectory string, scenario generator.ScenarioRules) Result {
+	result := Result{Scenario: scenario.Scenario, Expected: scenario.Rules}
+	path := filepath.Join(outputDirectory, "config", scenario.Scenario+".yaml")
+	_, err := config.LoadConfigFromPath(path)
+
+	validationErrors := validate.Errors(err)
+	if len(validationErrors) > 0 {
+		for _, validationError := range validationErrors {
+			result.Actual = appendRuleOnce(result.Actual, validationError.RuleID)
+		}
+		result.Missing = missingRules(result.Actual, scenario.Rules)
+		result.Status = classify(len(scenario.Rules), len(result.Missing))
+	} else if err == nil {
+		result.Status = StatusFailed
+		result.Missing = append(result.Missing, scenario.Rules...)
+		result.Error = "configuration unexpectedly passed validation"
+	} else {
+		result.Status = StatusFailed
+		result.Missing = append(result.Missing, scenario.Rules...)
+		result.Error = err.Error()
+	}
+	return result
 }
 
 func missingRules(actual, expected []validate.RuleID) []validate.RuleID {

@@ -194,7 +194,7 @@ Invalid configurations are rejected before artefacts are generated or infrastruc
 The [experiment runner](./experiment-runner/) contains two reusable packages:
 
 - `generator` contains mutation operators for all 29 validation rules. Each operator starts from a valid seed configuration, introduces a targeted fault, and records the expected rule ID. Scenarios combine three compatible rule groups, with at most one mutation selected from each group; structurally incompatible mutations are explicitly excluded.
-- `runner` loads the generated manifest, validates every scenario configuration, and checks that the reported validation rule is one of the mutations expected for that scenario.
+- `runner` streams the generated manifest, validates every scenario configuration, and checks that the reported validation rules include all mutations expected for that scenario.
 
 Run its verification tests with:
 
@@ -208,7 +208,7 @@ Generate the scenario corpus with:
 go run ./experiment-runner
 ```
 
-The command generates and runs the complete scenario corpus. It writes mutated configurations to `output/config/`, the scenario-to-rule mapping to `output/scenarios.json`, and execution results to `output/results.json`. Each result is `passed` when all expected rules are reported, `partial` when only some are reported, or `failed` when none are reported or the configuration cannot be processed. Missing rules are included in the result. The command exits with a non-zero status when any scenario is partial or failed.
+The command exhaustively generates and runs the complete scenario corpus without retaining it in memory. Combinations, the manifest, and execution results are processed incrementally. It writes mutated configurations to `output/config/`, the scenario-to-rule mapping to `output/scenarios.json`, and execution results to `output/results.json`. Each result is `passed` when all expected rules are reported, `partial` when only some are reported, or `failed` when none are reported or the configuration cannot be processed. Missing rules are included in the result. The command exits with a non-zero status when any scenario is partial or failed.
 
 ## Samples
 

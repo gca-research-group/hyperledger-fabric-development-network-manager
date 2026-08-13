@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -18,6 +19,10 @@ type MutationOperator struct {
 type ScenarioRules struct {
 	Scenario string            `json:"scenario"`
 	Rules    []validate.RuleID `json:"rules"`
+}
+
+type Summary struct {
+	Total int
 }
 
 const seedYAML = `
@@ -157,66 +162,88 @@ var incompatibilities = IncompatibilityPolicy{
 
 const DefaultMutationCount = 3
 
-func Generate(outputDirectory string, mutationCount int) ([]ScenarioRules, error) {
+func Generate(outputDirectory string, mutationCount int) (Summary, error) {
 	seed, err := yaml.FromBytes([]byte(seedYAML))
 	if err != nil {
-		return nil, fmt.Errorf("parse seed configuration: %w", err)
+		return Summary{}, fmt.Errorf("parse seed configuration: %w", err)
 	}
 
-	scenarios := GenerateCombinations(operators, mutationCount, incompatibilities)
 	configDirectory := filepath.Join(outputDirectory, "config")
+
 	if err := os.MkdirAll(configDirectory, 0755); err != nil {
-		return nil, fmt.Errorf("create config directory: %w", err)
+		return Summary{}, fmt.Errorf("create config directory: %w", err)
 	}
 
-	scenarioRules := make([]ScenarioRules, 0, len(scenarios))
+	manifest, err := os.Create(filepath.Join(outputDirectory, "scenarios.json"))
 
-	for i := 0; i < len(scenarios); i++ {
+	if err != nil {
+		return Summary{}, fmt.Errorf("create scenario manifest: %w", err)
+	}
+
+	writer := bufio.NewWriter(manifest)
+
+	if _, err := writer.WriteString("[\n"); err != nil {
+		manifest.Close()
+		return Summary{}, fmt.Errorf("write scenario manifest: %w", err)
+	}
+
+	summary := Summary{}
+
+	err = WalkCombinations(operators, mutationCount, incompatibilities, func(scenario []MutationOperator) error {
 		clone := seed.Clone()
 		doc := clone.Document()
+		rules := make([]validate.RuleID, 0, len(scenario))
 
-		rules := make([]validate.RuleID, 0)
-
-		for j := range scenarios[i] {
-			operator := scenarios[i][j]
+		for _, operator := range scenario {
 			rules = append(rules, operator.RuleID)
 			operator.Apply(doc)
 		}
 
-		scenarioName := fmt.Sprintf(
-			"%06d",
-			i+1,
-		)
+		scenarioName := fmt.Sprintf("%06d", summary.Total+1)
 
-		scenarioRules = append(
-			scenarioRules,
-			ScenarioRules{
-				Scenario: scenarioName,
-				Rules:    rules,
-			},
-		)
 		if err := clone.ToFile(filepath.Join(configDirectory, scenarioName+".yaml")); err != nil {
-			return nil, fmt.Errorf("write scenario %s: %w", scenarioName, err)
+			return fmt.Errorf("write scenario %s: %w", scenarioName, err)
 		}
-	}
 
-	data, err := json.MarshalIndent(
-		scenarioRules,
-		"",
-		"  ",
-	)
+		entry, err := json.Marshal(ScenarioRules{Scenario: scenarioName, Rules: rules})
+
+		if err != nil {
+			return fmt.Errorf("encode scenario %s: %w", scenarioName, err)
+		}
+
+		if summary.Total > 0 {
+			if _, err := writer.WriteString(",\n"); err != nil {
+				return fmt.Errorf("write scenario manifest: %w", err)
+			}
+		}
+
+		if _, err := writer.WriteString("  " + string(entry)); err != nil {
+			return fmt.Errorf("write scenario manifest: %w", err)
+		}
+
+		summary.Total++
+
+		return nil
+	})
+
 	if err != nil {
-		return nil, fmt.Errorf("encode scenario manifest: %w", err)
+		manifest.Close()
+		return Summary{}, err
 	}
 
-	err = os.WriteFile(
-		filepath.Join(outputDirectory, "scenarios.json"),
-		data,
-		0644,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("write scenario manifest: %w", err)
+	if _, err := writer.WriteString("\n]\n"); err != nil {
+		manifest.Close()
+		return Summary{}, fmt.Errorf("write scenario manifest: %w", err)
 	}
 
-	return scenarioRules, nil
+	if err := writer.Flush(); err != nil {
+		manifest.Close()
+		return Summary{}, fmt.Errorf("flush scenario manifest: %w", err)
+	}
+
+	if err := manifest.Close(); err != nil {
+		return Summary{}, fmt.Errorf("close scenario manifest: %w", err)
+	}
+
+	return summary, nil
 }
