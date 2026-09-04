@@ -25,71 +25,6 @@ type Summary struct {
 	Total int
 }
 
-const seedYAML = `
-output: output/example
-network: example
-
-capabilities:
-  channel: V2_0
-  orderer: V2_0
-  application: V2_5
-
-organizations:
-  - name: Org1
-    bootstrap: true
-    domain: org1.example.com
-    orderers:
-      - name: Orderer
-        subdomain: orderer
-    peers:
-      - name: Peer0
-        subdomain: peer0
-        exposePort: 7051
-    certificateAuthority:
-      exposePort: 7054
-
-  - name: Org2
-    bootstrap: false
-    domain: org2.example.com
-    peers:
-      - name: Peer0
-        subdomain: peer0
-        exposePort: 8051
-
-  - name: Org3
-    domain: org3.example.com
-    peers:
-      - name: Peer0
-        subdomain: peer0
-        exposePort: 9051
-
-profiles:
-  - name: DefaultProfile
-    organizations:
-      - Org1
-      - Org2
-      - Org3
-
-channels:
-  - name: defaultchannel
-    profile: DefaultProfile
-    chaincodes:
-      - name: Asset
-        version: "1.0"
-        path: samples/chaincodes/asset
-        language:
-          name: golang
-          version: "1.26"
-
-      - name: Product
-        version: "1.0"
-        path: samples/chaincodes/product
-
-      - name: PrivateAgreement
-        version: "1.0"
-        path: samples/chaincodes/private-agreement
-`
-
 var operators = [][]MutationOperator{
 	outputDirectoryOperators,
 	networkNameInvalidOperators,
@@ -220,8 +155,8 @@ var incompatibilities = IncompatibilityPolicy{
 
 const DefaultMutationCount = 3
 
-func Generate(outputDirectory string, mutationCount int) (Summary, error) {
-	seed, err := yaml.FromBytes([]byte(seedYAML))
+func Generate(seedYAML []byte, mutationCount int, outputDirectory string) (Summary, error) {
+	seed, err := yaml.FromBytes(seedYAML)
 	if err != nil {
 		return Summary{}, fmt.Errorf("parse seed configuration: %w", err)
 	}

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/gca-research-group/fabric-network-orchestrator/internal/spec"
@@ -13,6 +14,71 @@ import (
 	"github.com/gca-research-group/fabric-network-orchestrator/internal/yaml"
 	yamlv3 "gopkg.in/yaml.v3"
 )
+
+const testSeedYAML = `
+output: output/example
+network: example
+
+capabilities:
+  channel: V2_0
+  orderer: V2_0
+  application: V2_5
+
+organizations:
+  - name: Org1
+    bootstrap: true
+    domain: org1.example.com
+    orderers:
+      - name: Orderer
+        subdomain: orderer
+    peers:
+      - name: Peer0
+        subdomain: peer0
+        exposePort: 7051
+    certificateAuthority:
+      exposePort: 7054
+
+  - name: Org2
+    bootstrap: false
+    domain: org2.example.com
+    peers:
+      - name: Peer0
+        subdomain: peer0
+        exposePort: 8051
+
+  - name: Org3
+    domain: org3.example.com
+    peers:
+      - name: Peer0
+        subdomain: peer0
+        exposePort: 9051
+
+profiles:
+  - name: DefaultProfile
+    organizations:
+      - Org1
+      - Org2
+      - Org3
+
+channels:
+  - name: defaultchannel
+    profile: DefaultProfile
+    chaincodes:
+      - name: Asset
+        version: "1.0"
+        path: samples/chaincodes/asset
+        language:
+          name: golang
+          version: "1.26"
+
+      - name: Product
+        version: "1.0"
+        path: samples/chaincodes/product
+
+      - name: PrivateAgreement
+        version: "1.0"
+        path: samples/chaincodes/private-agreement
+`
 
 var allRuleIDs = []validate.RuleID{
 	validate.RuleOutputDirectoryNameInvalid,
@@ -63,7 +129,7 @@ var allRuleIDs = []validate.RuleID{
 
 func seedNode(t *testing.T) *yaml.Node {
 	t.Helper()
-	node, err := yaml.FromBytes([]byte(seedYAML))
+	node, err := yaml.FromBytes([]byte(testSeedYAML))
 	if err != nil {
 		t.Fatalf("parse seed: %v", err)
 	}
@@ -169,7 +235,8 @@ func TestWalkCombinationsStreamsOneHundredThousandCombinations(t *testing.T) {
 
 func TestGenerateStreamsValidManifest(t *testing.T) {
 	outputDirectory := t.TempDir()
-	summary, err := Generate(outputDirectory, 1)
+	seedYAML := strings.Replace(testSeedYAML, "network: example", "network: custom-seed", 1)
+	summary, err := Generate([]byte(seedYAML), 1, outputDirectory)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -185,10 +252,34 @@ func TestGenerateStreamsValidManifest(t *testing.T) {
 	if summary.Total != len(scenarios) || summary.Total == 0 {
 		t.Fatalf("summary total %d does not match manifest length %d", summary.Total, len(scenarios))
 	}
+	foundCustomSeed := false
 	for _, scenario := range scenarios {
-		if _, err := os.Stat(filepath.Join(outputDirectory, "config", scenario.Scenario+".yaml")); err != nil {
+		path := filepath.Join(outputDirectory, "config", scenario.Scenario+".yaml")
+		generated, err := os.ReadFile(path)
+		if err != nil {
 			t.Fatalf("scenario %s was not written: %v", scenario.Scenario, err)
 		}
+		if strings.Contains(string(generated), "network: custom-seed") {
+			foundCustomSeed = true
+		}
+	}
+	if !foundCustomSeed {
+		t.Fatal("generated configurations do not use the supplied seed YAML")
+	}
+}
+
+func TestGenerateFromDocumentedSample(t *testing.T) {
+	seedYAML, err := os.ReadFile(filepath.Join("..", "..", "..", "samples", "network-with-chaincode.yml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	summary, err := Generate(seedYAML, 1, t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if summary.Total == 0 {
+		t.Fatal("expected scenarios from documented sample seed")
 	}
 }
 

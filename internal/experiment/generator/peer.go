@@ -10,7 +10,7 @@ var peerNameDuplicateOperators = []MutationOperator{{RuleID: validate.RulePeerNa
 	peers := organization(n, "Org1").GetValue("peers")
 	duplicate := (*yaml.Node)(peers.Content[0]).Clone()
 	duplicate.GetValue("subdomain").SetScalar("peer1", yaml.StringType)
-	duplicate.GetValue("exposePort").SetScalar("0", yaml.IntType)
+	duplicate.GetOrCreateValue("exposePort", yaml.ScalarNode("0")).SetScalar("0", yaml.IntType)
 	peers.Content = append(peers.Content, (*yamlv3.Node)(duplicate))
 }}}
 
@@ -23,7 +23,7 @@ var peerSubdomainDuplicateOperators = []MutationOperator{{RuleID: validate.RuleP
 	peers := organization(n, "Org1").GetValue("peers")
 	duplicate := (*yaml.Node)(peers.Content[0]).Clone()
 	duplicate.GetValue("name").SetScalar("Peer1", yaml.StringType)
-	duplicate.GetValue("exposePort").SetScalar("0", yaml.IntType)
+	duplicate.GetOrCreateValue("exposePort", yaml.ScalarNode("0")).SetScalar("0", yaml.IntType)
 	peers.Content = append(peers.Content, (*yamlv3.Node)(duplicate))
 }}}
 

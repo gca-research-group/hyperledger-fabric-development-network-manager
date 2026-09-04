@@ -12,8 +12,8 @@ var certificateAuthorityPortInvalidOperators = []MutationOperator{
 			organizations := node.GetValue("organizations")
 
 			org := organizations.FindByValue("name", "Org1")
-			certificateAuthority := org.GetValue("certificateAuthority")
-			exposePort := certificateAuthority.GetValue("exposePort")
+			certificateAuthority := org.GetOrCreateValue("certificateAuthority", yaml.MappingNode())
+			exposePort := certificateAuthority.GetOrCreateValue("exposePort", yaml.ScalarNode("0"))
 			exposePort.SetScalar("-1", yaml.IntType)
 		},
 	},
@@ -22,7 +22,8 @@ var certificateAuthorityPortInvalidOperators = []MutationOperator{
 var exposedPortConflictOperators = []MutationOperator{{
 	RuleID: validate.RuleExposedPortConflict,
 	Apply: func(node *yaml.Node) {
-		peer(node, "Org2", "Peer0").GetValue("exposePort").SetScalar("7051", yaml.IntType)
+		org1Port := peer(node, "Org1", "Peer0").GetOrCreateValue("exposePort", yaml.ScalarNode("0"))
+		peer(node, "Org2", "Peer0").GetOrCreateValue("exposePort", yaml.ScalarNode("0")).SetScalar(org1Port.Value, yaml.IntType)
 	},
 }}
 
@@ -44,6 +45,6 @@ var peerInternalPortInvalidOperators = []MutationOperator{{RuleID: validate.Rule
 var peerPortInvalidOperators = []MutationOperator{{
 	RuleID: validate.RulePeerPortInvalid,
 	Apply: func(node *yaml.Node) {
-		peer(node, "Org1", "Peer0").GetValue("exposePort").SetScalar("-1", yaml.IntType)
+		peer(node, "Org1", "Peer0").GetOrCreateValue("exposePort", yaml.ScalarNode("0")).SetScalar("-1", yaml.IntType)
 	},
 }}

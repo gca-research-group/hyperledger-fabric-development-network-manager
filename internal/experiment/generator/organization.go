@@ -12,11 +12,11 @@ var bootstrapOrganizationsMultipleOperators = []MutationOperator{
 			organizations := node.GetValue("organizations")
 
 			org1 := organizations.FindByValue("name", "Org1")
-			bootstrapOrg1 := org1.GetValue("bootstrap")
+			bootstrapOrg1 := org1.GetOrCreateValue("bootstrap", yaml.ScalarNode("false"))
 			bootstrapOrg1.SetScalar("true", yaml.BoolType)
 
 			org2 := organizations.FindByValue("name", "Org2")
-			bootstrapOrg2 := org2.GetValue("bootstrap")
+			bootstrapOrg2 := org2.GetOrCreateValue("bootstrap", yaml.ScalarNode("false"))
 			bootstrapOrg2.SetScalar("true", yaml.BoolType)
 		},
 	},
@@ -27,7 +27,8 @@ var domainInvalidOperators = []MutationOperator{{RuleID: validate.RuleDomainInva
 }}}
 
 var organizationDomainDuplicateOperators = []MutationOperator{{RuleID: validate.RuleOrganizationDomainDuplicate, Apply: func(n *yaml.Node) {
-	organization(n, "Org2").GetValue("domain").SetScalar("org1.example.com", yaml.StringType)
+	org1Domain := organization(n, "Org1").GetValue("domain")
+	organization(n, "Org2").GetValue("domain").SetScalar(org1Domain.Value, yaml.StringType)
 }}}
 
 var organizationDomainRequiredOperators = []MutationOperator{{
