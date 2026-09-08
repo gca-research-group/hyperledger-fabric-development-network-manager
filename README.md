@@ -208,24 +208,33 @@ Invalid configurations are rejected before artefacts are generated or infrastruc
 
 The developer-only experiment runner is implemented under [`internal/experiment`](./internal/experiment/) and launched from [`cmd/experiment-runner`](./cmd/experiment-runner/):
 
+- `cli` wires the Cobra commands in small modules; the executable entry point only calls `cli.Execute()`.
 - `generator` contains mutation operators for all 44 validation rules. Each operator starts from a valid seed configuration, introduces a targeted fault, and records the expected rule ID. Scenarios combine three compatible rule groups, with at most one mutation selected from each group; structurally incompatible mutations are explicitly excluded.
 - `runner` streams the generated manifest, validates every scenario configuration, and checks that the reported validation rules include all mutations expected for that scenario.
 
 Run its verification tests with:
 
 ```bash
-go test ./internal/experiment/...
+go test ./cmd/experiment-runner ./internal/experiment/...
 ```
 
-Generate the scenario corpus with:
+Create a complete seed, generate the scenario corpus, and validate it in separate calls:
 
 ```bash
-go run ./cmd/experiment-runner --seed samples/network-with-chaincode.yml
+go run ./cmd/experiment-runner seed generate --output seed.yaml
+go run ./cmd/experiment-runner generate --seed seed.yaml --mutation-count 3 --output output
+go run ./cmd/experiment-runner validate --output output
 ```
 
-The `--seed` flag is required and selects the valid YAML configuration to mutate. Use `--mutation-count` to change the number of mutations per scenario (the default is `3`) and `--output` to select the generated corpus directory (the default is `output`).
+`seed generate` writes a bundled, deterministic YAML example with every configuration field explicitly represented, including optional settings. It defaults to `seed.yaml`, creates missing parent directories, and refuses to overwrite an existing file unless `--force` is supplied. Empty strings represent unused optional settings and empty lists represent absent topology entries. The seed includes three organizations and the three repository sample chaincodes; their paths are relative to the repository root. It generates configuration only, not chaincode sources or network artefacts.
 
-The command exhaustively generates and runs the complete scenario corpus without retaining it in memory. Combinations, the manifest, and execution results are processed incrementally. Generation and validation progress is printed every 1,000 scenarios and when each phase completes. It writes mutated configurations to `<output-directory>/config/`, the scenario-to-rule mapping to `<output-directory>/scenarios.json`, and execution results to `<output-directory>/results.json`. Each result is `passed` when all expected rules are reported, `partial` when only some are reported, or `failed` when none are reported or the configuration cannot be processed. Missing rules are included in the result. The command exits with a non-zero status when any scenario is partial or failed.
+For `generate`, the `--seed` flag is required and selects the valid YAML configuration to mutate. Existing seeds such as `samples/network-with-chaincode.yml` can also be used. Use `--mutation-count` to change the number of mutations per scenario (the default is `3`) and `--output` to select the generated corpus directory (the default is `output`). Generation writes mutated configurations to `<output-directory>/config/` and the scenario-to-rule mapping to `<output-directory>/scenarios.json`. It does not run verification or create or update `results.json`.
+
+`validate` reads the existing manifest and scenario files from `--output` (default `output`) and writes `<output-directory>/results.json`. It needs neither the original seed nor a mutation count and does not regenerate scenarios. Each result is `passed` when all expected rules are reported, `partial` when only some are reported, or `failed` when none are reported or the configuration cannot be processed. Missing rules are included in the result. Validation exits with a non-zero status when any scenario is partial or failed. Generation retains its existing corpus overwrite behavior; validation replaces existing results.
+
+Both phases process the corpus incrementally without retaining it in memory. Validation first counts manifest entries with a streaming read. Both `generate` and `validate` accept `--progress-interval N` to report progress every N scenarios (default `1000`; must be greater than zero). Start and completion are always reported.
+
+Subcommands are required: replace the former `experiment-runner --seed ...` invocation with `experiment-runner generate --seed ...`, followed by `experiment-runner validate --output ...`. Use `--help` at the root, on `seed`, or on any individual command for usage.
 
 ## Samples
 

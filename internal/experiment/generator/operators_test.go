@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gca-research-group/fabric-network-orchestrator/internal/experiment/seed"
+
 	"github.com/gca-research-group/fabric-network-orchestrator/internal/spec"
 	"github.com/gca-research-group/fabric-network-orchestrator/internal/validate"
 	"github.com/gca-research-group/fabric-network-orchestrator/internal/yaml"
@@ -149,6 +151,26 @@ func TestSeedIsValid(t *testing.T) {
 	configuration := decodeConfig(t, seedNode(t))
 	if err := validate.Config(configuration); err != nil {
 		t.Fatalf("seed must be valid (decoded output %q): %v", configuration.Output, err)
+	}
+}
+
+func TestBundledSeedSupportsEveryOperator(t *testing.T) {
+	for _, group := range operators {
+		for index, operator := range group {
+			t.Run(fmt.Sprintf("%s/%d", operator.RuleID, index), func(t *testing.T) {
+				node, err := yaml.FromBytes([]byte(seed.YAML))
+				if err != nil {
+					t.Fatal(err)
+				}
+				operator.Apply(node.Document())
+				for _, validationError := range validate.Errors(validate.Config(decodeConfig(t, node))) {
+					if validationError.RuleID == operator.RuleID {
+						return
+					}
+				}
+				t.Fatalf("operator did not trigger %s", operator.RuleID)
+			})
+		}
 	}
 }
 

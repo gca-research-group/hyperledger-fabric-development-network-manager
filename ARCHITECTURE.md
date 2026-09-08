@@ -8,12 +8,15 @@ packages are implementation details and therefore live under `internal/`.
 
 ```text
 cmd/cli -> internal/cli -> internal/application -> config and infrastructure
-cmd/experiment-runner -> internal/experiment
+cmd/experiment-runner -> internal/experiment/cli -> internal/experiment/{generator,runner,seed}
 ```
 
 - `cmd/` contains executable entry points only.
 - `internal/cli` owns Cobra command and flag wiring. Command handlers load a
   configuration, invoke one application workflow, and report its result.
+- `internal/experiment/cli` owns the experiment runner's Cobra commands, with
+  separate modules for generation, validation, seed generation, and progress.
+  Each invocation constructs a fresh command tree with independent flag state.
 - `internal/application` coordinates artifact generation, identities, images,
   network lifecycle, and chaincode deployment. It adds operation context to
   returned errors and does not terminate the process.

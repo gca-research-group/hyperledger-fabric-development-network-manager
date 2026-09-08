@@ -1,0 +1,87 @@
+# Complete experiment seed. Chaincode paths are relative to the repository root.
+# Empty strings disable unused optional settings; [] means no entries.
+output: output/example
+network: example
+capabilities:
+  channel: V2_0
+  orderer: V2_0
+  application: V2_5
+organizations:
+  - name: Org1
+    domain: org1.example.com
+    users: 1
+    bootstrap: true
+    certificateAuthority:
+      exposePort: 7054
+      version: latest
+    orderers:
+      - name: Orderer
+        subdomain: orderer
+        port: 7050
+        exposePort: 7050
+        version: "2.5.15"
+    peers:
+      - name: Peer0
+        subdomain: peer0
+        port: 7051
+        exposePort: 7051
+        version: "2.5.15"
+        isAnchor: true
+  - name: Org2
+    domain: org2.example.com
+    users: 1
+    bootstrap: false
+    certificateAuthority:
+      exposePort: 8054
+      version: latest
+    peers:
+      - name: Peer0
+        subdomain: peer0
+        port: 7051
+        exposePort: 8051
+        version: "2.5.15"
+        isAnchor: true
+  - name: Org3
+    domain: org3.example.com
+    users: 1
+    bootstrap: false
+    certificateAuthority:
+      exposePort: 9054
+      version: latest
+    peers:
+      - name: Peer0
+        subdomain: peer0
+        port: 7051
+        exposePort: 9051
+        version: "2.5.15"
+        isAnchor: true
+profiles:
+  - name: DefaultProfile
+    organizations: 
+      - Org1
+      - Org2
+      - Org3
+    consensus:
+      type: etcdraft
+channels:
+  - name: defaultchannel
+    profile: DefaultProfile
+    chaincodes:
+      - name: Asset
+        path: samples/chaincodes/asset
+        version: "1.0"
+        language:
+          name: golang
+          version: "1.26"
+      - name: Product
+        path: samples/chaincodes/product
+        version: "1.0"
+        language:
+          name: golang
+          version: "1.26"
+      - name: PrivateAgreement
+        path: samples/chaincodes/private-agreement
+        version: "1.0"
+        language:
+          name: golang
+          version: "1.26"
