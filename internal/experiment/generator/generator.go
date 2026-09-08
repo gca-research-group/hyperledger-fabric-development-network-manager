@@ -25,6 +25,8 @@ type Summary struct {
 	Total int
 }
 
+type ProgressFunc func(completed, total int)
+
 var operators = [][]MutationOperator{
 	outputDirectoryOperators,
 	networkNameInvalidOperators,
@@ -155,10 +157,18 @@ var incompatibilities = IncompatibilityPolicy{
 
 const DefaultMutationCount = 3
 
-func Generate(seedYAML []byte, mutationCount int, outputDirectory string) (Summary, error) {
+func Generate(seedYAML []byte, mutationCount int, outputDirectory string, progress ProgressFunc) (Summary, error) {
 	seed, err := yaml.FromBytes(seedYAML)
 	if err != nil {
 		return Summary{}, fmt.Errorf("parse seed configuration: %w", err)
+	}
+
+	total, err := countCombinations(operators, mutationCount, incompatibilities)
+	if err != nil {
+		return Summary{}, fmt.Errorf("count scenarios: %w", err)
+	}
+	if progress != nil {
+		progress(0, total)
 	}
 
 	configDirectory := filepath.Join(outputDirectory, "config")
@@ -215,6 +225,9 @@ func Generate(seedYAML []byte, mutationCount int, outputDirectory string) (Summa
 		}
 
 		summary.Total++
+		if progress != nil {
+			progress(summary.Total, total)
+		}
 
 		return nil
 	})

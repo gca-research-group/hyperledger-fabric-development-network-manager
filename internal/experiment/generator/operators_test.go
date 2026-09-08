@@ -233,10 +233,41 @@ func TestWalkCombinationsStreamsOneHundredThousandCombinations(t *testing.T) {
 	}
 }
 
+func TestCountCombinationsMatchesWalk(t *testing.T) {
+	groups := [][]MutationOperator{
+		{{RuleID: "one-a"}, {RuleID: "one-b"}},
+		{{RuleID: "two-a"}},
+		{{RuleID: "three-a"}, {RuleID: "three-b"}},
+	}
+
+	want := 0
+	if err := WalkCombinations(groups, 2, nil, func([]MutationOperator) error {
+		want++
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	got, err := countCombinations(groups, 2, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("count = %d, expected %d", got, want)
+	}
+}
+
 func TestGenerateStreamsValidManifest(t *testing.T) {
 	outputDirectory := t.TempDir()
 	seedYAML := strings.Replace(testSeedYAML, "network: example", "network: custom-seed", 1)
-	summary, err := Generate([]byte(seedYAML), 1, outputDirectory)
+	var progress []int
+	progressTotal := -1
+	summary, err := Generate([]byte(seedYAML), 1, outputDirectory, func(completed, total int) {
+		if progressTotal != -1 && total != progressTotal {
+			t.Fatalf("progress total changed from %d to %d", progressTotal, total)
+		}
+		progressTotal = total
+		progress = append(progress, completed)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -251,6 +282,14 @@ func TestGenerateStreamsValidManifest(t *testing.T) {
 	}
 	if summary.Total != len(scenarios) || summary.Total == 0 {
 		t.Fatalf("summary total %d does not match manifest length %d", summary.Total, len(scenarios))
+	}
+	if progressTotal != summary.Total || len(progress) != summary.Total+1 {
+		t.Fatalf("progress reported %d updates with total %d for %d scenarios", len(progress), progressTotal, summary.Total)
+	}
+	for completed, reported := range progress {
+		if reported != completed {
+			t.Fatalf("progress update %d reported %d", completed, reported)
+		}
 	}
 	foundCustomSeed := false
 	for _, scenario := range scenarios {
@@ -274,7 +313,7 @@ func TestGenerateFromDocumentedSample(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	summary, err := Generate(seedYAML, 1, t.TempDir())
+	summary, err := Generate(seedYAML, 1, t.TempDir(), nil)
 	if err != nil {
 		t.Fatal(err)
 	}

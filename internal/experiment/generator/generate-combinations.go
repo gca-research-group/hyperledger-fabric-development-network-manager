@@ -4,6 +4,15 @@ import "github.com/gca-research-group/fabric-network-orchestrator/internal/valid
 
 type IncompatibilityPolicy map[validate.RuleID][]validate.RuleID
 
+func countCombinations(groups [][]MutationOperator, combinationSize int, policy IncompatibilityPolicy) (int, error) {
+	count := 0
+	err := WalkCombinations(groups, combinationSize, policy, func([]MutationOperator) error {
+		count++
+		return nil
+	})
+	return count, err
+}
+
 func WalkCombinations(groups [][]MutationOperator, combinationSize int, policy IncompatibilityPolicy, visit func([]MutationOperator) error) error {
 	if combinationSize <= 0 || len(groups) == 0 {
 		return nil

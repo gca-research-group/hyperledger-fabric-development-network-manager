@@ -57,3 +57,26 @@ func TestRunReportsUnreadableSeedYAML(t *testing.T) {
 		t.Fatalf("expected seed read error, got %v", err)
 	}
 }
+
+func TestReportProgressThrottlesAndReportsFinalCount(t *testing.T) {
+	var output strings.Builder
+	for completed := 0; completed <= 2501; completed++ {
+		reportProgress(&output, "generation", completed, 2501)
+	}
+
+	expected := "generation progress: 0/2501 (0.0%)\n" +
+		"generation progress: 1000/2501 (40.0%)\n" +
+		"generation progress: 2000/2501 (80.0%)\n" +
+		"generation progress: 2501/2501 (100.0%)\n"
+	if output.String() != expected {
+		t.Fatalf("progress output:\n%s\nexpected:\n%s", output.String(), expected)
+	}
+}
+
+func TestReportProgressHandlesZeroTotal(t *testing.T) {
+	var output strings.Builder
+	reportProgress(&output, "validation", 0, 0)
+	if output.String() != "validation progress: 0/0 (100.0%)\n" {
+		t.Fatalf("unexpected zero-total progress: %q", output.String())
+	}
+}

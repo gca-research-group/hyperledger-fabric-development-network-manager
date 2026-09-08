@@ -18,6 +18,20 @@ type options struct {
 	outputDirectory string
 }
 
+const progressInterval = 1000
+
+func reportProgress(writer io.Writer, phase string, completed, total int) {
+	if completed != 0 && completed != total && completed%progressInterval != 0 {
+		return
+	}
+
+	percentage := 100.0
+	if total > 0 {
+		percentage = float64(completed) / float64(total) * 100
+	}
+	fmt.Fprintf(writer, "%s progress: %d/%d (%.1f%%)\n", phase, completed, total, percentage)
+}
+
 func parseOptions(args []string) (options, error) {
 	flags := flag.NewFlagSet("experiment-runner", flag.ContinueOnError)
 	flags.SetOutput(io.Discard)
@@ -51,12 +65,17 @@ func run(args []string, stdout io.Writer) error {
 		return fmt.Errorf("read seed YAML %q: %w", options.seedYAMLPath, err)
 	}
 
-	generation, err := generator.Generate(seedYAML, options.mutationCount, options.outputDirectory)
+	generation, err := generator.Generate(seedYAML, options.mutationCount, options.outputDirectory, func(completed, total int) {
+		reportProgress(stdout, "generation", completed, total)
+	})
 	if err != nil {
 		return err
 	}
 
-	summary, err := runner.RunDirectory(options.outputDirectory)
+	reportProgress(stdout, "validation", 0, generation.Total)
+	summary, err := runner.RunDirectory(options.outputDirectory, func(completed int) {
+		reportProgress(stdout, "validation", completed, generation.Total)
+	})
 	if err != nil {
 		return err
 	}

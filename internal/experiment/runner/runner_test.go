@@ -33,12 +33,18 @@ func TestRunChecksEveryScenario(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	summary, err := RunDirectory(outputDirectory)
+	var progress []int
+	summary, err := RunDirectory(outputDirectory, func(completed int) {
+		progress = append(progress, completed)
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if summary.Total != 3 || summary.Passed != 1 || summary.Partial != 1 || summary.Failed != 1 {
 		t.Fatalf("unexpected summary: %+v", summary)
+	}
+	if len(progress) != 3 || progress[0] != 1 || progress[1] != 2 || progress[2] != 3 {
+		t.Fatalf("unexpected progress updates: %v", progress)
 	}
 	data, err := os.ReadFile(filepath.Join(outputDirectory, "results.json"))
 	if err != nil {

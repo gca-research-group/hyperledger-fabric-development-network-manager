@@ -36,7 +36,9 @@ type Summary struct {
 	Failed  int `json:"failed"`
 }
 
-func RunDirectory(outputDirectory string) (Summary, error) {
+type ProgressFunc func(completed int)
+
+func RunDirectory(outputDirectory string, progress ProgressFunc) (Summary, error) {
 	manifest, err := os.Open(filepath.Join(outputDirectory, "scenarios.json"))
 	if err != nil {
 		return Summary{}, fmt.Errorf("open scenario manifest: %w", err)
@@ -95,6 +97,9 @@ func RunDirectory(outputDirectory string) (Summary, error) {
 			summary.Partial++
 		case StatusFailed:
 			summary.Failed++
+		}
+		if progress != nil {
+			progress(summary.Total)
 		}
 	}
 	if _, err := decoder.Token(); err != nil {
